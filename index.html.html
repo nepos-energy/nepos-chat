@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nepos Energy × BYD</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  /* WhatsApp dark palette */
+  --wa-bg:       #0b141a;
+  --wa-panel:    #111b21;
+  --wa-header:   #1f2c34;
+  --wa-input-bg: #2a3942;
+  --wa-in:       #202c33;
+  --wa-out:      #005c4b;
+  --wa-text:     #e9edef;
+  --wa-sub:      #8696a0;
+  --wa-green:    #00a884;
+  --wa-tick:     #53bdeb;
+
+  /* Nepos brand */
+  --nepos-teal:  #00d4aa;
+  --nepos-dark:  #00a382;
+  --byd-red:     #e31837;
+  --gold:        #f5c518;
+  --radius:      8px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--wa-bg);
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ── PHONE SHELL ── */
+.phone {
+  width: 400px;
+  max-width: 100%;
+  height: min(820px, 96vh);
+  background: var(--wa-panel);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06),
+    0 40px 100px rgba(0,0,0,.8),
+    0 0 80px rgba(0,212,170,.04);
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--wa-header);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  flex-shrink: 0;
+}
+.back-btn { color: var(--wa-sub); font-size: 22px; line-height:1; cursor:pointer; }
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink:0;
+  background: linear-gradient(135deg, var(--nepos-teal) 0%, var(--nepos-dark) 60%, #007a62 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
+  color: #fff; letter-spacing: -0.5px;
+  box-shadow: 0 0 0 2px rgba(0,212,170,.25);
+}
+.header-info { flex:1; min-width:0; }
+.header-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 15px;
+  color: var(--wa-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.header-name span { color: var(--byd-red); }
+.header-status { font-size: 11.5px; color: var(--wa-green); margin-top:1px; }
+.header-icons { display:flex; gap:18px; color:var(--wa-sub); font-size:19px; cursor:pointer; }
+
+/* ── CHAT AREA ── */
+.chat {
+  flex:1; overflow-y:auto; padding:10px 10px 6px;
+  display:flex; flex-direction:column; gap:3px;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M0 0h40v40H0V0zm40 40h40v40H40V40zm0-40h2l-2 2V0zm0 4l4-4h2l-6 6V4zm0 4l8-8h2L40 10V8zm0 4L52 0h2L40 14v-2zm0 4L56 0h2L40 18v-2zm0 4L60 0h2L40 22v-2zm0 4L64 0h2L40 26v-2zm0 4L68 0h2L40 30v-2zm0 4L72 0h2L40 34v-2zm0 4L76 0h2L40 38v-2zm0 4L80 0v2L42 40h-2zm4 0L80 4v2L46 40h-2zm4 0L80 8v2L50 40h-2zm4 0L80 12v2L54 40h-2zm4 0L80 16v2L58 40h-2zm4 0L80 20v2L62 40h-2zm4 0L80 24v2L66 40h-2zm4 0L80 28v2L70 40h-2zm4 0L80 32v2L74 40h-2zm4 0L80 36v2L78 40h-2zm4 0L80 40v0z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.chat::-webkit-scrollbar { width: 3px; }
+.chat::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius:4px; }
+
+/* ── DATE CHIP ── */
+.date-chip { text-align:center; margin: 6px 0 10px; }
+.date-chip span {
+  background: rgba(17,27,33,.85); color: var(--wa-sub);
+  font-size: 11px; padding: 4px 12px; border-radius: 7px;
+  backdrop-filter: blur(6px);
+}
+
+/* ── BUBBLES ── */
+.row { display:flex; align-items:flex-end; gap:5px; }
+.row.out { flex-direction: row-reverse; }
+
+.av {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background: linear-gradient(135deg, var(--nepos-teal), var(--nepos-dark));
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff;
+  font-family:'Syne',sans-serif;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 8px 11px 6px;
+  border-radius: var(--radius);
+  font-size: 14px; line-height: 1.48;
+  color: var(--wa-text);
+  position: relative;
+  word-break: break-word;
+}
+.row.in  .bubble { background: var(--wa-in);  border-top-left-radius:2px; }
+.row.out .bubble { background: var(--wa-out); border-top-right-radius:2px; }
+.bubble b { font-weight:600; }
+
+.meta {
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:3px; margin-top:3px;
+}
+.meta .t { font-size:10.5px; color: rgba(255,255,255,.38); }
+.meta .tick { font-size:12px; color: var(--wa-tick); }
+
+/* ── TYPING ── */
+.typing {
+  display:none; align-items:center; gap:4px;
+  background: var(--wa-in); padding:10px 14px;
+  border-radius:var(--radius); border-top-left-radius:2px;
+  width:fit-content; margin-left:33px;
+}
+.typing.show { display:flex; }
+.dot {
+  width:7px; height:7px; background:var(--wa-sub);
+  border-radius:50%; animation: bop .9s infinite;
+}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.30s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ── QUICK REPLY BUTTONS ── */
+.qr-wrap {
+  display:flex; flex-wrap:wrap; gap:6px;
+  margin: 4px 0 4px 33px;
+}
+.qr {
+  border: 1.5px solid var(--nepos-teal);
+  color: var(--nepos-teal);
+  background: transparent;
+  padding: 6px 14px; border-radius:20px;
+  font-size: 13px; font-family:'DM Sans',sans-serif;
+  cursor:pointer; transition: all .18s; font-weight:500;
+}
+.qr:hover  { background: var(--nepos-teal); color:#fff; }
+.qr:disabled { opacity:.35; cursor:default; pointer-events:none; }
+
+/* ── COMBO CARD ── */
+.card {
+  background: linear-gradient(145deg,#1a2a35,#0e1e28);
+  border: 1px solid rgba(0,212,170,.22);
+  border-radius: 12px; padding:14px; width:100%;
+  max-width: 78%; margin-left:33px;
+}
+.card-badge {
+  display:inline-block; padding:2px 9px; border-radius:20px;
+  font-size:10px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; margin-bottom:8px;
+  font-family:'Syne',sans-serif;
+}
+.badge-teal  { background:rgba(0,212,170,.15); color:var(--nepos-teal); border:1px solid rgba(0,212,170,.3);}
+.badge-gold  { background:rgba(245,197,24,.12);  color:var(--gold);        border:1px solid rgba(245,197,24,.28);}
+.badge-red   { background:rgba(227,24,55,.12);   color:#ff6b7a;            border:1px solid rgba(227,24,55,.28);}
+.card h3 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:3px; color:var(--wa-text);}
+.card .csub { font-size:11.5px; color:var(--wa-sub); margin-bottom:10px; }
+.specs { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.spec { display:flex; gap:7px; font-size:12.5px; color:#b8c5cf; align-items:flex-start; }
+.spec .si { flex-shrink:0; width:18px; }
+.divider { height:1px; background:rgba(255,255,255,.06); margin:10px 0; }
+.price-row { display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:12px; }
+.price-label { color:var(--wa-sub); }
+.price-val   { color:var(--wa-text); font-weight:600; }
+.price-val.highlight { color:var(--nepos-teal); font-size:14px; }
+.card-meta { display:flex; justify-content:flex-end; margin-top:8px; }
+.card-meta .t { font-size:10px; color:rgba(255,255,255,.28); }
+
+/* ── WA BUTTON ── */
+.wa-btn {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background: #25d366; color:#fff;
+  border:none; border-radius:10px; padding:11px 18px;
+  font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif;
+  cursor:pointer; text-decoration:none;
+  transition: background .18s, transform .12s;
+  margin-top:6px; width:100%;
+}
+.wa-btn:hover { background:#1ebe5c; transform:scale(1.01); }
+.wa-btn svg { width:20px; height:20px; fill:#fff; flex-shrink:0; }
+
+/* ── INPUT BAR ── */
+.bar {
+  background: var(--wa-header);
+  padding: 8px 10px;
+  display:flex; align-items:center; gap:8px;
+  border-top: 1px solid rgba(255,255,255,.04);
+  flex-shrink:0;
+}
+.bar input {
+  flex:1; background:var(--wa-input-bg); border:none; outline:none;
+  color:var(--wa-text); font-family:'DM Sans',sans-serif; font-size:14px;
+  padding:9px 15px; border-radius:22px;
+}
+.bar input::placeholder { color:var(--wa-sub); }
+.send {
+  width:42px; height:42px; border-radius:50%;
+  background:var(--wa-green); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:17px; flex-shrink:0;
+  transition: background .18s;
+}
+.send:hover { background:#00c47a; }
+
+/* ── SAVING TOAST ── */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#1f2c34; border:1px solid rgba(0,212,170,.3);
+  color:var(--nepos-teal); font-size:13px; padding:9px 18px;
+  border-radius:24px; opacity:0; transition: all .3s; pointer-events:none;
+  white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:440px){
+  html,body{ padding:0; }
+  .phone{ border-radius:0; height:100vh; width:100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="back-btn">‹</span>
+    <div class="avatar">NE</div>
+    <div class="header-info">
+      <div class="header-name">Nepos Energy <span>× BYD</span></div>
+      <div class="header-status">● en línea</div>
+    </div>
+    <div class="header-icons">
+      <span title="Videollamada">⬡</span>
+      <span title="Llamada">✆</span>
+      <span title="Menú">⋮</span>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="chat" id="chat">
+    <div class="date-chip"><span>Hoy</span></div>
+  </div>
+
+  <!-- TYPING -->
+  <div style="padding:0 10px 4px">
+    <div class="typing" id="typing">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="bar">
+    <span style="font-size:22px;color:var(--wa-sub);cursor:pointer">☺</span>
+    <input id="inp" type="text" placeholder="Escribe un mensaje…" autocomplete="off"/>
+    <button class="send" id="sendBtn">➤</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ Lead guardado en Google Sheets</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG — editá estos valores
+// ═══════════════════════════════════════════════════
+const SHEET_ID   = '1sa950sG7C61VMHHFytuL2ngiNgA7Vc2lIf88txfikLA';
+const WA_NUMBER  = '5491168545890'; // sin + ni espacios
+const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, me contacto desde la concesionaria BYD. Me interesa saber más sobre los paneles solares.');
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const S = {
+  step: 0,
+  nombre: '', familia: 0, consumo: 0,
+  gasolina: 0, vivienda: '', combo: null, plan: '',
+  telefono: '', concesionaria: 'BYD Ecuador'
+};
+
+const now = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+
+// ═══════════════════════════════════════════════════
+// COMBOS
+// ═══════════════════════════════════════════════════
+const COMBOS = {
+  basico: {
+    key:'basico', badge:'badge-teal', badgeText:'Recomendado para vos',
+    nombre:'☀️ SOLAR BÁSICO', sub:'Hogar pequeño + BYD como 2° auto',
+    specs:[
+      {i:'⚡',t:'3 kWp instalados'},
+      {i:'🔋',t:'Genera ~360 kWh/mes'},
+      {i:'📐',t:'Requiere ~20 m² de techo'},
+      {i:'🛡️',t:'Garantía 25 años en paneles'},
+    ],
+    contado:'$6.800', ppa:'$0 inversión / $0.07 por kWh',
+    suscripcion:'$189/mes × 36 meses', ahorro:'~$55/mes',
+  },
+  estandar: {
+    key:'estandar', badge:'badge-gold', badgeText:'⭐ Más popular',
+    nombre:'⚡ SOLAR ESTÁNDAR', sub:'Familia media + BYD como auto principal',
+    specs:[
+      {i:'⚡',t:'5 kWp instalados'},
+      {i:'🔋',t:'Genera ~600 kWh/mes'},
+      {i:'📐',t:'Requiere ~32 m² de techo'},
+      {i:'🛡️',t:'Garantía 25 años + monitoreo remoto'},
+    ],
+    contado:'$10.500', ppa:'$0 inversión / $0.07 por kWh',
+    suscripcion:'$289/mes × 36 meses', ahorro:'~$95/mes',
+  },
+  premium: {
+    key:'premium', badge:'badge-red', badgeText:'💎 Premium',
+    nombre:'🌟 SOLAR PREMIUM', sub:'Hogar grande + 2 EVs + batería BYD',
+    specs:[
+      {i:'⚡',t:'8 kWp instalados'},
+      {i:'🔋',t:'Genera ~960 kWh/mes + batería'},
+      {i:'📐',t:'Requiere ~50 m² de techo'},
+      {i:'🛡️',t:'Garantía 25 años + batería BYD + monitoreo'},
+    ],
+    contado:'$16.900', ppa:'$0 inversión / $0.065 por kWh',
+    suscripcion:'$449/mes × 36 meses', ahorro:'~$160/mes',
+  },
+};
+
+function recomendar(){
+  const extra = Math.round((S.gasolina / 0.65) * 0.18 * 10);
+  const total = S.consumo + extra;
+  if (S.familia <= 3 && total <= 350) return 'basico';
+  if (S.familia <= 5 && total <= 600) return 'estandar';
+  return 'premium';
+}
+
+// ═══════════════════════════════════════════════════
+// SCRIPT STEPS
+// ═══════════════════════════════════════════════════
+const STEPS = [
+  // 0 — bienvenida
+  {
+    msgs: [`👋 ¡Hola! Soy el asistente de *Nepos Energy × BYD*.\n\nTe ayudo a dimensionar un sistema solar para tu hogar, para que la energía de tu nuevo BYD no te salga cara ☀️\n\n¿Puedo hacerte unas preguntas rápidas?`],
+    opts: ['¡Claro, adelante! ✅','¿Cómo funciona esto? ℹ️'],
+    next: a => a.includes('Claro') ? 1 : 'info',
+  },
+  // 1 — nombre
+  {
+    msgs: [`Perfecto 🙌 ¿Cuál es tu nombre?`],
+    free: true,
+    next: a => { S.nombre = a.trim().split(' ')[0]; return 2; },
+  },
+  // 2 — familia
+  {
+    msgs: s => [`Mucho gusto, *${s.nombre}* 😊\n\n¿Cuántas personas viven en tu hogar?`],
+    opts: ['1–2 personas','3–4 personas','5 o más personas'],
+    next: a => { S.familia = a.includes('1') ? 2 : a.includes('3') ? 3.5 : 6; return 3; },
+  },
+  // 3 — consumo
+  {
+    msgs: [`💡 ¿Cuánto pagás aproximadamente en tu factura eléctrica mensual?`],
+    opts: ['Menos de $30','$30–$60','$60–$100','Más de $100'],
+    next: a => {
+      S.consumo = a.includes('Menos') ? 150 : a.includes('$30') ? 250 : a.includes('$60') ? 400 : 600;
+      return 4;
+    },
+  },
+  // 4 — gasolina
+  {
+    msgs: [`⛽ ¿Cuánto gastás en gasolina al mes?\n\n_(esto nos ayuda a estimar cuánta energía necesitará tu BYD)_`],
+    opts: ['Menos de $40','$40–$80','$80–$150','Más de $150'],
+    next: a => {
+      S.gasolina = a.includes('Menos') ? 30 : a.includes('$40') ? 60 : a.includes('$80') ? 110 : 200;
+      return 5;
+    },
+  },
+  // 5 — vivienda
+  {
+    msgs: [`🏠 ¿Cuál es tu tipo de vivienda?`],
+    opts: ['Casa propia con techo','Casa arrendada','Departamento','Negocio / Local'],
+    next: a => { S.vivienda = a; return 6; },
+  },
+  // 6 — oferta
+  {
+    msgs: s => {
+      const c = recomendar(); S.combo = c;
+      const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
+      return [
+        `🔍 Analizando tu perfil, *${s.nombre}*…`,
+        `✅ ¡Listo! Esta es nuestra recomendación para vos:`,
+        { type:'combo', combo: COMBOS[c], ppa: esPPA },
+        esPPA
+          ? `📋 Como tu vivienda es *${s.vivienda.toLowerCase()}*, la opción *PPA* es ideal: *cero inversión inicial*, solo pagás por la energía que usás.`
+          : `¿Cuál de las opciones de pago te interesa explorar?`,
+      ];
+    },
+    opts: s => {
+      const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
+      return esPPA
+        ? ['Quiero el PPA ✅','Ver otras opciones','Hablar con un asesor 👨‍💼']
+        : ['Pago de contado 💰','Opción PPA 📋','Suscripción mensual 📅','Hablar con un asesor 👨‍💼'];
+    },
+    next: a => {
+      if (a.includes('asesor') || a.includes('Hablar')) return 'contacto';
+      if (a.includes('contado'))     return 'contado';
+      if (a.includes('PPA') || a.includes('ppa') || a.includes('Quiero')) return 'ppa';
+      if (a.includes('Suscripción')) return 'suscripcion';
+      return 'otras';
+    },
+  },
+];
+
+// ═══════════════════════════════════════════════════
+// EXTRA BRANCHES
+// ═══════════════════════════════════════════════════
+const EXTRA = {
+  info: {
+    msgs: [`ℹ️ *¿Cómo funciona?*\n\nCon tu BYD, tu consumo eléctrico va a subir. Un sistema solar en tu techo:\n• Genera tu propia energía ☀️\n• Reduce la factura eléctrica\n• Puede cargar tu auto de forma gratuita\n• Opciones desde *$0 de inversión inicial*\n\n¿Arrancamos con las preguntas?`],
+    opts: ['Sí, empezamos ✅','Ahora no, gracias'],
+    next: a => a.includes('Sí') ? 1 : 'fin',
+  },
+  contado: {
+    msgs: s => {
+      const c = COMBOS[S.combo];
+      return [`💰 *Pago de contado*\n\nPrecio total: *${c.contado}*\nIncluye instalación + materiales + garantías.\n\nAhorro estimado: *${c.ahorro}/mes*\n⏱ Retorno de inversión: ~5–6 años\n\n¿Querés que te contactemos para coordinar?`];
+    },
+    opts: ['Sí, que me contacten ✅','Necesito pensarlo'],
+    next: a => a.includes('Sí') ? 'contacto' : 'pensar',
+  },
+  ppa: {
+    msgs: s => {
+      const c = COMBOS[S.combo];
+      return [`📋 *Contrato PPA*\n\n✅ Cero inversión inicial\n✅ Nosotros instalamos y mantenemos\n✅ Pagás solo *${c.ppa.split('/')[1].trim()}*\n✅ Contrato 15 años + opción de compra\n\n¿Querés que te contactemos para los detalles?`];
+    },
+    opts: ['Sí, que me contacten ✅','Necesito pensarlo'],
+    next: a => a.includes('Sí') ? 'contacto' : 'pensar',
+  },
+  suscripcion: {
+    msgs: s => {
+      const c = COMBOS[S.combo];
+      return [`📅 *Suscripción mensual*\n\nCuota: *${c.suscripcion}*\n\n• Sin cuota inicial\n• Mantenimiento preventivo incluido\n• Al mes 37, el sistema queda en tu propiedad ✅\n\n¿Querés que te contactemos?`];
+    },
+    opts: ['Sí, que me contacten ✅','Necesito pensarlo'],
+    next: a => a.includes('Sí') ? 'contacto' : 'pensar',
+  },
+  otras: {
+    msgs: [`Claro, estas son las 3 opciones:\n\n💰 *Contado* — un pago, mayor ahorro a largo plazo\n📋 *PPA* — $0 inversión, pagás por kWh consumido\n📅 *Suscripción* — cuota mensual, el sistema queda tuyo al final\n\n¿Cuál querés explorar?`],
+    opts: ['Contado 💰','PPA 📋','Suscripción 📅'],
+    next: a => a.includes('Contado') ? 'contado' : a.includes('PPA') ? 'ppa' : 'suscripcion',
+  },
+  contacto: {
+    msgs: s => [`📱 ¡Genial, *${s.nombre}*! ¿Cuál es tu número de celular para que te contactemos?`],
+    free: true,
+    next: a => { S.telefono = a.trim(); return 'guardar'; },
+  },
+  guardar: {
+    msgs: s => [
+      `✅ Perfecto. Ya registramos tus datos.\n\nUn asesor de *Nepos Energy* te va a contactar en las próximas *horas hábiles* para:\n📋 Confirmar tu combo recomendado\n📐 Agendar visita técnica sin costo\n📄 Preparar tu propuesta formal\n\n¡Gracias por tu interés, *${s.nombre}*! 🌱⚡`,
+      { type:'wa_btn' },
+    ],
+    opts: [],
+    next: () => 'fin',
+    onRender: () => saveToSheet(),
+  },
+  pensar: {
+    msgs: s => [`Sin problema, *${s.nombre}* 😊\n\nCuando quieras avanzar, podés escribirnos directamente por WhatsApp o volver a este chat.\n\n¡Que disfrutes tu BYD! 🚗⚡☀️`],
+    opts: [{ label:'Escribirnos por WhatsApp 💬', isWA: true }],
+    next: () => 'fin',
+  },
+  fin: {
+    msgs: [`_Podés cerrar esta ventana o reiniciar el chat._`],
+    opts: [],
+    next: () => 'fin',
+  },
+};
+
+// ═══════════════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════════════
+const chat = document.getElementById('chat');
+const typing = document.getElementById('typing');
+
+function scrollDown(){ setTimeout(()=>{ chat.scrollTop = chat.scrollHeight; }, 60); }
+
+function addBubble(text, dir='in'){
+  const row = document.createElement('div');
+  row.className = `row ${dir}`;
+  if(dir==='in'){
+    const av = document.createElement('div');
+    av.className='av'; av.textContent='NE';
+    row.appendChild(av);
+  }
+  const bub = document.createElement('div');
+  bub.className='bubble';
+  const html = text
+    .replace(/\*(.*?)\*/g,'<b>$1</b>')
+    .replace(/_(.*?)_/g,'<i style="color:var(--wa-sub);font-size:13px">$1</i>')
+    .replace(/\n/g,'<br>');
+  bub.innerHTML = html +
+    `<div class="meta"><span class="t">${now()}</span>${dir==='out'?'<span class="tick">✓✓</span>':''}</div>`;
+  row.appendChild(bub);
+  chat.appendChild(row);
+  scrollDown();
+}
+
+function addCard(combo, isPpa){
+  const wrap = document.createElement('div');
+  wrap.className='card';
+  const badge=`<span class="card-badge ${combo.badge}">${combo.badgeText}</span>`;
+  const specs = combo.specs.map(s=>`<div class="spec"><span class="si">${s.i}</span><span>${s.t}</span></div>`).join('');
+  const prices = isPpa
+    ? [
+        {l:'📋 PPA (recomendado)', v:combo.ppa, hi:true},
+        {l:'💰 Contado',           v:combo.contado},
+        {l:'📅 Suscripción',       v:combo.suscripcion},
+        {l:'💚 Ahorro estimado',   v:combo.ahorro+'/mes'},
+      ]
+    : [
+        {l:'💰 Contado',           v:combo.contado, hi:true},
+        {l:'📋 PPA',               v:combo.ppa},
+        {l:'📅 Suscripción',       v:combo.suscripcion},
+        {l:'💚 Ahorro estimado',   v:combo.ahorro+'/mes'},
+      ];
+  const phtml = prices.map(p=>`
+    <div class="price-row">
+      <span class="price-label">${p.l}</span>
+      <span class="price-val ${p.hi?'highlight':''}">${p.v}</span>
+    </div>`).join('');
+  wrap.innerHTML = `${badge}<h3>${combo.nombre}</h3><div class="csub">${combo.sub}</div>
+    <div class="specs">${specs}</div>
+    <div class="divider"></div>${phtml}
+    <div class="card-meta"><span class="t">${now()}</span></div>`;
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function addWaBtn(){
+  const wrap = document.createElement('div');
+  wrap.className='row in'; wrap.style.marginLeft='33px';
+  const link = document.createElement('a');
+  link.className='wa-btn';
+  link.href=`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+  link.target='_blank';
+  link.innerHTML=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Continuar por WhatsApp`;
+  wrap.appendChild(link);
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function addOptions(opts, onPick){
+  if(!opts || opts.length===0) return;
+  const wrap = document.createElement('div');
+  wrap.className='qr-wrap';
+  opts.forEach(o=>{
+    const label = typeof o === 'string' ? o : o.label;
+    const isWA  = typeof o === 'object' && o.isWA;
+    const btn   = document.createElement(isWA ? 'a' : 'button');
+    btn.className='qr';
+    btn.textContent=label;
+    if(isWA){
+      btn.href=`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+      btn.target='_blank';
+      btn.style.textDecoration='none';
+    } else {
+      btn.onclick = ()=>{
+        wrap.querySelectorAll('button,a').forEach(b=>b.disabled=true);
+        addBubble(label,'out');
+        onPick(label);
+      };
+    }
+    wrap.appendChild(btn);
+  });
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function showTyping(cb, delay=1100){
+  typing.classList.add('show'); scrollDown();
+  setTimeout(()=>{ typing.classList.remove('show'); cb(); }, delay);
+}
+
+// ═══════════════════════════════════════════════════
+// FLOW ENGINE
+// ═══════════════════════════════════════════════════
+let currentStepKey = 0;
+
+function runStep(key){
+  currentStepKey = key;
+  const step = typeof key === 'number' ? STEPS[key] : EXTRA[key];
+  if(!step) return;
+
+  if(step.onRender) step.onRender();
+
+  const rawMsgs = typeof step.msgs === 'function' ? step.msgs(S) : step.msgs;
+  const rawOpts = typeof step.opts === 'function' ? step.opts(S) : step.opts;
+
+  let i=0;
+  function next(){
+    if(i >= rawMsgs.length){
+      addOptions(rawOpts, ans => {
+        const nk = step.next(ans);
+        setTimeout(()=>runStep(nk), 380);
+      });
+      return;
+    }
+    const m = rawMsgs[i++];
+    const delay = i===1 ? 950 : 650;
+    showTyping(()=>{
+      if(m && m.type==='combo')    addCard(m.combo, m.ppa);
+      else if(m && m.type==='wa_btn') addWaBtn();
+      else addBubble(m,'in');
+      setTimeout(next, 280);
+    }, delay);
+  }
+  next();
+}
+
+// ─── FREE TEXT input ───────────────────────────────
+function handleFree(val){
+  const step = typeof currentStepKey==='number' ? STEPS[currentStepKey] : EXTRA[currentStepKey];
+  if(!step || !step.free) return;
+  addBubble(val,'out');
+  const nk = step.next(val);
+  setTimeout(()=>runStep(nk), 380);
+}
+
+document.getElementById('sendBtn').onclick = ()=>{
+  const v = document.getElementById('inp').value.trim();
+  if(!v) return;
+  document.getElementById('inp').value='';
+  handleFree(v);
+};
+document.getElementById('inp').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('sendBtn').click();
+});
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS — Apps Script Web App
+// ═══════════════════════════════════════════════════
+async function saveToSheet(){
+  // URL del Apps Script Web App — reemplazá con tu URL desplegada
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhaVTRfbgYJKZ9ZHgxQh0OVBnz7gNmZKNqF8oGxMbJ2ZYsT4fOOW7mKbKy1nO0CtxP/exec';
+
+  const payload = {
+    timestamp:     new Date().toISOString(),
+    nombre:        S.nombre,
+    telefono:      S.telefono,
+    familia:       S.familia,
+    consumo_kwh:   S.consumo,
+    gasolina_usd:  S.gasolina,
+    vivienda:      S.vivienda,
+    combo:         S.combo,
+    plan:          S.plan || 'consulta_asesor',
+    concesionaria: S.concesionaria,
+  };
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    showToast();
+  } catch(e){
+    console.warn('Sheet save failed:', e);
+  }
+}
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+setTimeout(()=>runStep(0), 400);
+</script>
+</body>
+</html>
