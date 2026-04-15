@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nepos Agent — CRM Conversacional</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --azul: #3E5A8B;
+    --azul-dark: #2d4270;
+    --azul-light: #5a7ab5;
+    --amarillo: #FFD931;
+    --amarillo-dark: #e6c200;
+    --bg: #0f1520;
+    --bg2: #161e2e;
+    --bg3: #1e2a40;
+    --border: #2a3a55;
+    --text: #e8edf5;
+    --text2: #8a9bbf;
+    --text3: #5a6a8a;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--amarillo);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo-text strong {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+
+  .logo-text span {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-badge {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-title {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .quick-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 3px;
+    border: 1px solid transparent;
+  }
+
+  .quick-action:hover {
+    background: var(--bg3);
+    border-color: var(--border);
+  }
+
+  .quick-action.active {
+    background: rgba(62, 90, 139, 0.2);
+    border-color: var(--azul);
+  }
+
+  .qa-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .qa-icon.amarillo { background: rgba(255, 217, 49, 0.15); }
+  .qa-icon.azul { background: rgba(62, 90, 139, 0.2); }
+  .qa-icon.verde { background: rgba(46, 204, 113, 0.15); }
+  .qa-icon.naranja { background: rgba(255, 153, 0, 0.15); }
+
+  .qa-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.3;
+  }
+
+  /* CONTEXT PANEL */
+  .context-panel {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .context-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  .context-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  .context-value {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .context-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .stage-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    margin-top: 4px;
+  }
+
+  .stage-pill.nuevo { background: rgba(138, 155, 191, 0.15); color: var(--text2); }
+  .stage-pill.requerimientos { background: rgba(255, 153, 0, 0.15); color: #ff9900; }
+  .stage-pill.cotizacion { background: rgba(62, 90, 139, 0.2); color: var(--azul-light); }
+  .stage-pill.aprobado { background: rgba(46, 204, 113, 0.15); color: var(--success); }
+
+  /* CHAT AREA */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* MESSAGES */
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 760px;
+    animation: msgIn 0.2s ease-out;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    margin-top: 2px;
+  }
+
+  .msg.agent .msg-avatar { background: var(--azul); }
+  .msg.user .msg-avatar { background: var(--amarillo); }
+
+  .msg-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 600px;
+  }
+
+  .msg.user .msg-bubble {
+    background: rgba(62, 90, 139, 0.25);
+    border-color: var(--azul);
+    color: var(--text);
+  }
+
+  .msg-bubble strong { color: var(--amarillo); font-weight: 600; }
+  .msg-bubble code {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--azul-light);
+  }
+
+  /* DATA CARDS dentro del chat */
+  .data-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .data-card-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-row:last-child { border-bottom: none; }
+  .data-key { color: var(--text3); font-size: 12px; }
+  .data-val { color: var(--text); font-size: 12px; font-weight: 500; }
+
+  /* OPTIONS */
+  .options-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .option-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .option-btn:hover {
+    background: rgba(62, 90, 139, 0.2);
+    border-color: var(--azul);
+    color: var(--text);
+  }
+
+  .option-btn.selected {
+    background: var(--azul);
+    border-color: var(--azul);
+    color: white;
+  }
+
+  /* TYPING */
+  .typing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 16px;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    background: var(--text3);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* INPUT AREA */
+  .input-area {
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    transition: border-color 0.15s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: var(--azul);
+  }
+
+  #userInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    resize: none;
+    max-height: 120px;
+    line-height: 1.5;
+  }
+
+  #userInput::placeholder { color: var(--text3); }
+
+  .send-btn {
+    width: 34px;
+    height: 34px;
+    background: var(--azul);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    color: white;
+    font-size: 16px;
+  }
+
+  .send-btn:hover { background: var(--azul-light); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .input-hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 8px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* WELCOME */
+  .welcome {
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 500px;
+    margin: auto;
+  }
+
+  .welcome-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--amarillo);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+  }
+
+  .welcome h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .welcome p {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .welcome-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .welcome-btn:hover {
+    background: rgba(62, 90, 139, 0.2);
+    border-color: var(--azul);
+    color: var(--text);
+  }
+
+  /* SCROLLBAR */
+  .sidebar::-webkit-scrollbar,
+  .context-panel::-webkit-scrollbar { width: 3px; }
+  .sidebar::-webkit-scrollbar-thumb,
+  .context-panel::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☀️</div>
+    <div class="logo-text">
+      <strong>Nepos Agent</strong>
+      <span>CRM CONVERSACIONAL v1.0</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      CONECTADO
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Acciones rápidas</div>
+      <div class="quick-action" onclick="quickAction('nuevo lead')">
+        <div class="qa-icon amarillo">➕</div>
+        <div class="qa-text">Nuevo lead</div>
+      </div>
+      <div class="quick-action" onclick="quickAction('buscar')">
+        <div class="qa-icon azul">🔍</div>
+        <div class="qa-text">Buscar cliente</div>
+      </div>
+      <div class="quick-action" onclick="quickAction('pendientes')">
+        <div class="qa-icon naranja">⏳</div>
+        <div class="qa-text">Ver pendientes</div>
+      </div>
+      <div class="quick-action" onclick="quickAction('cargar requerimientos')">
+        <div class="qa-icon verde">📋</div>
+        <div class="qa-text">Cargar requerimientos</div>
+      </div>
+    </div>
+
+    <div class="context-panel" id="contextPanel">
+      <div class="sidebar-title">Contexto activo</div>
+      <div id="contextContent">
+        <div style="color: var(--text3); font-size: 12px; text-align: center; padding: 20px 0;">
+          Sin contexto activo
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="welcome">
+        <div class="welcome-icon">☀️</div>
+        <h2>Hola, soy el Agente Nepos</h2>
+        <p>Puedo ayudarte a gestionar leads, proyectos y requerimientos técnicos del CRM. ¿Por dónde empezamos?</p>
+        <div class="welcome-actions">
+          <button class="welcome-btn" onclick="quickAction('nuevo lead')">➕ Nuevo lead</button>
+          <button class="welcome-btn" onclick="quickAction('buscar cliente')">🔍 Buscar cliente</button>
+          <button class="welcome-btn" onclick="quickAction('ver pendientes')">⏳ Ver pendientes</button>
+          <button class="welcome-btn" onclick="quickAction('cargar requerimientos')">📋 Cargar requerimientos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea id="userInput" placeholder="Escribí tu mensaje..." rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIG — reemplazá con tu URL del Apps Script Web App
+// ============================================================
+const BACKEND_URL = https://script.google.com/macros/s/AKfycbwoujBfEx_Scwz02HvqTNcFSDl--yBVxG549Dv-qKYb-yaQteDBNmVMjDyasSnhdfhOlg/exec;
+const CLAUDE_API_KEY = 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;
+
+// ============================================================
+// ESTADO DE LA CONVERSACIÓN
+// ============================================================
+let conversationHistory = [];
+let currentContext = {
+  leadActivo: null,
+  proyectoActivo: null,
+  flujoActivo: null,
+  datosEnCurso: {}
+};
+
+// ============================================================
+// SISTEMA PROMPT DEL AGENTE
+// ============================================================
+const SYSTEM_PROMPT = `Sos el Agente CRM de Nepos Energy, una empresa de energía solar y electrolineras en Ecuador.
+
+Tu rol es ayudar al equipo comercial e ingeniería a gestionar leads, proyectos y requerimientos técnicos de forma conversacional.
+
+CAPACIDADES:
+- Crear y buscar leads
+- Convertir leads a proyectos
+- Cargar requerimientos técnicos
+- Actualizar datos existentes
+- Mostrar pendientes y resúmenes
+
+ENUMS Y OPCIONES VÁLIDAS:
+Origen: Comercial, Web, QR Concesionaria, Redes Sociales, Referido, Otro
+Comercial asignado: Daniel (daniel@neposenergy.com), Juan Carlos (jc.barragan@neposenergy.com), Mariano (melmiger@neposenergy.com)
+Tipo cliente: Residencial, Comercial, Industrial
+Como nos conoció: Redes Sociales, Publicidad, Referido, Web, Otro
+Tipo producto: Solar consumo, Híbrido, Electrolinera residencial, Electrolinera comercial, PPA
+Tipo vivienda: Casa, PH, Departamento, Local, Galpón, Fábrica, Estación de carga
+Objetivo cobertura: 100% consumo, Reducir factura, Solo backup, Solo carga VE, Híbrido
+Conexión red: On grid, Off grid, Híbrido
+Tipo techo: Losa, Chapa, Teja
+Orientación: Norte, Sur, Este, Oeste
+Urgencia: Inmediata <1mes, Normal 1 a 3 meses, Sin urgencia >3 meses
+Requiere backup: Sí, No
+Tiene parking: Sí, No
+
+CAMPOS OBLIGATORIOS:
+Lead: nombre_contacto, email
+Proyecto: nombre_proyecto, tipo_producto
+Requerimientos según tipo:
+  - Todos: consumo_kwh_mensual, tipo_vivienda_local, conexion_red, objetivo_cobertura
+  - Solar/Híbrido: + metros_disponibles_m2, tipo_techo, orientacion, tiene_espacio_paneles
+  - Solo Híbrido: + requiere_bateria_backup
+  - Electrolinera: + cantidad_vehiculos_electricos, tiene_parking, modelo_vehiculos
+
+REGLAS DE COMPORTAMIENTO:
+1. Pedí los datos de a uno o de a dos — no hagas preguntas largas
+2. Cuando tengas suficientes datos, ejecutá la acción con la función correspondiente
+3. Confirmá siempre antes de crear o modificar datos: "¿Confirmo que creo el lead para [nombre]?"
+4. Si el usuario dice un nombre, buscalo primero antes de crear uno nuevo
+5. Cuando encontrés múltiples resultados, mostrá las opciones y pedí que confirme cuál es
+6. Usá los campos del contexto activo cuando estén disponibles — no volvás a pedirlos
+7. Sé conciso y directo — el equipo comercial necesita velocidad
+8. Respondé siempre en español
+
+FUNCIONES DISPONIBLES (usás estas para ejecutar acciones en el CRM):
+- crearLead(data) — crea un nuevo lead
+- buscarLead(query) — busca leads por nombre, empresa o email
+- convertirAProyecto(leadId, data) — convierte un lead en proyecto
+- crearRequerimientos(proyectoId, data) — carga requerimientos técnicos
+- actualizarLead(leadId, data) — actualiza campos de un lead
+- actualizarProyecto(proyectoId, data) — actualiza campos de un proyecto
+- obtenerResumen(id, tipo) — obtiene resumen de un lead o proyecto
+- listarPendientes(comercial) — lista pendientes del comercial
+
+Cuando necesités ejecutar una función, respondé con un JSON en este formato exacto al final de tu mensaje:
+<ACTION>{"function": "nombreFuncion", "params": {...}}</ACTION>
+
+Por ejemplo:
+<ACTION>{"function": "crearLead", "params": {"data": {"nombre_contacto": "María González", "email": "maria@empresa.com", "origen": "Web", "tipo_cliente": "Residencial"}}}</ACTION>`;
+
+// ============================================================
+// ENVIAR MENSAJE
+// ============================================================
+async function sendMessage(text) {
+  const input = document.getElementById('userInput');
+  const message = text || input.value.trim();
+  if (!message) return;
+
+  if (!text) {
+    input.value = '';
+    input.style.height = 'auto';
+  }
+
+  // Mostrar mensaje del usuario
+  appendMessage('user', message);
+  conversationHistory.push({ role: 'user', content: message });
+
+  // Mostrar typing
+  const typingId = showTyping();
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const response = await callClaude(message);
+    hideTyping(typingId);
+    await processResponse(response);
+  } catch (err) {
+    hideTyping(typingId);
+    appendMessage('agent', '❌ Error de conexión. Verificá tu API key y la URL del backend.');
+    console.error(err);
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// ============================================================
+// LLAMAR A CLAUDE
+// ============================================================
+async function callClaude(userMessage) {
+  const contextMessage = buildContextMessage();
+
+  const messages = contextMessage
+    ? [{ role: 'user', content: contextMessage }, { role: 'assistant', content: 'Entendido, tengo el contexto activo.' }, ...conversationHistory]
+    : conversationHistory;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: messages
+    })
+  });
+
+  if (!response.ok) throw new Error('Error en API Claude: ' + response.status);
+  const data = await response.json();
+  return data.content[0].text;
+}
+
+// ============================================================
+// PROCESAR RESPUESTA
+// ============================================================
+async function processResponse(response) {
+  // Extraer acciones si las hay
+  const actionMatch = response.match(/<ACTION>(.*?)<\/ACTION>/s);
+  const displayText = response.replace(/<ACTION>.*?<\/ACTION>/s, '').trim();
+
+  // Mostrar texto de respuesta
+  if (displayText) {
+    appendMessage('agent', displayText);
+    conversationHistory.push({ role: 'assistant', content: displayText });
+  }
+
+  // Ejecutar acción si existe
+  if (actionMatch) {
+    try {
+      const action = JSON.parse(actionMatch[1]);
+      await executeAction(action);
+    } catch (err) {
+      console.error('Error parseando acción:', err);
+    }
+  }
+}
+
+// ============================================================
+// EJECUTAR ACCIÓN EN EL BACKEND
+// ============================================================
+async function executeAction(action) {
+  showSystemMessage('⚙️ Ejecutando en CRM...');
+
+  try {
+    const payload = { action: action.function, ...action.params };
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (result.error) {
+      showSystemMessage('❌ ' + result.error);
+      conversationHistory.push({
+        role: 'user',
+        content: 'Error del sistema: ' + result.error
+      });
+    } else {
+      // Actualizar contexto según la acción
+      updateContext(action.function, result, action.params);
+
+      // Notificar a Claude del resultado
+      const successMsg = buildSuccessMessage(action.function, result);
+      conversationHistory.push({ role: 'user', content: successMsg });
+
+      // Obtener respuesta de confirmación de Claude
+      const confirmation = await callClaude(successMsg);
+      const cleanConfirmation = confirmation.replace(/<ACTION>.*?<\/ACTION>/s, '').trim();
+      if (cleanConfirmation) {
+        appendMessage('agent', cleanConfirmation);
+        conversationHistory.push({ role: 'assistant', content: cleanConfirmation });
+      }
+    }
+  } catch (err) {
+    showSystemMessage('❌ Error conectando al backend. Verificá la URL del Apps Script.');
+    console.error(err);
+  }
+}
+
+// ============================================================
+// CONTEXTO
+// ============================================================
+function buildContextMessage() {
+  if (!currentContext.leadActivo && !currentContext.proyectoActivo) return null;
+  let ctx = 'CONTEXTO ACTIVO DEL CRM:\n';
+  if (currentContext.leadActivo) {
+    ctx += `Lead activo: ${JSON.stringify(currentContext.leadActivo)}\n`;
+  }
+  if (currentContext.proyectoActivo) {
+    ctx += `Proyecto activo: ${JSON.stringify(currentContext.proyectoActivo)}\n`;
+  }
+  return ctx;
+}
+
+function updateContext(functionName, result, params) {
+  if (functionName === 'crearLead' && result.lead_id) {
+    currentContext.leadActivo = { lead_id: result.lead_id, ...params.data };
+    updateSidebarContext();
+  }
+  if (functionName === 'buscarLead' && result.resultados?.length === 1) {
+    currentContext.leadActivo = result.resultados[0];
+    updateSidebarContext();
+  }
+  if (functionName === 'convertirAProyecto' && result.proyecto_id) {
+    currentContext.proyectoActivo = { proyecto_id: result.proyecto_id, ...params.data };
+    updateSidebarContext();
+  }
+  if (functionName === 'buscarProyecto' && result.resultados?.length === 1) {
+    currentContext.proyectoActivo = result.resultados[0];
+    updateSidebarContext();
+  }
+}
+
+function updateSidebarContext() {
+  const panel = document.getElementById('contextContent');
+  let html = '';
+
+  if (currentContext.leadActivo) {
+    const l = currentContext.leadActivo;
+    html += `
+      <div class="context-card">
+        <div class="context-label">Lead activo</div>
+        <div class="context-value">${l.nombre_contacto || '—'}</div>
+        <div class="context-sub">${l.empresa || ''} ${l.email ? '· ' + l.email : ''}</div>
+        ${l.estado_lead ? `<div class="stage-pill nuevo">${l.estado_lead}</div>` : ''}
+      </div>`;
+  }
+
+  if (currentContext.proyectoActivo) {
+    const p = currentContext.proyectoActivo;
+    html += `
+      <div class="context-card">
+        <div class="context-label">Proyecto activo</div>
+        <div class="context-value">${p.nombre_proyecto || '—'}</div>
+        <div class="context-sub">${p.tipo_producto || ''}</div>
+        ${p.etapa_pipeline ? `<div class="stage-pill requerimientos">${p.etapa_pipeline}</div>` : ''}
+      </div>`;
+  }
+
+  if (!html) html = '<div style="color: var(--text3); font-size: 12px; text-align: center; padding: 20px 0;">Sin contexto activo</div>';
+  panel.innerHTML = html;
+}
+
+function buildSuccessMessage(functionName, result) {
+  const messages = {
+    crearLead: `Lead creado exitosamente con ID: ${result.lead_id}`,
+    buscarLead: `Resultados de búsqueda: ${JSON.stringify(result.resultados)}`,
+    convertirAProyecto: `Proyecto creado exitosamente con ID: ${result.proyecto_id}`,
+    crearRequerimientos: `Requerimientos guardados con ID: ${result.req_id}`,
+    actualizarLead: `Lead actualizado correctamente`,
+    actualizarProyecto: `Proyecto actualizado correctamente`,
+    obtenerResumen: `Datos obtenidos: ${JSON.stringify(result)}`,
+    listarPendientes: `Pendientes: ${JSON.stringify(result)}`
+  };
+  return messages[functionName] || `Operación completada: ${JSON.stringify(result)}`;
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function appendMessage(role, text) {
+  const messages = document.getElementById('messages');
+
+  // Remover welcome si existe
+  const welcome = messages.querySelector('.welcome');
+  if (welcome) welcome.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const avatar = role === 'agent' ? '☀️' : '👤';
+  const formattedText = formatText(text);
+
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${formattedText}</div>
+  `;
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function showTyping() {
+  const messages = document.getElementById('messages');
+  const id = 'typing-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'msg agent';
+  div.id = id;
+  div.innerHTML = `
+    <div class="msg-avatar">☀️</div>
+    <div class="msg-bubble">
+      <div class="typing"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return id;
+}
+
+function hideTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function showSystemMessage(text) {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.style.cssText = 'text-align: center; font-size: 11px; color: var(--text3); font-family: DM Mono, monospace; padding: 4px 0;';
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function quickAction(text) {
+  const input = document.getElementById('userInput');
+  input.value = text;
+  sendMessage(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+</script>
+
+</body>
+</html>
