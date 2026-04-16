@@ -1,1 +1,762 @@
-hola
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nepos Energy — Feria de Movilidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:       #080f0c;
+  --panel:    #0e1a15;
+  --header:   #132018;
+  --in:       #172310;
+  --out:      #003d2e;
+  --input-bg: #1a2e22;
+  --text:     #e8f0eb;
+  --sub:      #6b8f78;
+  --green:    #00c98d;
+  --green2:   #00f5aa;
+  --gold:     #f0c040;
+  --orange:   #ff8c42;
+  --blue:     #4eb5ff;
+  --red:      #ff5f6d;
+  --radius:   9px;
+}
+
+html,body{
+  height:100%; background:var(--bg);
+  font-family:'Outfit',sans-serif;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:16px;
+}
+
+/* ── PHONE ── */
+.phone{
+  width:400px; max-width:100%;
+  height:min(840px,96vh);
+  background:var(--panel);
+  border-radius:28px; overflow:hidden;
+  display:flex; flex-direction:column;
+  box-shadow:
+    0 0 0 1px rgba(0,201,141,.12),
+    0 40px 100px rgba(0,0,0,.85),
+    0 0 120px rgba(0,201,141,.04);
+}
+
+/* ── HEADER ── */
+.header{
+  background:var(--header);
+  padding:11px 14px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid rgba(0,201,141,.08);
+  flex-shrink:0;
+}
+.back{color:var(--sub);font-size:22px;line-height:1;cursor:pointer;}
+.avatar{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green2),var(--green),#007a62);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:13px;
+  color:#fff;letter-spacing:-.5px;
+  box-shadow:0 0 0 2px rgba(0,201,141,.3);
+}
+.hinfo{flex:1;min-width:0;}
+.hname{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;
+  color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hstatus{font-size:11.5px;color:var(--green);margin-top:1px;}
+.hicons{display:flex;gap:18px;color:var(--sub);font-size:19px;cursor:pointer;}
+
+/* ── CHAT ── */
+.chat{
+  flex:1;overflow-y:auto;padding:10px 10px 6px;
+  display:flex;flex-direction:column;gap:3px;
+  background-image:radial-gradient(circle at 20% 50%, rgba(0,201,141,.03) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(0,245,170,.02) 0%, transparent 50%);
+}
+.chat::-webkit-scrollbar{width:3px;}
+.chat::-webkit-scrollbar-thumb{background:rgba(0,201,141,.15);border-radius:4px;}
+
+.date-chip{text-align:center;margin:6px 0 10px;}
+.date-chip span{
+  background:rgba(14,26,21,.9);color:var(--sub);
+  font-size:11px;padding:4px 12px;border-radius:7px;
+}
+
+/* ── BUBBLES ── */
+.row{display:flex;align-items:flex-end;gap:5px;}
+.row.out{flex-direction:row-reverse;}
+.av{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green2),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;font-family:'Outfit',sans-serif;
+}
+.bubble{
+  max-width:78%;padding:8px 12px 6px;
+  border-radius:var(--radius);
+  font-size:14px;line-height:1.48;color:var(--text);
+  position:relative;word-break:break-word;
+}
+.row.in  .bubble{background:var(--in); border-top-left-radius:2px;}
+.row.out .bubble{background:var(--out);border-top-right-radius:2px;}
+.bubble b{font-weight:600;color:var(--green2);}
+.meta{display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:3px;}
+.meta .t{font-size:10.5px;color:rgba(255,255,255,.3);}
+.meta .tick{font-size:12px;color:var(--blue);}
+
+/* ── TYPING ── */
+.typing{
+  display:none;align-items:center;gap:4px;
+  background:var(--in);padding:10px 14px;
+  border-radius:var(--radius);border-top-left-radius:2px;
+  width:fit-content;margin-left:33px;
+}
+.typing.show{display:flex;}
+.dot{width:7px;height:7px;background:var(--sub);border-radius:50%;animation:bop .9s infinite;}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.30s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ── QUICK REPLIES ── */
+.qr-wrap{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 4px 33px;}
+.qr{
+  border:1.5px solid var(--green);color:var(--green);
+  background:transparent;padding:6px 14px;border-radius:20px;
+  font-size:13px;font-family:'Outfit',sans-serif;
+  cursor:pointer;transition:all .18s;font-weight:500;
+}
+.qr:hover{background:var(--green);color:#fff;}
+.qr:disabled{opacity:.35;cursor:default;pointer-events:none;}
+
+/* ── SYSTEM CARD ── */
+.card{
+  background:linear-gradient(145deg,#0f2018,#091510);
+  border:1px solid rgba(0,201,141,.2);
+  border-radius:12px;padding:14px;
+  width:100%;max-width:78%;margin-left:33px;
+}
+.card-badge{
+  display:inline-block;padding:2px 9px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:8px;
+  font-family:'Outfit',sans-serif;
+}
+.bg-green  {background:rgba(0,201,141,.15);color:var(--green);  border:1px solid rgba(0,201,141,.3);}
+.bg-gold   {background:rgba(240,192,64,.12); color:var(--gold);   border:1px solid rgba(240,192,64,.28);}
+.bg-orange {background:rgba(255,140,66,.12); color:var(--orange); border:1px solid rgba(255,140,66,.28);}
+.bg-blue   {background:rgba(78,181,255,.12); color:var(--blue);   border:1px solid rgba(78,181,255,.28);}
+.card h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;color:var(--text);}
+.card .csub{font-size:11.5px;color:var(--sub);margin-bottom:10px;}
+.specs{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.spec{display:flex;gap:7px;font-size:12.5px;color:#9bbfac;align-items:flex-start;}
+.spec .si{flex-shrink:0;width:18px;}
+.divider{height:1px;background:rgba(255,255,255,.05);margin:10px 0;}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px;}
+.price-label{color:var(--sub);}
+.price-val{color:var(--text);font-weight:600;}
+.price-val.hi{color:var(--green2);font-size:15px;}
+.price-note{font-size:10.5px;color:var(--sub);font-style:italic;margin-top:8px;}
+.card-meta{display:flex;justify-content:flex-end;margin-top:8px;}
+.card-meta .t{font-size:10px;color:rgba(255,255,255,.25);}
+
+/* ── CHARGER SECTION ── */
+.charger-section{margin-top:10px;}
+.charger-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:8px;}
+.charger-row{
+  background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px;
+  margin-bottom:6px;border-left:3px solid var(--green);
+}
+.charger-row.semi{border-left-color:var(--gold);}
+.charger-row.fast{border-left-color:var(--orange);}
+.charger-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.charger-detail{font-size:11.5px;color:var(--sub);}
+
+/* ── WA BUTTON ── */
+.wa-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:#25d366;color:#fff;border:none;border-radius:10px;
+  padding:11px 18px;font-size:14px;font-weight:600;
+  font-family:'Outfit',sans-serif;cursor:pointer;
+  text-decoration:none;transition:background .18s,transform .12s;
+  margin-top:6px;width:100%;
+}
+.wa-btn:hover{background:#1ebe5c;transform:scale(1.01);}
+.wa-btn svg{width:20px;height:20px;fill:#fff;flex-shrink:0;}
+
+/* ── INPUT BAR ── */
+.bar{
+  background:var(--header);padding:8px 10px;
+  display:flex;align-items:center;gap:8px;
+  border-top:1px solid rgba(0,201,141,.06);flex-shrink:0;
+}
+.bar input{
+  flex:1;background:var(--input-bg);border:none;outline:none;
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;
+  padding:9px 15px;border-radius:22px;
+}
+.bar input::placeholder{color:var(--sub);}
+.send{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--green);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:17px;flex-shrink:0;transition:background .18s;
+}
+.send:hover{background:var(--green2);}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#132018;border:1px solid rgba(0,201,141,.3);
+  color:var(--green);font-size:13px;padding:9px 18px;
+  border-radius:24px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:440px){
+  html,body{padding:0;}
+  .phone{border-radius:0;height:100vh;width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="header">
+    <span class="back">‹</span>
+    <div class="avatar">NE</div>
+    <div class="hinfo">
+      <div class="hname">Nepos Energy</div>
+      <div class="hstatus">● en línea — Feria de Movilidad 2026</div>
+    </div>
+    <div class="hicons"><span>⬡</span><span>✆</span><span>⋮</span></div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="date-chip"><span>Hoy</span></div>
+  </div>
+
+  <div style="padding:0 10px 4px">
+    <div class="typing" id="typing">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span style="font-size:22px;color:var(--sub);cursor:pointer">☺</span>
+    <input id="inp" type="text" placeholder="Escribe un mensaje…" autocomplete="off"/>
+    <button class="send" id="sendBtn">➤</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Datos guardados — ¡Nos contactamos pronto!</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhaVTRfbgYJKZ9ZHgxQh0OVBnz7gNmZKNqF8oGxMbJ2ZYsT4fOOW7mKbKy1nO0CtxP/exec';
+const WA_NUMBER  = '593983358832';
+const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, los conocí en la Feria de Movilidad y me interesa saber más sobre energía solar.');
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  flujo: '',        // 'ev_hogar' | 'solar_puro' | 'empresa'
+  nombre: '',
+  email: '',
+  telefono: '',
+  consumo: 0,
+  gasolina: 0,
+  vivienda: '',
+  n_vehiculos: 0,
+  tipo_carga: '',
+  combo: null,
+  origen: 'Feria Movilidad 2026',
+};
+
+const now = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+
+// ═══════════════════════════════════════════
+// SISTEMAS SOLARES
+// ═══════════════════════════════════════════
+const SISTEMAS = [
+  { key:'s3',   kwp:3,   contado:'$3.617',   ahorro:'~$40/mes'  },
+  { key:'s7',   kwp:7,   contado:'$5.564',   ahorro:'~$70/mes'  },
+  { key:'s10',  kwp:10,  contado:'$7.810',   ahorro:'~$110/mes' },
+  { key:'s15',  kwp:15,  contado:'$13.213',  ahorro:'~$170/mes' },
+  { key:'s30',  kwp:30,  contado:'$22.049',  ahorro:'~$340/mes' },
+  { key:'s50',  kwp:50,  contado:'$36.750',  ahorro:'~$560/mes' },
+  { key:'s100', kwp:100, contado:'$73.500',  ahorro:'~$1.100/mes'},
+  { key:'s200', kwp:200, contado:'$147.000', ahorro:'~$2.200/mes'},
+];
+
+// kWh por kWp instalado (factor de producción Ecuador ~120 kWh/kWp/mes)
+const KWH_PER_KWP = 120;
+
+function recomendarSistema(kwh_total) {
+  for (const s of SISTEMAS) {
+    if (s.kwp * KWH_PER_KWP >= kwh_total) return s;
+  }
+  return SISTEMAS[SISTEMAS.length - 1];
+}
+
+// ═══════════════════════════════════════════
+// CARGADORES
+// ═══════════════════════════════════════════
+const CARGADORES = {
+  lento: {
+    nombre: '🌙 Carga Lenta (AC Nivel 1)',
+    potencia: '3.7 kW',
+    tiempo: '8–12 horas',
+    precio: '~$1.000',
+    ideal: 'Carga nocturna en casa',
+    cls: '',
+  },
+  semirrapido: {
+    nombre: '⚡ Carga Semi-rápida (AC Nivel 2)',
+    potencia: '7–22 kW',
+    tiempo: '2–4 horas',
+    precio: '~$2.500',
+    ideal: 'Uso diario, hogar o empresa',
+    cls: 'semi',
+  },
+  rapido: {
+    nombre: '🚀 Carga Rápida (DC)',
+    potencia: '50 kW+',
+    tiempo: '20–45 minutos',
+    precio: '~$25.000',
+    ideal: 'Flotas, estaciones públicas',
+    cls: 'fast',
+  },
+};
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+const chat = document.getElementById('chat');
+const typing = document.getElementById('typing');
+
+function scrollDown(){ setTimeout(()=>{ chat.scrollTop = chat.scrollHeight; }, 60); }
+
+function addBubble(text, dir='in'){
+  const row = document.createElement('div');
+  row.className = `row ${dir}`;
+  if(dir==='in'){
+    const av = document.createElement('div');
+    av.className='av'; av.textContent='NE';
+    row.appendChild(av);
+  }
+  const bub = document.createElement('div');
+  bub.className='bubble';
+  bub.innerHTML = text
+    .replace(/\*(.*?)\*/g,'<b>$1</b>')
+    .replace(/_(.*?)_/g,'<i style="color:var(--sub);font-size:13px">$1</i>')
+    .replace(/\n/g,'<br>') +
+    `<div class="meta"><span class="t">${now()}</span>${dir==='out'?'<span class="tick">✓✓</span>':''}</div>`;
+  row.appendChild(bub);
+  chat.appendChild(row);
+  scrollDown();
+}
+
+function addSistemaCard(sistema, kwh_total, flujo){
+  const wrap = document.createElement('div');
+  wrap.className='card';
+
+  const badge = sistema.kwp <= 15 ? {cls:'bg-green', txt:'Residencial'}
+              : sistema.kwp <= 50 ? {cls:'bg-gold',  txt:'Semi-industrial'}
+              : {cls:'bg-blue', txt:'Industrial'};
+
+  let specsHTML = `
+    <div class="spec"><span class="si">⚡</span><span>${sistema.kwp} kWp instalados</span></div>
+    <div class="spec"><span class="si">🔋</span><span>Genera ~${sistema.kwp * KWH_PER_KWP} kWh/mes</span></div>
+    <div class="spec"><span class="si">📐</span><span>Requiere ~${Math.round(sistema.kwp * 6)} m² de techo</span></div>
+    <div class="spec"><span class="si">🛡️</span><span>Garantía 25 años en paneles</span></div>`;
+
+  // Cargadores section for EV flows
+  let cargadoresHTML = '';
+  if(flujo === 'ev_hogar' || flujo === 'empresa'){
+    cargadoresHTML = `
+      <div class="charger-section">
+        <div class="charger-title">Opciones de carga EV</div>
+        ${Object.values(CARGADORES).map(c=>`
+          <div class="charger-row ${c.cls}">
+            <div class="charger-name">${c.nombre}</div>
+            <div class="charger-detail">${c.potencia} · ${c.tiempo} · <b style="color:var(--green)">${c.precio}*</b></div>
+            <div class="charger-detail" style="margin-top:2px;font-size:11px">${c.ideal}</div>
+          </div>`).join('')}
+        <div class="price-note">* Precios de cargadores son referenciales. Un asesor confirmará el valor exacto según tu instalación.</div>
+      </div>`;
+  }
+
+  wrap.innerHTML = `
+    <span class="card-badge ${badge.cls}">${badge.txt}</span>
+    <h3>☀️ SISTEMA SOLAR ${sistema.kwp} kWp</h3>
+    <div class="csub">Consumo estimado cubierto: ~${kwh_total} kWh/mes</div>
+    <div class="specs">${specsHTML}</div>
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">💰 Precio contado</span>
+      <span class="price-val hi">${sistema.contado}</span>
+    </div>
+    <div class="price-row">
+      <span class="price-label">💚 Ahorro estimado</span>
+      <span class="price-val">${sistema.ahorro}</span>
+    </div>
+    <div class="price-note">Financiamiento y contratos PPA disponibles — consultá con un asesor.</div>
+    ${cargadoresHTML}
+    <div class="card-meta"><span class="t">${now()}</span></div>`;
+
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function addWaBtn(){
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-left:33px;margin-right:8px;';
+  const link = document.createElement('a');
+  link.className='wa-btn';
+  link.href=`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+  link.target='_blank';
+  link.innerHTML=`<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Continuar por WhatsApp`;
+  wrap.appendChild(link);
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function addOptions(opts, onPick){
+  if(!opts || opts.length===0) return;
+  const wrap = document.createElement('div');
+  wrap.className='qr-wrap';
+  opts.forEach(o=>{
+    const label = typeof o==='string' ? o : o.label;
+    const isWA  = typeof o==='object' && o.isWA;
+    const btn   = document.createElement(isWA ? 'a' : 'button');
+    btn.className='qr'; btn.textContent=label;
+    if(isWA){
+      btn.href=`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+      btn.target='_blank'; btn.style.textDecoration='none';
+    } else {
+      btn.onclick = ()=>{
+        wrap.querySelectorAll('button,a').forEach(b=>b.disabled=true);
+        addBubble(label,'out');
+        onPick(label);
+      };
+    }
+    wrap.appendChild(btn);
+  });
+  chat.appendChild(wrap);
+  scrollDown();
+}
+
+function showTyping(cb, delay=1000){
+  typing.classList.add('show'); scrollDown();
+  setTimeout(()=>{ typing.classList.remove('show'); cb(); }, delay);
+}
+
+// ═══════════════════════════════════════════
+// FLOW ENGINE
+// ═══════════════════════════════════════════
+let currentKey = 0;
+
+function runStep(key){
+  currentKey = key;
+  const step = typeof key==='number' ? STEPS[key] : EXTRA[key];
+  if(!step) return;
+  if(step.onEnter) step.onEnter();
+
+  const rawMsgs = typeof step.msgs==='function' ? step.msgs(S) : step.msgs;
+  const rawOpts = typeof step.opts==='function' ? step.opts(S) : step.opts;
+
+  let i=0;
+  function next(){
+    if(i >= rawMsgs.length){
+      addOptions(rawOpts, ans => {
+        const nk = step.next(ans);
+        setTimeout(()=>runStep(nk), 380);
+      });
+      return;
+    }
+    const m = rawMsgs[i++];
+    showTyping(()=>{
+      if(m && m.type==='sistema')  addSistemaCard(m.sistema, m.kwh, m.flujo);
+      else if(m && m.type==='wa')  addWaBtn();
+      else addBubble(m,'in');
+      setTimeout(next, 280);
+    }, i===1 ? 950 : 650);
+  }
+  next();
+}
+
+function handleFree(val){
+  const step = typeof currentKey==='number' ? STEPS[currentKey] : EXTRA[currentKey];
+  if(!step || !step.free) return;
+  addBubble(val,'out');
+  const nk = step.next(val);
+  setTimeout(()=>runStep(nk), 380);
+}
+
+// ═══════════════════════════════════════════
+// STEPS — FLUJO PRINCIPAL
+// ═══════════════════════════════════════════
+const STEPS = [
+  // 0 — bienvenida
+  {
+    msgs: [`👋 ¡Hola! Soy el *agente inteligente* de *Nepos Energy*.\n\nGracias por visitarnos en la *Feria de Movilidad 2026* ☀️⚡\n\n¿Qué te trae por acá hoy?`],
+    opts: ['🚗 Tengo / voy a tener un EV', '☀️ Quiero reducir mi factura energética', '🏢 Soy empresa o tengo flota'],
+    next: a => {
+      if(a.includes('EV'))      { S.flujo='ev_hogar';  return 1; }
+      if(a.includes('factura')) { S.flujo='solar_puro'; return 1; }
+      S.flujo='empresa'; return 1;
+    },
+  },
+  // 1 — nombre
+  {
+    msgs: s => {
+      if(s.flujo==='ev_hogar')   return [`Genial 🚗⚡ ¿Cuál es tu nombre?`];
+      if(s.flujo==='solar_puro') return [`Perfecto ☀️ ¿Cuál es tu nombre?`];
+      return [`Excelente 🏢 ¿Con quién hablo y de qué empresa?`];
+    },
+    free: true,
+    next: a => { S.nombre = a.trim().split(' ')[0]; return 2; },
+  },
+  // 2 — consumo / empresa
+  {
+    msgs: s => {
+      if(s.flujo==='empresa') return [`Mucho gusto, *${s.nombre}* 😊\n\n¿Cuántos vehículos tiene la flota?`];
+      return [`Mucho gusto, *${s.nombre}* 😊\n\n💡 ¿Cuánto pagás aproximadamente en tu factura eléctrica mensual?`];
+    },
+    opts: s => s.flujo==='empresa'
+      ? ['1–5 vehículos','6–20 vehículos','21–50 vehículos','Más de 50']
+      : ['Menos de $40','$40–$70','$70–$100','Más de $100'],
+    next: a => {
+      if(S.flujo==='empresa'){
+        S.n_vehiculos = a.includes('1–5') ? 3 : a.includes('6–20') ? 13 : a.includes('21') ? 35 : 75;
+        return 'empresa_consumo';
+      }
+      S.consumo = a.includes('Menos') ? 40 : a.includes('$40') ? 70 : a.includes('$70') ? 100 : 200;
+      return S.flujo==='ev_hogar' ? 3 : 'solar_vivienda';
+    },
+  },
+  // 3 — gasolina (solo EV hogar)
+  {
+    msgs: [`⛽ ¿Cuánto gastás actualmente en gasolina al mes?\n\n_(esto nos ayuda a estimar cuánta energía necesitará tu EV)_`],
+    opts: ['Menos de $40','$40–$80','$80–$150','Más de $150'],
+    next: a => {
+      S.gasolina = a.includes('Menos') ? 30 : a.includes('$40') ? 60 : a.includes('$80') ? 110 : 200;
+      return 4;
+    },
+  },
+  // 4 — vivienda (EV hogar)
+  {
+    msgs: [`🏠 ¿Cuál es tu tipo de vivienda?`],
+    opts: ['Casa propia con techo','Casa arrendada','Departamento','Negocio / Local'],
+    next: a => { S.vivienda = a; return 'oferta_ev'; },
+  },
+];
+
+// ═══════════════════════════════════════════
+// EXTRA BRANCHES
+// ═══════════════════════════════════════════
+const EXTRA = {
+
+  // ── SOLAR PURO ──
+  solar_vivienda: {
+    msgs: [`🏠 ¿La instalación es para tu hogar o negocio?`],
+    opts: ['Hogar propio','Casa arrendada','Negocio / Local','Industria'],
+    next: a => { S.vivienda = a; return 'oferta_solar'; },
+  },
+  oferta_solar: {
+    msgs: s => {
+      const sistema = recomendarSistema(s.consumo);
+      S.combo = sistema.key;
+      const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
+      return [
+        `🔍 Calculando tu sistema ideal, *${s.nombre}*…`,
+        `✅ Basándonos en tu consumo de *~${s.consumo} kWh/mes*, esta es nuestra recomendación:`,
+        { type:'sistema', sistema, kwh: s.consumo, flujo: 'solar_puro' },
+        esPPA
+          ? `📋 Como tu propiedad es *${s.vivienda.toLowerCase()}*, podemos ofrecerte un *contrato PPA* sin inversión inicial. Un asesor te explicará los detalles.`
+          : `¿Te gustaría que un asesor te contacte para preparar tu propuesta formal?`,
+      ];
+    },
+    opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
+    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
+  },
+
+  // ── EV HOGAR ──
+  oferta_ev: {
+    msgs: s => {
+      const extra_ev = Math.round((s.gasolina / 0.65) * 0.18 * 10);
+      const total = s.consumo + extra_ev;
+      const sistema = recomendarSistema(total);
+      S.combo = sistema.key;
+      const esPPA = s.vivienda.includes('Depart');
+      return [
+        `🔍 Analizando tu perfil, *${s.nombre}*…`,
+        `✅ Con tu consumo actual + el estimado de tu EV (*~${total} kWh/mes en total*), te recomendamos:`,
+        { type:'sistema', sistema, kwh: total, flujo: 'ev_hogar' },
+        esPPA
+          ? `📋 Como vivís en departamento, el *contrato PPA* puede ser ideal para vos: sin inversión inicial. Un asesor te explicará cómo funciona.`
+          : `El sistema incluye opciones de carga para tu EV. ¿Querés que un asesor te contacte?`,
+      ];
+    },
+    opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
+    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
+  },
+
+  // ── EMPRESA ──
+  empresa_consumo: {
+    msgs: [`🏭 ¿Cuánto paga la empresa en electricidad mensualmente?`],
+    opts: ['Menos de $500','$500–$2.000','$2.000–$5.000','Más de $5.000'],
+    next: a => {
+      const map = {'Menos':1000,'$500':2000,'$2.000':5000,'Más':12000};
+      const k = Object.keys(map).find(k => a.includes(k));
+      S.consumo = map[k] || 2000;
+      return 'empresa_tipo_carga';
+    },
+  },
+  empresa_tipo_carga: {
+    msgs: [`⚡ ¿Qué tipo de carga necesitan para los vehículos de la flota?`],
+    opts: ['🌙 Carga lenta (nocturna)','⚡ Semi-rápida (2–4 hs)','🚀 Rápida (menos de 1 hora)','Todavía no lo sé'],
+    next: a => {
+      S.tipo_carga = a.includes('lenta') ? 'lento' : a.includes('Semi') ? 'semirrapido' : a.includes('Rápida') ? 'rapido' : 'por_definir';
+      return 'oferta_empresa';
+    },
+  },
+  oferta_empresa: {
+    msgs: s => {
+      // Add EV consumption estimate per vehicle
+      const kwh_ev = s.n_vehiculos * 400; // ~400 kWh/mes por vehículo promedio
+      const total = s.consumo + kwh_ev;
+      const sistema = recomendarSistema(total);
+      S.combo = sistema.key;
+      return [
+        `🔍 Dimensionando el sistema para *${s.n_vehiculos} vehículos* + consumo de la empresa…`,
+        `✅ Consumo total estimado: *~${total.toLocaleString()} kWh/mes*. Nuestra recomendación:`,
+        { type:'sistema', sistema, kwh: total, flujo: 'empresa' },
+        s.tipo_carga !== 'por_definir'
+          ? `Para el tipo de carga que elegiste (*${CARGADORES[s.tipo_carga]?.nombre || s.tipo_carga}*), incluimos esa opción en la propuesta. ¿Querés que un asesor los contacte?`
+          : `¿Querés que un asesor prepare una propuesta completa para tu empresa?`,
+      ];
+    },
+    opts: ['Sí, que nos contacten ✅','Tengo más preguntas 💬'],
+    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
+  },
+
+  // ── CONTACTO ──
+  contacto: {
+    msgs: s => [`📱 ¡Perfecto, *${s.nombre}*! ¿Cuál es tu número de celular?`],
+    free: true,
+    next: a => { S.telefono = a.trim(); return 'contacto_email'; },
+  },
+  contacto_email: {
+    msgs: [`📧 ¿Y tu email de contacto?`],
+    free: true,
+    next: a => { S.email = a.trim(); return 'guardar'; },
+  },
+  guardar: {
+    msgs: s => [
+      `✅ *¡Todo listo, ${s.nombre}!*\n\nUn asesor de Nepos Energy te va a contactar en las próximas horas hábiles para:\n📋 Preparar tu propuesta personalizada\n📐 Coordinar visita técnica sin costo\n💡 Resolver todas tus dudas\n\n¡Gracias por tu interés en la energía limpia! 🌱⚡`,
+      { type:'wa' },
+    ],
+    opts: [],
+    next: () => 'fin',
+    onEnter: () => saveToSheet(),
+  },
+
+  // ── MÁS INFO ──
+  mas_info: {
+    msgs: [`Claro, ¿qué querés saber?\n\n💰 *Precios y financiamiento*\n📋 *Contrato PPA (sin inversión inicial)*\n📐 *Cómo es la instalación*\n⚡ *Cargadores para EV*`],
+    opts: ['Precios 💰','Contrato PPA 📋','La instalación 📐','Cargadores ⚡','Hablar con un asesor 👨‍💼'],
+    next: a => {
+      if(a.includes('Precios'))        return 'info_precios';
+      if(a.includes('PPA'))            return 'info_ppa';
+      if(a.includes('instalación'))    return 'info_instalacion';
+      if(a.includes('Cargadores'))     return 'info_cargadores';
+      return 'contacto';
+    },
+  },
+  info_precios: {
+    msgs: [`💰 *Precios del sistema solar*\n\nLos precios varían según la potencia que necesitás:\n\n• 3 kWp → $3.617\n• 7 kWp → $5.564\n• 10 kWp → $7.810\n• 15 kWp → $13.213\n• 30 kWp → $22.049\n• 50–200 kWp → consultar\n\nIncluyen instalación completa + garantía 25 años.\n\nPara financiamiento o contrato PPA, un asesor te arma una propuesta a medida.`],
+    opts: ['Quiero que me contacten ✅','Ver más opciones'],
+    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+  },
+  info_ppa: {
+    msgs: [`📋 *Contrato PPA (Power Purchase Agreement)*\n\n✅ Nosotros instalamos el sistema\n✅ Vos pagás solo por la energía que generás\n✅ Sin inversión inicial\n✅ Contrato 15 años + opción de compra\n\nIdeal para quienes no quieren desembolso inicial o están en propiedad arrendada.\n\nUn asesor te explicará el precio por kWh según tu perfil.`],
+    opts: ['Me interesa, que me contacten ✅','Ver más opciones'],
+    next: a => a.includes('Me interesa') ? 'contacto' : 'mas_info',
+  },
+  info_instalacion: {
+    msgs: [`📐 *¿Cómo es la instalación?*\n\n1. Visita técnica sin costo para evaluar tu techo\n2. Propuesta personalizada\n3. Firma del contrato\n4. Instalación en 1–3 días\n5. Activación y monitoreo remoto\n\nGarantía 25 años en paneles + 10 años en inversores.`],
+    opts: ['Quiero que me contacten ✅','Ver más opciones'],
+    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+  },
+  info_cargadores: {
+    msgs: [`⚡ *Opciones de carga para EV*\n\n🌙 *Lenta* — 3.7 kW, 8–12 hs, ~$1.000\nIdeal para carga nocturna en casa\n\n⚡ *Semi-rápida* — 7–22 kW, 2–4 hs, ~$2.500\nIdeal para uso diario, hogar o empresa\n\n🚀 *Rápida* (DC) — 50 kW+, 20–45 min, ~$25.000\nIdeal para flotas y estaciones públicas\n\n_Precios referenciales — confirmación con asesor._`],
+    opts: ['Quiero que me contacten ✅','Ver más opciones'],
+    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+  },
+
+  fin: {
+    msgs: [`_Podés cerrar esta ventana o reiniciar el chat._`],
+    opts: [],
+    next: () => 'fin',
+  },
+};
+
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS
+// ═══════════════════════════════════════════
+async function saveToSheet(){
+  const payload = {
+    timestamp:    new Date().toISOString(),
+    nombre:       S.nombre,
+    telefono:     S.telefono,
+    email:        S.email,
+    flujo:        S.flujo,
+    consumo_kwh:  S.consumo,
+    gasolina_usd: S.gasolina,
+    vivienda:     S.vivienda,
+    n_vehiculos:  S.n_vehiculos,
+    tipo_carga:   S.tipo_carga,
+    combo:        S.combo,
+    origen:       S.origen,
+  };
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 3500);
+  } catch(e){ console.warn('Sheet save failed:', e); }
+}
+
+// ═══════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════
+document.getElementById('sendBtn').onclick = () => {
+  const v = document.getElementById('inp').value.trim();
+  if(!v) return;
+  document.getElementById('inp').value='';
+  handleFree(v);
+};
+document.getElementById('inp').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('sendBtn').click();
+});
+
+// INIT
+setTimeout(()=>runStep(0), 400);
+</script>
+</body>
+</html>
