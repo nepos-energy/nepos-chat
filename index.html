@@ -295,9 +295,78 @@ html, body {
 // ═══════════════════════════════════════════════════
 // CONFIG — editá estos valores
 // ═══════════════════════════════════════════════════
-const SHEET_ID   = '1sa950sG7C61VMHHFytuL2ngiNgA7Vc2lIf88txfikLA';
-const WA_NUMBER  = '593983358832'; // sin + ni espacios
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhaVTRfbgYJKZ9ZHgxQh0OVBnz7gNmZKNqF8oGxMbJ2ZYsT4fOOW7mKbKy1nO0CtxP/exec';
+const WA_NUMBER  = '593983358832';
 const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, me contacto desde la concesionaria BYD. Me interesa saber más sobre los paneles solares.');
+
+// Config dinámica — se carga desde Google Sheets
+let CONFIG = null;
+
+async function loadConfig() {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    CONFIG = await res.json();
+    buildCombos();
+  } catch(e) {
+    console.warn('Config load failed, using defaults:', e);
+    CONFIG = null;
+    buildCombos();
+  }
+}
+
+function buildCombos() {
+  if (!CONFIG || !CONFIG.sistemas) return; // usa los valores hardcodeados
+
+  // Reconstruir COMBOS desde config
+  const factor = CONFIG.params.factor_kwh_kwp || 120;
+  const tasa   = CONFIG.params.tasa_suscripcion || 0.24;
+  const meses  = CONFIG.params.meses_suscripcion || 36;
+  const names  = ['basico','estandar','avanzado','premium'];
+  const badges = ['badge-teal','badge-gold','badge-red','badge-purple'];
+  const bTexts = ['Recomendado para vos','⭐ Más popular','🔥 Alto rendimiento','💎 Premium'];
+  const subs   = [
+    'Hogar pequeño + BYD como 2° auto',
+    'Familia media + BYD como auto principal',
+    'Hogar grande + BYD uso intensivo',
+    'Máximo rendimiento + batería de respaldo 5kWh',
+  ];
+  const emojis = ['☀️','⚡','🚀','🌟'];
+
+  CONFIG.sistemas.slice(0,4).forEach((s, i) => {
+    const r  = tasa / 12;
+    const cuota = Math.round(s.costo * (r * Math.pow(1+r, meses)) / (Math.pow(1+r, meses) - 1));
+    const ahorro = Math.round(s.kwp * factor * 0.10);
+    const key = names[i] || `s${s.kwp}`;
+    COMBOS[key] = {
+      key, badge: badges[i], badgeText: bTexts[i],
+      nombre: `${emojis[i]} SOLAR ${key.toUpperCase()}`,
+      sub: subs[i] || `${s.kwp} kWp`,
+      specs: [
+        {i:'⚡', t:`${s.kwp} kWp instalados`},
+        {i:'🔋', t:`Genera ~${s.kwp * factor} kWh/mes`},
+        {i:'📐', t:`Requiere ~${Math.round(s.kwp * 6)} m² de techo`},
+        {i:'🛡️', t:'Garantía 25 años en paneles'},
+      ],
+      contado:    `$${s.costo.toLocaleString('es-AR')}`,
+      suscripcion:`$${cuota}/mes × ${meses} meses`,
+      ahorro:     `~$${ahorro}/mes`,
+      ppa:        '$0 inversión / consultar asesor',
+    };
+  });
+
+  // Actualizar rangos
+  if (CONFIG.rangos && CONFIG.rangos.length) {
+    RANGOS_CONFIG = CONFIG.rangos;
+  }
+}
+
+// Rangos de recomendación (se sobreescriben desde Config si está disponible)
+let RANGOS_CONFIG = [
+  { hasta: 100,   combo: 'basico'   },
+  { hasta: 170,   combo: 'estandar' },
+  { hasta: 270,   combo: 'avanzado' },
+  { hasta: 99999, combo: 'premium'  },
+];
 
 // ═══════════════════════════════════════════════════
 // STATE
@@ -372,10 +441,10 @@ const COMBOS = {
 function recomendar(){
   const extra = Math.round((S.gasolina / 0.65) * 0.18 * 10);
   const total = S.consumo + extra;
-  if (total <= 100) return 'basico';
-  if (total <= 170) return 'estandar';
-  if (total <= 270) return 'avanzado';
-  return 'premium';
+  for (const r of RANGOS_CONFIG) {
+    if (total <= r.hasta) return r.combo;
+  }
+  return RANGOS_CONFIG[RANGOS_CONFIG.length - 1].combo;
 }
 
 // ═══════════════════════════════════════════════════
@@ -459,7 +528,7 @@ const STEPS = [
 // ═══════════════════════════════════════════════════
 const EXTRA = {
   info: {
-    msgs: [`ℹ️ *¿Cómo funciona?*\n\nCon tu BYD, tu consumo eléctrico va a subir. Un sistema solar en tu techo:\n• Genera tu propia energía ☀️\n• Reduce la factura eléctrica\n• Puede cargar tu auto de forma gratuita\n• Opciones desde *$0 de inversión inicial*\n\n¿Arrancamos con las preguntas?`],
+    msgs: [`ℹ️ *¿Cómo funciona?*\n\nAuto eléctrico + paneles solares = independencia energética total ⚡☀️\n• Generás tu propia energía en casa\n• Cargás tu BYD sin depender de la red\n• Tu factura eléctrica baja considerablemente\n\n¿Arrancamos con las preguntas?`],
     opts: ['Sí, empezamos ✅','Ahora no, gracias'],
     next: a => a.includes('Sí') ? 1 : 'fin',
   },
@@ -716,9 +785,9 @@ function showToast(){
 }
 
 // ═══════════════════════════════════════════════════
-// INIT
+// INIT — carga config desde Sheet, luego arranca
 // ═══════════════════════════════════════════════════
-setTimeout(()=>runStep(0), 400);
+loadConfig().then(() => setTimeout(()=>runStep(0), 400));
 </script>
 </body>
 </html>
