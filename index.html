@@ -328,7 +328,7 @@ const COMBOS = {
       {i:'🛡️',t:'Garantía 25 años en paneles'},
     ],
     contado:'$3.617,75', ppa:'$0 inversión / $0.07 por kWh',
-    suscripcion:'$112/mes × 36 meses', ahorro:'~$40/mes',
+    suscripcion:'$142/mes × 36 meses', ahorro:'~$40/mes',
   },
   estandar: {
     key:'estandar', badge:'badge-gold', badgeText:'⭐ Más popular',
@@ -340,7 +340,7 @@ const COMBOS = {
       {i:'🛡️',t:'Garantía 25 años + monitoreo remoto'},
     ],
     contado:'$5.564,44', ppa:'$0 inversión / $0.07 por kWh',
-    suscripcion:'$173/mes × 36 meses', ahorro:'~$70/mes',
+    suscripcion:'$218/mes × 36 meses', ahorro:'~$70/mes',
   },
   avanzado: {
     key:'avanzado', badge:'badge-red', badgeText:'🔥 Alto rendimiento',
@@ -352,7 +352,7 @@ const COMBOS = {
       {i:'🛡️',t:'Garantía 25 años + monitoreo remoto'},
     ],
     contado:'$7.810,30', ppa:'$0 inversión / $0.065 por kWh',
-    suscripcion:'$243/mes × 36 meses', ahorro:'~$110/mes',
+    suscripcion:'$306/mes × 36 meses', ahorro:'~$110/mes',
   },
   premium: {
     key:'premium', badge:'badge-purple', badgeText:'💎 Premium',
@@ -365,7 +365,7 @@ const COMBOS = {
       {i:'🛡️',t:'Garantía 25 años + batería + monitoreo'},
     ],
     contado:'$13.212,85*', ppa:'$0 inversión / $0.065 por kWh',
-    suscripcion:'$411/mes × 36 meses', ahorro:'~$170/mes',
+    suscripcion:'$518/mes × 36 meses', ahorro:'~$170/mes',
   },
 };
 
@@ -560,7 +560,6 @@ function addCard(combo, isPpa){
       ]
     : [
         {l:'💰 Contado',           v:combo.contado, hi:true},
-        {l:'📋 PPA',               v:combo.ppa},
         {l:'📅 Suscripción',       v:combo.suscripcion},
         {l:'💚 Ahorro estimado',   v:combo.ahorro+'/mes'},
       ];
