@@ -182,7 +182,8 @@ html, body {
 }
 .badge-teal  { background:rgba(0,212,170,.15); color:var(--nepos-teal); border:1px solid rgba(0,212,170,.3);}
 .badge-gold  { background:rgba(245,197,24,.12);  color:var(--gold);        border:1px solid rgba(245,197,24,.28);}
-.badge-red   { background:rgba(227,24,55,.12);   color:#ff6b7a;            border:1px solid rgba(227,24,55,.28);}
+.badge-red    { background:rgba(227,24,55,.12);   color:#ff6b7a;            border:1px solid rgba(227,24,55,.28);}
+.badge-purple { background:rgba(167,139,250,.12); color:#a78bfa;            border:1px solid rgba(167,139,250,.28);}
 .card h3 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:3px; color:var(--wa-text);}
 .card .csub { font-size:11.5px; color:var(--wa-sub); margin-bottom:10px; }
 .specs { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
@@ -295,7 +296,7 @@ html, body {
 // CONFIG — editá estos valores
 // ═══════════════════════════════════════════════════
 const SHEET_ID   = '1sa950sG7C61VMHHFytuL2ngiNgA7Vc2lIf88txfikLA';
-const WA_NUMBER  = '5491168545890'; // sin + ni espacios
+const WA_NUMBER  = '593983358832'; // sin + ni espacios
 const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, me contacto desde la concesionaria BYD. Me interesa saber más sobre los paneles solares.');
 
 // ═══════════════════════════════════════════════════
@@ -322,44 +323,58 @@ const COMBOS = {
     nombre:'☀️ SOLAR BÁSICO', sub:'Hogar pequeño + BYD como 2° auto',
     specs:[
       {i:'⚡',t:'3 kWp instalados'},
-      {i:'🔋',t:'Genera ~360 kWh/mes'},
-      {i:'📐',t:'Requiere ~20 m² de techo'},
+      {i:'🔋',t:'Genera ~300 kWh/mes'},
+      {i:'📐',t:'Requiere ~18 m² de techo'},
       {i:'🛡️',t:'Garantía 25 años en paneles'},
     ],
-    contado:'$6.800', ppa:'$0 inversión / $0.07 por kWh',
-    suscripcion:'$189/mes × 36 meses', ahorro:'~$55/mes',
+    contado:'$3.617,75', ppa:'$0 inversión / $0.07 por kWh',
+    suscripcion:'$112/mes × 36 meses', ahorro:'~$40/mes',
   },
   estandar: {
     key:'estandar', badge:'badge-gold', badgeText:'⭐ Más popular',
     nombre:'⚡ SOLAR ESTÁNDAR', sub:'Familia media + BYD como auto principal',
     specs:[
-      {i:'⚡',t:'5 kWp instalados'},
-      {i:'🔋',t:'Genera ~600 kWh/mes'},
-      {i:'📐',t:'Requiere ~32 m² de techo'},
+      {i:'⚡',t:'7 kWp instalados'},
+      {i:'🔋',t:'Genera ~700 kWh/mes'},
+      {i:'📐',t:'Requiere ~42 m² de techo'},
       {i:'🛡️',t:'Garantía 25 años + monitoreo remoto'},
     ],
-    contado:'$10.500', ppa:'$0 inversión / $0.07 por kWh',
-    suscripcion:'$289/mes × 36 meses', ahorro:'~$95/mes',
+    contado:'$5.564,44', ppa:'$0 inversión / $0.07 por kWh',
+    suscripcion:'$173/mes × 36 meses', ahorro:'~$70/mes',
+  },
+  avanzado: {
+    key:'avanzado', badge:'badge-red', badgeText:'🔥 Alto rendimiento',
+    nombre:'🚀 SOLAR AVANZADO', sub:'Hogar grande + BYD uso intensivo',
+    specs:[
+      {i:'⚡',t:'10 kWp instalados'},
+      {i:'🔋',t:'Genera ~1.000 kWh/mes'},
+      {i:'📐',t:'Requiere ~60 m² de techo'},
+      {i:'🛡️',t:'Garantía 25 años + monitoreo remoto'},
+    ],
+    contado:'$7.810,30', ppa:'$0 inversión / $0.065 por kWh',
+    suscripcion:'$243/mes × 36 meses', ahorro:'~$110/mes',
   },
   premium: {
-    key:'premium', badge:'badge-red', badgeText:'💎 Premium',
-    nombre:'🌟 SOLAR PREMIUM', sub:'Hogar grande + 2 EVs + batería BYD',
+    key:'premium', badge:'badge-purple', badgeText:'💎 Premium',
+    nombre:'🌟 SOLAR PREMIUM', sub:'Máximo rendimiento + batería de respaldo 5kWh',
     specs:[
-      {i:'⚡',t:'8 kWp instalados'},
-      {i:'🔋',t:'Genera ~960 kWh/mes + batería'},
-      {i:'📐',t:'Requiere ~50 m² de techo'},
-      {i:'🛡️',t:'Garantía 25 años + batería BYD + monitoreo'},
+      {i:'⚡',t:'15 kWp instalados'},
+      {i:'🔋',t:'Genera ~1.500 kWh/mes'},
+      {i:'🪫',t:'Batería 5kWh (4.1 kWh útiles) incluida'},
+      {i:'📐',t:'Requiere ~90 m² de techo'},
+      {i:'🛡️',t:'Garantía 25 años + batería + monitoreo'},
     ],
-    contado:'$16.900', ppa:'$0 inversión / $0.065 por kWh',
-    suscripcion:'$449/mes × 36 meses', ahorro:'~$160/mes',
+    contado:'$13.212,85*', ppa:'$0 inversión / $0.065 por kWh',
+    suscripcion:'$411/mes × 36 meses', ahorro:'~$170/mes',
   },
 };
 
 function recomendar(){
   const extra = Math.round((S.gasolina / 0.65) * 0.18 * 10);
   const total = S.consumo + extra;
-  if (S.familia <= 3 && total <= 350) return 'basico';
-  if (S.familia <= 5 && total <= 600) return 'estandar';
+  if (total <= 100) return 'basico';
+  if (total <= 170) return 'estandar';
+  if (total <= 270) return 'avanzado';
   return 'premium';
 }
 
@@ -369,7 +384,7 @@ function recomendar(){
 const STEPS = [
   // 0 — bienvenida
   {
-    msgs: [`👋 ¡Hola! Soy el asistente de *Nepos Energy × BYD*.\n\nElegiste un auto eléctrico — ahora te ayudamos a que tu hogar también sea inteligente ☀️\n\n¿Puedo hacerte unas preguntas rápidas?`],
+    msgs: [`👋 ¡Hola! Soy el asistente de *Nepos Energy × BYD*.\n\nTe ayudo a dimensionar un sistema solar para tu hogar, para que la energía de tu nuevo BYD no te salga cara ☀️\n\n¿Puedo hacerte unas preguntas rápidas?`],
     opts: ['¡Claro, adelante! ✅','¿Cómo funciona esto? ℹ️'],
     next: a => a.includes('Claro') ? 1 : 'info',
   },
@@ -388,9 +403,9 @@ const STEPS = [
   // 3 — consumo
   {
     msgs: [`💡 ¿Cuánto pagás aproximadamente en tu factura eléctrica mensual?`],
-    opts: ['Menos de $30','$30–$60','$60–$100','Más de $100'],
+    opts: ['Menos de $40','$40–$70','$70–$100','Más de $100'],
     next: a => {
-      S.consumo = a.includes('Menos') ? 150 : a.includes('$30') ? 250 : a.includes('$60') ? 400 : 600;
+      S.consumo = a.includes('Menos') ? 40 : a.includes('$40') ? 70 : a.includes('$70') ? 100 : 200;
       return 4;
     },
   },
@@ -413,21 +428,21 @@ const STEPS = [
   {
     msgs: s => {
       const c = recomendar(); S.combo = c;
-      const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
+      const esPPA = s.vivienda.includes('Depart');
       return [
         `🔍 Analizando tu perfil, *${s.nombre}*…`,
         `✅ ¡Listo! Esta es nuestra recomendación para vos:`,
         { type:'combo', combo: COMBOS[c], ppa: esPPA },
         esPPA
-          ? `📋 Como tu vivienda es *${s.vivienda.toLowerCase()}*, la opción *PPA* es ideal: *cero inversión inicial*, solo pagás por la energía que usás.`
+          ? `📋 Como vivís en un *departamento*, la opción *PPA* es ideal para vos: *cero inversión inicial*, nosotros instalamos y mantenemos el sistema.`
           : `¿Cuál de las opciones de pago te interesa explorar?`,
       ];
     },
     opts: s => {
-      const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
+      const esPPA = s.vivienda.includes('Depart');
       return esPPA
-        ? ['Quiero el PPA ✅','Ver otras opciones','Hablar con un asesor 👨‍💼']
-        : ['Pago de contado 💰','Opción PPA 📋','Suscripción mensual 📅','Hablar con un asesor 👨‍💼'];
+        ? ['Quiero saber más del PPA ✅','Ver otras opciones','Hablar con un asesor 👨‍💼']
+        : ['Pago de contado 💰','Suscripción mensual 📅','Hablar con un asesor 👨‍💼'];
     },
     next: a => {
       if (a.includes('asesor') || a.includes('Hablar')) return 'contacto';
@@ -444,7 +459,7 @@ const STEPS = [
 // ═══════════════════════════════════════════════════
 const EXTRA = {
   info: {
-    msgs: [`ℹ️ *¿Cómo funciona?*\n\nTu BYD es el comienzo de un estilo de vida más inteligente. Un sistema solar en tu techo completa la ecuación:\n• Genera tu propia energía ☀️\n• Reduce la factura eléctrica\n• Puede cargar tu auto de forma gratuita\n• Opciones desde *$0 de inversión inicial*\n\n¿Arrancamos con las preguntas?`],
+    msgs: [`ℹ️ *¿Cómo funciona?*\n\nCon tu BYD, tu consumo eléctrico va a subir. Un sistema solar en tu techo:\n• Genera tu propia energía ☀️\n• Reduce la factura eléctrica\n• Puede cargar tu auto de forma gratuita\n• Opciones desde *$0 de inversión inicial*\n\n¿Arrancamos con las preguntas?`],
     opts: ['Sí, empezamos ✅','Ahora no, gracias'],
     next: a => a.includes('Sí') ? 1 : 'fin',
   },
@@ -458,8 +473,7 @@ const EXTRA = {
   },
   ppa: {
     msgs: s => {
-      const c = COMBOS[S.combo];
-      return [`📋 *Contrato PPA*\n\n✅ Cero inversión inicial\n✅ Nosotros instalamos y mantenemos\n✅ Pagás solo *${c.ppa.split('/')[1].trim()}*\n✅ Contrato 15 años + opción de compra\n\n¿Querés que te contactemos para los detalles?`];
+      return [`📋 *Contrato PPA*\n\n✅ Cero inversión inicial\n✅ Nosotros instalamos y mantenemos el sistema\n✅ Solo pagás por la energía que generás\n✅ Contrato 15 años + opción de compra al final\n\nUn asesor te explicará el precio por kWh según tu perfil.\n\n¿Querés que te contactemos?`];
     },
     opts: ['Sí, que me contacten ✅','Necesito pensarlo'],
     next: a => a.includes('Sí') ? 'contacto' : 'pensar',
@@ -473,9 +487,9 @@ const EXTRA = {
     next: a => a.includes('Sí') ? 'contacto' : 'pensar',
   },
   otras: {
-    msgs: [`Claro, estas son las 3 opciones:\n\n💰 *Contado* — un pago, mayor ahorro a largo plazo\n📋 *PPA* — $0 inversión, pagás por kWh consumido\n📅 *Suscripción* — cuota mensual, el sistema queda tuyo al final\n\n¿Cuál querés explorar?`],
-    opts: ['Contado 💰','PPA 📋','Suscripción 📅'],
-    next: a => a.includes('Contado') ? 'contado' : a.includes('PPA') ? 'ppa' : 'suscripcion',
+    msgs: [`Claro, estas son las opciones disponibles:\n\n💰 *Contado* — un pago, mayor ahorro a largo plazo\n📅 *Suscripción* — cuota mensual fija, el sistema queda tuyo al final\n\n¿Cuál querés explorar?`],
+    opts: ['Contado 💰','Suscripción 📅'],
+    next: a => a.includes('Contado') ? 'contado' : 'suscripcion',
   },
   contacto: {
     msgs: s => [`📱 ¡Genial, *${s.nombre}*! ¿Cuál es tu número de celular para que te contactemos?`],
