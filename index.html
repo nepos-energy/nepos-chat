@@ -556,12 +556,12 @@ function addCard(combo, isPpa){
         {l:'📋 PPA (recomendado)', v:combo.ppa, hi:true},
         {l:'💰 Contado',           v:combo.contado},
         {l:'📅 Suscripción',       v:combo.suscripcion},
-        {l:'💚 Ahorro estimado',   v:combo.ahorro+'/mes'},
+        {l:'💚 Ahorro estimado',   v:combo.ahorro},
       ]
     : [
         {l:'💰 Contado',           v:combo.contado, hi:true},
         {l:'📅 Suscripción',       v:combo.suscripcion},
-        {l:'💚 Ahorro estimado',   v:combo.ahorro+'/mes'},
+        {l:'💚 Ahorro estimado',   v:combo.ahorro},
       ];
   const phtml = prices.map(p=>`
     <div class="price-row">
