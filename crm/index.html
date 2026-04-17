@@ -154,8 +154,12 @@ const now = () => {
 // API
 // ═══════════════════════════════════════════
 async function apiGet(params) {
-  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  const r = await fetch(url);
+  // POST instead of GET to avoid CORS issues
+  const r = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(params),
+  });
   return await r.json();
 }
 
