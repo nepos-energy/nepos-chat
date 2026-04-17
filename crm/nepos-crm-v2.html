@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nepos CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b141a;--panel:#111b21;--header:#1f2c34;
+  --in:#202c33;--out:#1a3a5c;--input-bg:#2a3942;
+  --text:#e9edef;--sub:#8696a0;
+  --blue:#3E5A8B;--blue2:#5b7db5;--yellow:#FFD931;
+  --green:#00c98d;--red:#ff5f6d;--orange:#ff8c42;--purple:#a78bfa;
+  --radius:8px;
+}
+html,body{height:100%;background:var(--bg);font-family:'Outfit',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
+.phone{width:400px;max-width:100%;height:min(840px,96vh);background:var(--panel);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(62,90,139,.2),0 40px 100px rgba(0,0,0,.85);}
+.header{background:var(--header);padding:11px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(62,90,139,.15);flex-shrink:0;}
+.avatar{width:42px;height:42px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--blue2),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;box-shadow:0 0 0 2px rgba(62,90,139,.4);}
+.hinfo{flex:1;}.hname{font-weight:700;font-size:15px;color:var(--text);}
+.hstatus{font-size:11.5px;color:var(--green);margin-top:1px;}
+.menu-btn{background:transparent;border:1px solid rgba(255,255,255,.1);cursor:pointer;color:var(--sub);font-size:12px;font-family:'Outfit',sans-serif;padding:4px 10px;border-radius:6px;transition:all .18s;}
+.menu-btn:hover{background:rgba(62,90,139,.2);color:var(--blue2);}
+.chat{flex:1;overflow-y:auto;padding:10px 10px 6px;display:flex;flex-direction:column;gap:3px;}
+.chat::-webkit-scrollbar{width:3px;}.chat::-webkit-scrollbar-thumb{background:rgba(62,90,139,.3);border-radius:4px;}
+.date-chip{text-align:center;margin:6px 0 10px;}.date-chip span{background:rgba(17,27,33,.9);color:var(--sub);font-size:11px;padding:4px 12px;border-radius:7px;}
+.row{display:flex;align-items:flex-end;gap:5px;}.row.out{flex-direction:row-reverse;}
+.av{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--blue2),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;}
+.bubble{max-width:80%;padding:8px 12px 6px;border-radius:var(--radius);font-size:14px;line-height:1.48;color:var(--text);word-break:break-word;}
+.row.in .bubble{background:var(--in);border-top-left-radius:2px;}
+.row.out .bubble{background:var(--out);border-top-right-radius:2px;}
+.bubble b{font-weight:600;color:var(--yellow);}
+.meta{display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:3px;}
+.meta .t{font-size:10.5px;color:rgba(255,255,255,.3);}
+.meta .tick{font-size:12px;color:var(--blue2);}
+.typing{display:none;align-items:center;gap:4px;background:var(--in);padding:10px 14px;border-radius:var(--radius);border-top-left-radius:2px;width:fit-content;margin-left:33px;}
+.typing.show{display:flex;}
+.dot{width:7px;height:7px;background:var(--sub);border-radius:50%;animation:bop .9s infinite;}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.30s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.qr-wrap{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 4px 33px;}
+.qr{border:1.5px solid var(--blue);color:var(--blue2);background:transparent;padding:6px 14px;border-radius:20px;font-size:13px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .18s;font-weight:500;}
+.qr:hover{background:var(--blue);color:#fff;}
+.qr.yellow{border-color:var(--yellow);color:var(--yellow);}.qr.yellow:hover{background:var(--yellow);color:#000;}
+.qr.red{border-color:var(--red);color:var(--red);}.qr.red:hover{background:var(--red);color:#fff;}
+.qr.green{border-color:var(--green);color:var(--green);}.qr.green:hover{background:var(--green);color:#fff;}
+.qr.purple{border-color:var(--purple);color:var(--purple);}.qr.purple:hover{background:var(--purple);color:#fff;}
+.qr:disabled{opacity:.35;cursor:default;pointer-events:none;}
+/* CARDS */
+.card{background:linear-gradient(145deg,#162030,#0d1824);border-radius:12px;padding:14px;width:100%;max-width:82%;margin-left:33px;}
+.card.blue{border:1px solid rgba(62,90,139,.3);}
+.card.yellow{border:1px solid rgba(255,217,49,.2);}
+.card.green{border:1px solid rgba(0,201,141,.2);}
+.card.purple{border:1px solid rgba(167,139,250,.2);}
+.card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.card-sub{font-size:11.5px;color:var(--sub);margin-bottom:10px;}
+.cr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.cr:last-child{border-bottom:none;}
+.cl{color:var(--sub);}.cv{color:var(--text);font-weight:500;text-align:right;max-width:60%;}
+.cv.hi{color:var(--yellow);font-size:14px;}
+.cv.green{color:var(--green);}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.b-nuevo{background:rgba(62,90,139,.2);color:var(--blue2);}
+.b-contactado{background:rgba(255,217,49,.15);color:var(--yellow);}
+.b-calificado{background:rgba(0,201,141,.15);color:var(--green);}
+.b-descartado{background:rgba(255,95,109,.15);color:var(--red);}
+.b-etapa{background:rgba(62,90,139,.2);color:var(--blue2);}
+.b-energia{background:rgba(0,201,141,.15);color:var(--green);}
+.b-movilidad{background:rgba(62,90,139,.2);color:var(--blue2);}
+.b-ingenieria{background:rgba(255,217,49,.15);color:var(--yellow);}
+.b-software{background:rgba(167,139,250,.15);color:var(--purple);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.stat-item{background:rgba(0,0,0,.2);border-radius:8px;padding:10px;text-align:center;}
+.stat-num{font-size:22px;font-weight:800;color:var(--yellow);}
+.stat-label{font-size:10px;color:var(--sub);margin-top:2px;}
+.divider-line{height:1px;background:rgba(255,255,255,.05);margin:10px 0;}
+.section-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.card-meta{display:flex;justify-content:flex-end;margin-top:8px;}
+.card-meta .t{font-size:10px;color:rgba(255,255,255,.25);}
+/* OFERTA CARD */
+.oferta-card{background:linear-gradient(145deg,#0d2018,#091510);border:1px solid rgba(0,201,141,.2);border-radius:12px;padding:14px;width:100%;max-width:82%;margin-left:33px;}
+.oferta-price{font-size:22px;font-weight:800;color:var(--green);margin:8px 0 4px;}
+/* INPUT */
+.bar{background:var(--header);padding:8px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(62,90,139,.1);flex-shrink:0;}
+.bar input{flex:1;background:var(--input-bg);border:none;outline:none;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;padding:9px 15px;border-radius:22px;}
+.bar input::placeholder{color:var(--sub);}
+.send{width:42px;height:42px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;flex-shrink:0;transition:background .18s;}
+.send:hover{background:var(--blue2);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2c34;border:1px solid rgba(62,90,139,.4);color:var(--blue2);font-size:13px;padding:9px 18px;border-radius:24px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:99;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(0,201,141,.4);color:var(--green);}
+.toast.err{border-color:rgba(255,95,109,.4);color:var(--red);}
+@media(max-width:440px){html,body{padding:0;}.phone{border-radius:0;height:100vh;width:100%;}}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="header">
+    <div class="avatar">NE</div>
+    <div class="hinfo">
+      <div class="hname">Nepos CRM</div>
+      <div class="hstatus" id="hstatus">● cargando…</div>
+    </div>
+    <button class="menu-btn" onclick="volverMenu()">↺ Menú</button>
+  </div>
+  <div class="chat" id="chat"><div class="date-chip"><span>Hoy</span></div></div>
+  <div style="padding:0 10px 4px"><div class="typing" id="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+  <div class="bar">
+    <span style="font-size:22px;color:var(--sub)">☺</span>
+    <input id="inp" type="text" placeholder="Escribe un mensaje…" autocomplete="off"/>
+    <button class="send" id="sendBtn">➤</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymthFhpojOpdNJVZrDx5DE4fwuWu9mUnYOrAISeCjkSRXJzgxxcdFSxF_5ZG5xEbW-pA/exec';
+
+// Config dinámica desde Sheets
+let CFG = null;
+
+async function loadConfig() {
+  try {
+    const r = await fetch(APPS_SCRIPT_URL + '?action=config');
+    CFG = await r.json();
+    setStatus('● en línea', 'var(--green)');
+  } catch(e) {
+    CFG = { owners:[], params:{}, sistemas:[], rangos:[], cargadores:[], umbrales:{} };
+    setStatus('● sin conexión', 'var(--red)');
+  }
+}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  owner: null,
+  leadActual: null,
+  proyectoActual: null,
+  tempData: {},
+};
+
+const now = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+
+// ═══════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════
+async function apiGet(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function apiPost(body) {
+  const r = await fetch(APPS_SCRIPT_URL, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  return await r.json();
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+const chatEl = document.getElementById('chat');
+const typingEl = document.getElementById('typing');
+
+function scrollDown(){ setTimeout(()=>{ chatEl.scrollTop = chatEl.scrollHeight; }, 60); }
+
+function addBubble(text, dir='in'){
+  const row = document.createElement('div');
+  row.className = `row ${dir}`;
+  if(dir==='in'){ const av=document.createElement('div'); av.className='av'; av.textContent='NE'; row.appendChild(av); }
+  const bub = document.createElement('div');
+  bub.className='bubble';
+  bub.innerHTML = text.replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/_(.*?)_/g,'<i style="color:var(--sub);font-size:13px">$1</i>').replace(/\n/g,'<br>') +
+    `<div class="meta"><span class="t">${now()}</span>${dir==='out'?'<span class="tick">✓✓</span>':''}</div>`;
+  row.appendChild(bub); chatEl.appendChild(row); scrollDown();
+}
+
+function addOptions(opts, onPick){
+  if(!opts||opts.length===0) return;
+  const wrap = document.createElement('div');
+  wrap.className='qr-wrap';
+  opts.forEach(o=>{
+    const label = typeof o==='string'?o:o.label;
+    const cls   = typeof o==='object'?(o.cls||''):'';
+    const btn   = document.createElement('button');
+    btn.className=`qr ${cls}`; btn.textContent=label;
+    btn.onclick=()=>{ wrap.querySelectorAll('button').forEach(b=>b.disabled=true); addBubble(label,'out'); onPick(label,o); };
+    wrap.appendChild(btn);
+  });
+  chatEl.appendChild(wrap); scrollDown();
+}
+
+function showTyping(cb, delay=900){ typingEl.classList.add('show'); scrollDown(); setTimeout(()=>{ typingEl.classList.remove('show'); cb(); }, delay); }
+
+function showToast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>{ t.className='toast'; }, 3500);
+}
+
+function setStatus(txt, color='var(--green)'){
+  const el = document.getElementById('hstatus');
+  el.textContent=txt; el.style.color=color;
+}
+
+function makeCard(color, children){
+  const wrap = document.createElement('div');
+  wrap.className=`card ${color}`;
+  children.forEach(c=>{ if(typeof c==='string'){ const d=document.createElement('div'); d.innerHTML=c; wrap.appendChild(d); } else wrap.appendChild(c); });
+  const meta = document.createElement('div'); meta.className='card-meta';
+  meta.innerHTML=`<span class="t">${now()}</span>`; wrap.appendChild(meta);
+  chatEl.appendChild(wrap); scrollDown(); return wrap;
+}
+
+function crRow(label, value){ return `<div class="cr"><span class="cl">${label}</span><span class="cv">${value||'—'}</span></div>`; }
+function crRowHi(label, value){ return `<div class="cr"><span class="cl">${label}</span><span class="cv hi">${value||'—'}</span></div>`; }
+
+function addLeadCard(lead, proyecto=null){
+  const udnCls = (lead.unidad_negocio||'').toLowerCase().replace(' ','') || 'blue';
+  const estCls = (lead.estado_lead||'nuevo').toLowerCase();
+  let html = `<div class="card-title">${lead.nombre_contacto||'Sin nombre'} <span class="badge b-${estCls}">${lead.estado_lead||'Nuevo'}</span></div>
+    <div class="card-sub">${lead.tipo_cliente||''} ${lead.empresa?'· '+lead.empresa:''}</div>
+    ${crRow('📞 Teléfono', lead.telefono)}
+    ${crRow('📧 Email', lead.email)}
+    ${crRow('🏢 Empresa', lead.empresa)}
+    ${crRow('📍 Ciudad', lead.provincia_ciudad)}
+    ${crRow('👤 Owner', lead.comercial_asignado)}
+    ${crRow('🏷️ Unidad', lead.unidad_negocio)}
+    ${crRow('📅 Creación', lead.fecha_creacion)}`;
+  if(proyecto){
+    html += `<div class="divider-line"></div><div class="section-label">Proyecto asociado</div>
+      ${crRow('📋 Nombre', proyecto.nombre_proyecto)}
+      ${crRow('📊 Etapa', `<span class="badge b-etapa">${proyecto.etapa_pipeline||'—'}</span>`)}
+      ${crRow('🏭 Unidad', proyecto.unidad_negocio)}
+      ${crRow('💰 Monto est.', proyecto.monto_estimado_usd?'$'+proyecto.monto_estimado_usd:'—')}`;
+  }
+  makeCard('blue', [html]);
+}
+
+function addOfertaCard(sistema, kwh_total, cargador=null){
+  const factor  = CFG?.params?.factor_kwh_kwp || 120;
+  const tarifa  = CFG?.params?.tarifa_kwh || 0.09;
+  const ahorro  = Math.round(sistema.kwp * factor * tarifa);
+  let html = `<div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:8px;">☀️ SISTEMA RECOMENDADO</div>
+    <div class="card-title">${sistema.kwp} kWp instalados</div>
+    <div class="card-sub">Consumo cubierto: ~${kwh_total} kWh/mes</div>
+    ${crRow('⚡ Generación', '~'+(sistema.kwp*factor)+' kWh/mes')}
+    ${crRow('📐 Techo requerido', '~'+(sistema.kwp*6)+' m²')}
+    ${crRow('🛡️ Garantía', '25 años en paneles')}
+    <div class="divider-line"></div>
+    ${crRowHi('💰 Precio contado', '$'+sistema.costo.toLocaleString('es-AR'))}
+    ${crRow('💚 Ahorro estimado', '~$'+ahorro+'/mes')}
+    <div style="font-size:10.5px;color:var(--sub);margin-top:8px;font-style:italic">Financiamiento y PPA disponibles — consultar con asesor.</div>`;
+  if(cargador){
+    html += `<div class="divider-line"></div><div class="section-label">Cargador EV sugerido</div>
+      ${crRow('⚡ Tipo', cargador.tipo)}
+      ${crRow('🔌 Potencia', cargador.potencia+' kW')}
+      ${crRow('⏱️ Tiempo carga', cargador.tiempo)}
+      ${crRowHi('💰 Precio ref.', '$'+cargador.precio.toLocaleString('es-AR')+'*')}
+      <div style="font-size:10.5px;color:var(--sub);margin-top:4px;font-style:italic">*Precio referencial — confirmar con ingeniería.</div>`;
+  }
+  makeCard('green', [html]);
+}
+
+function addResumenCard(res){
+  const pipeHTML = Object.entries(res.pipeline||{}).filter(([,v])=>v>0)
+    .map(([k,v])=>`<div class="cr"><span class="cl">${k}</span><span class="cv" style="color:var(--blue2)">${v}</span></div>`).join('');
+  makeCard('blue', [`
+    <div class="card-title">📊 Resumen del Pipeline</div>
+    <div class="stat-grid">
+      <div class="stat-item"><div class="stat-num">${res.total_leads||0}</div><div class="stat-label">Total Leads</div></div>
+      <div class="stat-item"><div class="stat-num">${res.total_proyectos||0}</div><div class="stat-label">Proyectos</div></div>
+    </div>
+    <div class="divider-line"></div>
+    <div class="section-label">Pipeline</div>
+    ${pipeHTML}
+    <div class="divider-line"></div>
+    <div class="cr"><span class="cl">💰 Monto total</span><span class="cv hi">$${(res.monto_pipeline_usd||0).toLocaleString('es-AR')}</span></div>
+  `]);
+}
+
+// ═══════════════════════════════════════════
+// FLOW ENGINE
+// ═══════════════════════════════════════════
+let currentKey = 'pin';
+
+function runStep(key){
+  currentKey = key;
+  const step = STEPS[key];
+  if(!step) return;
+  if(step.onEnter){ step.onEnter(); return; }
+
+  const msgs = typeof step.msgs==='function'?step.msgs(S):(step.msgs||[]);
+  const opts = typeof step.opts==='function'?step.opts(S):(step.opts||[]);
+
+  let i=0;
+  function next(){
+    if(i>=msgs.length){
+      addOptions(opts, (ans,opt)=>{ const nk=step.next(ans,opt); if(nk) setTimeout(()=>runStep(nk),380); });
+      return;
+    }
+    const m=msgs[i++];
+    showTyping(()=>{ addBubble(m,'in'); setTimeout(next,280); }, i===1?950:650);
+  }
+  next();
+}
+
+function handleFree(val){
+  const step=STEPS[currentKey];
+  if(!step||!step.free) return;
+  addBubble(val,'out');
+  const nk=step.next(val);
+  if(nk) setTimeout(()=>runStep(nk),380);
+}
+
+function withOtro(opts, nextFn){
+  return [...opts.map(o=>typeof o==='string'?o:{...o}), { label:'Otro ✏️', cls:'', isOtro:true }];
+}
+
+function volverMenu(){
+  S.leadActual=null; S.proyectoActual=null; S.tempData={};
+  addBubble('↺ Volver al menú','out');
+  setTimeout(()=>runStep('menu'),400);
+}
+
+// Dimensionamiento
+function calcSistema(kwh_total){
+  const rangos = CFG?.rangos || [{hasta:100,combo:'s3'},{hasta:170,combo:'s7'},{hasta:270,combo:'s10'},{hasta:99999,combo:'s15'}];
+  const sistemas = CFG?.sistemas || [];
+  for(const r of rangos){ if(kwh_total<=r.hasta){ return sistemas.find(s=>s.key===r.combo)||sistemas[0]; } }
+  return sistemas[sistemas.length-1];
+}
+
+function calcCargador(tipo){
+  const cargadores = CFG?.cargadores || [];
+  return cargadores.find(c=>c.tipo.toLowerCase().includes(tipo.toLowerCase())) || null;
+}
+
+// ═══════════════════════════════════════════
+// STEPS
+// ═══════════════════════════════════════════
+const STEPS = {
+
+  // ── PIN ──
+  pin: {
+    msgs: [`👋 Bienvenido al *CRM de Nepos Energy*.\n\nIngresá tu *PIN* para continuar:`],
+    free: true,
+    next: async (ans) => {
+      try {
+        const r = await apiGet({ action:'validarPin', pin: ans.trim() });
+        if(r.valid){
+          S.owner = r.owner;
+          setStatus(`● ${r.owner.nombre}`, 'var(--blue2)');
+          showToast(`✅ Bienvenido, ${r.owner.nombre}`, 'ok');
+          return 'menu';
+        } else {
+          showTyping(()=>{ addBubble('❌ PIN incorrecto. Intentá de nuevo:','in'); }, 600);
+          return null;
+        }
+      } catch(e){
+        showTyping(()=>{ addBubble('❌ Error de conexión. Intentá de nuevo:','in'); }, 600);
+        return null;
+      }
+    },
+  },
+
+  // ── MENÚ ──
+  menu: {
+    msgs: s => [`¿Qué querés hacer, *${s.owner?.nombre||''}*?`],
+    opts: [
+      { label:'➕ Nuevo Lead', cls:'green' },
+      { label:'🔍 Buscar Lead', cls:'' },
+      { label:'📋 Mis Pendientes', cls:'' },
+      { label:'📊 Resumen Pipeline', cls:'' },
+    ],
+    next: (ans) => {
+      if(ans.includes('Nuevo'))      return 'lead_nombre';
+      if(ans.includes('Buscar'))     return 'buscar';
+      if(ans.includes('Pendientes')) return 'pendientes';
+      if(ans.includes('Resumen'))    return 'resumen';
+      return 'menu';
+    },
+  },
+
+  // ══ NUEVO LEAD ══
+  lead_nombre: {
+    msgs: [`➕ *Nuevo Lead*\n\n¿Nombre del contacto?`],
+    free: true,
+    next: (v) => { S.tempData={ nombre_contacto:v, owner_email:S.owner?.email, comercial_asignado:S.owner?.email }; return 'lead_empresa'; },
+  },
+  lead_empresa: {
+    msgs: [`🏢 ¿Empresa? _(o "particular")_`],
+    free: true,
+    next: (v) => { if(v.toLowerCase()!=='particular') S.tempData.empresa=v; return 'lead_telefono'; },
+  },
+  lead_telefono: {
+    msgs: [`📞 ¿Teléfono?`],
+    free: true,
+    next: (v) => { S.tempData.telefono=v; return 'lead_tipo_cliente'; },
+  },
+  lead_tipo_cliente: {
+    msgs: [`👤 ¿Tipo de cliente?`],
+    opts: () => withOtro(['Residencial','Comercial','Industrial']),
+    next: (ans, opt) => {
+      if(opt?.isOtro) return 'lead_tipo_cliente_otro';
+      S.tempData.tipo_cliente=ans; return 'lead_unidad';
+    },
+  },
+  lead_tipo_cliente_otro: {
+    msgs: [`✏️ Especificá el tipo de cliente:`],
+    free: true,
+    next: (v) => { S.tempData.tipo_cliente=v; return 'lead_unidad'; },
+  },
+  lead_unidad: {
+    msgs: [`🏭 ¿Unidad de negocio?`],
+    opts: () => {
+      const uds = CFG?.unidades?.map(u=>({ label:u.nombre, cls: u.color||'' })) || [
+        {label:'Energía',cls:'green'},{label:'Movilidad Eléctrica',cls:'blue'},{label:'Ingeniería',cls:'yellow'},{label:'Software',cls:'purple'}
+      ];
+      return uds;
+    },
+    next: (ans) => { S.tempData.unidad_negocio=ans; return 'lead_origen'; },
+  },
+  lead_origen: {
+    msgs: [`📌 ¿Cómo nos conoció?`],
+    opts: () => withOtro(['Comercial','Web','QR Concesionaria','Redes Sociales','Referido']),
+    next: (ans, opt) => {
+      if(opt?.isOtro) return 'lead_origen_otro';
+      S.tempData.como_nos_conocio=ans; S.tempData.origen=ans; return 'lead_email';
+    },
+  },
+  lead_origen_otro: {
+    msgs: [`✏️ Especificá el origen:`],
+    free: true,
+    next: (v) => { S.tempData.como_nos_conocio=v; S.tempData.origen=v; return 'lead_email'; },
+  },
+  lead_email: {
+    msgs: [`📧 ¿Email? _(o "omitir")_`],
+    free: true,
+    next: (v) => { if(v.toLowerCase()!=='omitir') S.tempData.email=v; return 'lead_ciudad'; },
+  },
+  lead_ciudad: {
+    msgs: [`📍 ¿Ciudad/Provincia? _(o "omitir")_`],
+    free: true,
+    next: (v) => { if(v.toLowerCase()!=='omitir') S.tempData.provincia_ciudad=v; return 'lead_notas'; },
+  },
+  lead_notas: {
+    msgs: [`📝 ¿Nota inicial? _(o "ninguna")_`],
+    free: true,
+    next: (v) => { if(v.toLowerCase()!=='ninguna') S.tempData.notas_iniciales=v; return 'lead_confirmar'; },
+  },
+  lead_confirmar: {
+    msgs: s => {
+      const d=s.tempData;
+      return [`✅ *Confirmar nuevo lead:*\n\n👤 ${d.nombre_contacto}\n🏢 ${d.empresa||'Particular'}\n📞 ${d.telefono}\n👤 ${d.tipo_cliente}\n🏭 ${d.unidad_negocio}\n📌 ${d.como_nos_conocio}\n📧 ${d.email||'—'}\n\n¿Guardamos?`];
+    },
+    opts: [{ label:'✅ Confirmar', cls:'green' },{ label:'❌ Cancelar', cls:'red' }],
+    next: (ans) => ans.includes('Confirmar') ? 'lead_guardar' : 'menu',
+  },
+  lead_guardar: {
+    msgs: [`⏳ Guardando…`],
+    onEnter: async () => {
+      try {
+        const r = await apiPost({ action:'crearLead', data:S.tempData });
+        if(r.status==='ok'){
+          showToast('✅ Lead creado: '+r.lead_id, 'ok');
+          S.tempData={};
+          showTyping(()=>{
+            addBubble(`✅ *Lead creado*\nID: ${r.lead_id}\n\n¿Creamos también el proyecto?`,'in');
+            addOptions([{label:'🚀 Sí, crear proyecto',cls:'green'},{label:'No, volver al menú',cls:''}],(a)=>{
+              if(a.includes('Sí')){ S.leadActual={lead_id:r.lead_id,...S.tempData}; runStep('proy_nombre'); }
+              else runStep('menu');
+            });
+          },800);
+        } else { showToast('❌ Error: '+(r.error||'desconocido'),'err'); runStep('menu'); }
+      } catch(e){ showToast('❌ Error de conexión','err'); runStep('menu'); }
+    },
+  },
+
+  // ══ BUSCAR LEAD ══
+  buscar: {
+    msgs: [`🔍 Escribí nombre, empresa, teléfono o RUC:`],
+    free: true,
+    next: (v) => { S.tempData.q=v; return 'buscar_resultado'; },
+  },
+  buscar_resultado: {
+    msgs: [`🔍 Buscando…`],
+    onEnter: async () => {
+      try {
+        const r = await apiGet({ action:'buscarLead', q:S.tempData.q });
+        if(r.leads && r.leads.length>0){
+          if(r.leads.length===1){
+            S.leadActual=r.leads[0];
+            const pr = await apiGet({ action:'buscarProyecto', lead_id:S.leadActual.lead_id }).catch(()=>({proyecto:null}));
+            S.proyectoActual=pr.proyecto||null;
+            showTyping(()=>{ addBubble('✅ Encontré este lead:','in'); addLeadCard(S.leadActual,S.proyectoActual); setTimeout(()=>runStep('lead_acciones'),400); },600);
+          } else {
+            showTyping(()=>{
+              addBubble(`Encontré *${r.leads.length} resultados*. ¿Cuál es?`,'in');
+              addOptions(r.leads.map(l=>l.nombre_contacto+(l.empresa?` (${l.empresa})`:'')),(ans)=>{
+                const lead=r.leads.find(l=>ans.includes(l.nombre_contacto));
+                if(lead){ S.leadActual=lead; apiGet({action:'buscarProyecto',lead_id:lead.lead_id}).then(pr=>{ S.proyectoActual=pr.proyecto||null; addLeadCard(S.leadActual,S.proyectoActual); setTimeout(()=>runStep('lead_acciones'),400); }); }
+              });
+            },600);
+          }
+        } else {
+          showTyping(()=>{
+            addBubble(`❌ Sin resultados para _"${S.tempData.q}"_.`,'in');
+            addOptions([{label:'🔍 Buscar de nuevo',cls:''},{label:'🏠 Menú',cls:''}],(a)=>runStep(a.includes('Buscar')?'buscar':'menu'));
+          },600);
+        }
+      } catch(e){ showToast('❌ Error de conexión','err'); runStep('menu'); }
+    },
+  },
+
+  // ── ACCIONES LEAD ──
+  lead_acciones: {
+    msgs: () => [`¿Qué querés hacer?`],
+    opts: s => {
+      const tp = s.leadActual?.tiene_proyecto;
+      const est = s.leadActual?.estado_lead;
+      const opts = [
+        {label:'✏️ Editar campo',cls:''},
+        {label:'📝 Agregar nota',cls:''},
+        {label:'📝 Registrar seguimiento',cls:''},
+      ];
+      if(!tp && ['Nuevo','Contactado'].includes(est)) opts.unshift({label:'🚀 Crear Proyecto',cls:'yellow'});
+      if(tp && s.proyectoActual) opts.push({label:'📋 Ver proyecto',cls:''});
+      opts.push({label:'🏠 Menú',cls:''});
+      return opts;
+    },
+    next: (ans) => {
+      if(ans.includes('Crear Proyecto'))  return 'proy_nombre';
+      if(ans.includes('Ver proyecto'))    return 'proy_acciones';
+      if(ans.includes('Editar campo'))    return 'editar_lead';
+      if(ans.includes('nota'))            return 'agregar_nota_lead';
+      if(ans.includes('seguimiento'))     return 'seg_tipo';
+      return 'menu';
+    },
+  },
+
+  // ── EDITAR LEAD ──
+  editar_lead: {
+    msgs: () => [`✏️ ¿Qué campo querés editar?`],
+    opts: () => withOtro(['nombre_contacto','empresa','telefono','email','estado_lead','provincia_ciudad','tipo_cliente','unidad_negocio','notas_iniciales']),
+    next: (ans, opt) => {
+      if(opt?.isOtro) return 'editar_lead_campo_libre';
+      S.tempData.campo_editar=ans; return 'editar_lead_valor';
+    },
+  },
+  editar_lead_campo_libre: {
+    msgs:[`✏️ ¿Nombre exacto del campo?`],
+    free:true,
+    next:(v)=>{ S.tempData.campo_editar=v; return 'editar_lead_valor'; },
+  },
+  editar_lead_valor: {
+    msgs: s => [`📝 Nuevo valor para _${s.tempData.campo_editar}_:`],
+    free: true,
+    next: async (v) => {
+      try {
+        await apiPost({ action:'actualizarLead', lead_id:S.leadActual.lead_id, campo:S.tempData.campo_editar, valor:v });
+        S.leadActual[S.tempData.campo_editar]=v;
+        showToast('✅ Campo actualizado','ok');
+      } catch(e){ showToast('❌ Error','err'); }
+      return 'lead_acciones';
+    },
+  },
+
+  agregar_nota_lead: {
+    msgs:[`📝 Escribí la nota:`],
+    free:true,
+    next: async (v) => {
+      const anterior = String(S.leadActual.notas_iniciales||'');
+      const nueva = anterior ? anterior+'\n'+new Date().toLocaleDateString()+': '+v : new Date().toLocaleDateString()+': '+v;
+      try {
+        await apiPost({ action:'actualizarLead', lead_id:S.leadActual.lead_id, campo:'notas_iniciales', valor:nueva });
+        S.leadActual.notas_iniciales=nueva;
+        showToast('✅ Nota agregada','ok');
+      } catch(e){ showToast('❌ Error','err'); }
+      return 'lead_acciones';
+    },
+  },
+
+  // ══ PROYECTO ══
+  proy_nombre: {
+    msgs: s => [`🚀 *Crear Proyecto*\n\n¿Nombre del proyecto? _(Enter para usar "${s.leadActual?.nombre_contacto||'Lead'}")_`],
+    free: true,
+    next: (v) => { S.tempData.nombre_proyecto = v||S.leadActual?.nombre_contacto||'Nuevo Proyecto'; return 'proy_unidad'; },
+  },
+  proy_unidad: {
+    msgs:[`🏭 ¿Unidad de negocio?`],
+    opts: () => {
+      const uds = CFG?.unidades?.map(u=>({label:u.nombre,cls:u.color||''})) ||
+        [{label:'Energía',cls:'green'},{label:'Movilidad Eléctrica',cls:'blue'},{label:'Ingeniería',cls:'yellow'},{label:'Software',cls:'purple'}];
+      return uds;
+    },
+    next: (ans) => { S.tempData.unidad_negocio=ans; return decidirFlujoProy(ans); },
+  },
+
+  // ── Energía / Movilidad → tipo producto ──
+  proy_tipo_energia: {
+    msgs:[`⚡ ¿Tipo de producto?`],
+    opts: () => withOtro(['Solar consumo','Híbrido','PPA']),
+    next: (ans,opt) => { if(opt?.isOtro) return 'proy_tipo_otro'; S.tempData.tipo_producto=ans; return 'proy_guardar'; },
+  },
+  proy_tipo_movilidad: {
+    msgs:[`🚗 ¿Tipo de producto?`],
+    opts: () => withOtro(['Electrolinera residencial','Electrolinera comercial','Nest']),
+    next: (ans,opt) => {
+      if(opt?.isOtro) return 'proy_tipo_otro';
+      S.tempData.tipo_producto=ans;
+      if(ans==='Nest') return 'proy_nest';
+      return 'proy_guardar';
+    },
+  },
+  proy_nest: {
+    msgs:[`🛵 *Producto Nest*\n\nElectrolinera para movilidad liviana (bicicletas eléctricas, scooters, etc.)\n\nUn asesor se va a contactar para dimensionar la solución.\n\nAnotamos el proyecto y lo derivamos.`],
+    opts:[{label:'✅ Confirmar y guardar',cls:'green'},{label:'🏠 Menú',cls:''}],
+    next:(ans)=>ans.includes('Confirmar')?'proy_guardar':'menu',
+  },
+  proy_tipo_otro: {
+    msgs:[`✏️ Especificá el tipo de producto:`],
+    free:true,
+    next:(v)=>{ S.tempData.tipo_producto=v; return 'proy_guardar'; },
+  },
+
+  // ── Ingeniería / Software → descripción ──
+  proy_descripcion: {
+    msgs:[`📝 Describí el proyecto:`],
+    free:true,
+    next:(v)=>{ S.tempData.descripcion_proyecto=v; return 'proy_fecha'; },
+  },
+  proy_fecha: {
+    msgs:[`📅 ¿Fecha límite estimada? _(ej: 30/06/2025 o "indefinida")_`],
+    free:true,
+    next:(v)=>{ S.tempData.fecha_limite=v; return 'proy_monto'; },
+  },
+  proy_monto: {
+    msgs:[`💰 ¿Importe estimado en USD? _(o "por definir")_`],
+    free:true,
+    next:(v)=>{ S.tempData.monto_estimado=v; return 'proy_guardar'; },
+  },
+
+  proy_guardar: {
+    msgs:[`⏳ Creando proyecto…`],
+    onEnter: async () => {
+      try {
+        S.tempData.owner_email = S.owner?.email;
+        const r = await apiPost({ action:'crearProyecto', lead_id:S.leadActual?.lead_id, data:S.tempData });
+        if(r.status==='ok'){
+          showToast('✅ Proyecto creado: '+r.proyecto_id,'ok');
+          const pr = await apiGet({action:'buscarProyecto',lead_id:S.leadActual?.lead_id}).catch(()=>({proyecto:null}));
+          S.proyectoActual = pr.proyecto||null;
+
+          showTyping(()=>{
+            addBubble(`✅ *Proyecto creado*\nID: ${r.proyecto_id}`,'in');
+            const unidad = S.tempData.unidad_negocio||'';
+            const esEnergia = unidad.includes('Energ');
+            const esMovilidad = unidad.includes('Movil');
+            const esNest = S.tempData.tipo_producto==='Nest';
+
+            if((esEnergia || esMovilidad) && !esNest){
+              addOptions([{label:'📋 Cargar requerimientos técnicos',cls:'yellow'},{label:'🏠 Menú',cls:''}],(a)=>{
+                runStep(a.includes('requerimientos')?'reqs_consumo':'menu');
+              });
+            } else {
+              addOptions([{label:'🏠 Menú',cls:''}],()=>runStep('menu'));
+            }
+          },800);
+        } else { showToast('❌ '+(r.error||'Error'),'err'); runStep('menu'); }
+      } catch(e){ showToast('❌ Error de conexión','err'); runStep('menu'); }
+    },
+  },
+
+  // ── ACCIONES PROYECTO ──
+  proy_acciones: {
+    msgs:()=>[`¿Qué hacemos con el proyecto *${S.proyectoActual?.nombre_proyecto||''}*?`],
+    opts: s => {
+      const tieneReqs = s.proyectoActual?.tiene_requerimientos;
+      const unidad = s.proyectoActual?.unidad_negocio||'';
+      const esEnergiaMov = unidad.includes('Energ')||unidad.includes('Movil');
+      const opts = [{label:'✏️ Editar campo',cls:''},{label:'📊 Actualizar etapa',cls:''}];
+      if(esEnergiaMov && !tieneReqs) opts.push({label:'📋 Cargar requerimientos',cls:'yellow'});
+      if(tieneReqs) opts.push({label:'⚡ Ver dimensionamiento',cls:'green'});
+      opts.push({label:'📝 Seguimiento',cls:''},{label:'🔙 Volver al lead',cls:''});
+      return opts;
+    },
+    next:(ans)=>{
+      if(ans.includes('Editar'))         return 'editar_proy';
+      if(ans.includes('etapa'))          return 'actualizar_etapa';
+      if(ans.includes('requerimientos')) return 'reqs_consumo';
+      if(ans.includes('dimensionamiento'))return 'dim_ver';
+      if(ans.includes('Seguimiento'))    return 'seg_tipo';
+      return 'lead_acciones';
+    },
+  },
+
+  editar_proy: {
+    msgs:[`✏️ ¿Qué campo querés editar?`],
+    opts:()=>withOtro(['nombre_proyecto','tipo_producto','etapa_pipeline','prioridad','monto_estimado_usd','fecha_limite_propuesta','notas_proyecto','descripcion_proyecto']),
+    next:(ans,opt)=>{ if(opt?.isOtro) return 'editar_proy_libre'; S.tempData.campo_editar=ans; return 'editar_proy_valor'; },
+  },
+  editar_proy_libre:{msgs:[`✏️ ¿Nombre del campo?`],free:true,next:(v)=>{S.tempData.campo_editar=v;return 'editar_proy_valor';}},
+  editar_proy_valor:{
+    msgs:s=>[`📝 Nuevo valor para _${s.tempData.campo_editar}_:`],
+    free:true,
+    next:async(v)=>{
+      try{ await apiPost({action:'actualizarProyecto',proyecto_id:S.proyectoActual.proyecto_id,campo:S.tempData.campo_editar,valor:v}); S.proyectoActual[S.tempData.campo_editar]=v; showToast('✅ Actualizado','ok'); }
+      catch(e){ showToast('❌ Error','err'); }
+      return 'proy_acciones';
+    },
+  },
+
+  actualizar_etapa:{
+    msgs:[`📊 ¿Nueva etapa?`],
+    opts:()=>withOtro(['Nuevo proyecto','Relevamiento','Requerimientos completos','Propuesta en diseño','Propuesta enviada','Negociación','Propuesta aceptada','Propuesta rechazada']),
+    next:async(ans,opt)=>{
+      const val = opt?.isOtro ? null : ans;
+      if(!val) return 'actualizar_etapa_libre';
+      try{ await apiPost({action:'actualizarProyecto',proyecto_id:S.proyectoActual.proyecto_id,campo:'etapa_pipeline',valor:val}); S.proyectoActual.etapa_pipeline=val; showToast('✅ Etapa actualizada','ok'); }
+      catch(e){ showToast('❌ Error','err'); }
+      return 'proy_acciones';
+    },
+  },
+  actualizar_etapa_libre:{msgs:[`✏️ Especificá la etapa:`],free:true,next:async(v)=>{ try{await apiPost({action:'actualizarProyecto',proyecto_id:S.proyectoActual.proyecto_id,campo:'etapa_pipeline',valor:v}); showToast('✅ Etapa actualizada','ok');}catch(e){showToast('❌ Error','err');} return 'proy_acciones'; }},
+
+  // ══ REQUERIMIENTOS ══
+  reqs_consumo:{
+    msgs:[`📋 *Requerimientos Técnicos*\n\n¿Consumo mensual en kWh?`],
+    free:true,
+    next:(v)=>{ S.tempData.req={consumo_kwh_mensual:v}; return 'reqs_vivienda'; },
+  },
+  reqs_vivienda:{
+    msgs:[`🏠 ¿Tipo de vivienda/local?`],
+    opts:()=>withOtro(['Casa','PH','Departamento','Local','Galpón','Fábrica','Estación de carga']),
+    next:(ans,opt)=>{ if(opt?.isOtro) return 'reqs_vivienda_otro'; S.tempData.req.tipo_vivienda_local=ans; return 'reqs_propietario'; },
+  },
+  reqs_vivienda_otro:{msgs:[`✏️ Especificá el tipo:`],free:true,next:(v)=>{S.tempData.req.tipo_vivienda_local=v;return 'reqs_propietario';}},
+  reqs_propietario:{msgs:[`🔑 ¿Es propietario?`],opts:['Sí','No'],next:(v)=>{S.tempData.req.es_propietario=v==='Sí';return 'reqs_espacio';}},
+  reqs_espacio:{msgs:[`📐 ¿Tiene espacio disponible para paneles?`],opts:['Sí','No','A evaluar'],next:(v)=>{S.tempData.req.tiene_espacio_paneles=v==='Sí';return v==='Sí'?'reqs_metros':'reqs_techo';}},
+  reqs_metros:{msgs:[`📏 ¿Metros² disponibles aprox.?`],free:true,next:(v)=>{S.tempData.req.metros_disponibles_m2=v;return 'reqs_techo';}},
+  reqs_techo:{msgs:[`🏗️ ¿Tipo de techo?`],opts:()=>withOtro(['Losa','Chapa','Teja']),next:(ans,opt)=>{if(opt?.isOtro)return 'reqs_techo_otro';S.tempData.req.tipo_techo=ans;return 'reqs_orientacion';}},
+  reqs_techo_otro:{msgs:[`✏️ Especificá el tipo de techo:`],free:true,next:(v)=>{S.tempData.req.tipo_techo=v;return 'reqs_orientacion';}},
+  reqs_orientacion:{msgs:[`🧭 ¿Orientación del techo?`],opts:()=>withOtro(['Norte','Sur','Este','Oeste']),next:(ans,opt)=>{if(opt?.isOtro)return 'reqs_orientacion_otro';S.tempData.req.orientacion=ans;return 'reqs_objetivo';}},
+  reqs_orientacion_otro:{msgs:[`✏️ Especificá la orientación:`],free:true,next:(v)=>{S.tempData.req.orientacion=v;return 'reqs_objetivo';}},
+  reqs_objetivo:{msgs:[`🎯 ¿Objetivo de cobertura?`],opts:()=>withOtro(['100% consumo','Reducir factura','Solo backup','Solo carga VE','Híbrido']),next:(ans,opt)=>{if(opt?.isOtro)return 'reqs_objetivo_otro';S.tempData.req.objetivo_cobertura=ans;return 'reqs_conexion';}},
+  reqs_objetivo_otro:{msgs:[`✏️ Especificá el objetivo:`],free:true,next:(v)=>{S.tempData.req.objetivo_cobertura=v;return 'reqs_conexion';}},
+  reqs_conexion:{msgs:[`🔌 ¿Tipo de conexión?`],opts:()=>withOtro(['On grid','Off grid','Híbrido']),next:(ans,opt)=>{if(opt?.isOtro)return 'reqs_conexion_otro';S.tempData.req.conexion_red=ans;return 'reqs_bateria';}},
+  reqs_conexion_otro:{msgs:[`✏️ Especificá el tipo de conexión:`],free:true,next:(v)=>{S.tempData.req.conexion_red=v;return 'reqs_bateria';}},
+  reqs_bateria:{msgs:[`🔋 ¿Requiere batería de backup?`],opts:['Sí','No','A evaluar'],next:(v)=>{S.tempData.req.requiere_bateria_backup=v;return 'reqs_urgencia';}},
+  reqs_urgencia:{msgs:[`⏱️ ¿Urgencia?`],opts:()=>withOtro(['Inmediata <1mes','Normal 1 a 3 meses','Sin urgencia >3 meses']),next:(ans,opt)=>{if(opt?.isOtro)return 'reqs_urgencia_otro';S.tempData.req.urgencia_instalacion=ans;return 'reqs_ev';}},
+  reqs_urgencia_otro:{msgs:[`✏️ Especificá la urgencia:`],free:true,next:(v)=>{S.tempData.req.urgencia_instalacion=v;return 'reqs_ev';}},
+  reqs_ev:{
+    msgs:[`🚗 ¿Tiene vehículos eléctricos?`],
+    opts:['Sí','No'],
+    next:(v)=>{ S.tempData.req.tiene_ev = v==='Sí'; return v==='Sí'?'reqs_ev_cantidad':'reqs_notas'; },
+  },
+  reqs_ev_cantidad:{msgs:[`🚗 ¿Cuántos vehículos?`],free:true,next:(v)=>{S.tempData.req.cantidad_vehiculos_electricos=v;return 'reqs_notas';}},
+  reqs_notas:{
+    msgs:[`📝 ¿Notas técnicas? _(o "ninguna")_`],
+    free:true,
+    next: async (v) => {
+      if(v.toLowerCase()!=='ninguna') S.tempData.req.notas_tecnicas=v;
+      S.tempData.req.Tipo_producto = S.proyectoActual?.tipo_producto||'';
+      try{
+        const r = await apiPost({ action:'crearRequerimientos', proyecto_id:S.proyectoActual?.proyecto_id, data:S.tempData.req });
+        if(r.status==='ok'){
+          showToast('✅ Requerimientos guardados','ok');
+          return 'dim_calcular';
+        } else { showToast('❌ '+(r.error||'Error'),'err'); return 'menu'; }
+      } catch(e){ showToast('❌ Error de conexión','err'); return 'menu'; }
+    },
+  },
+
+  // ══ DIMENSIONAMIENTO ══
+  dim_calcular: {
+    msgs:[`⚡ Calculando dimensionamiento…`],
+    onEnter: () => {
+      const req = S.tempData.req || {};
+      const consumo = parseFloat(req.consumo_kwh_mensual)||0;
+      const ev_count = parseFloat(req.cantidad_vehiculos_electricos)||0;
+      const kwh_ev = ev_count * (CFG?.params?.kwh_ev_por_vehiculo||400);
+      const total = consumo + kwh_ev;
+      const sistema = calcSistema(total);
+
+      const unidad = S.proyectoActual?.unidad_negocio||S.tempData.unidad_negocio||'';
+      const esMovilidad = unidad.includes('Movil');
+
+      showTyping(()=>{
+        addBubble(`✅ *Dimensionamiento calculado*\nConsumo total estimado: ~${total} kWh/mes`,'in');
+        if(esMovilidad){
+          addBubble('🚗 ¿Tipo de carga para los vehículos?','in');
+          addOptions([
+            {label:'🌙 Lenta (nocturna)',cls:''},
+            {label:'⚡ Semi-rápida (2-4hs)',cls:''},
+            {label:'🚀 Rápida DC',cls:''},
+          ],(ans)=>{
+            const tipo = ans.includes('Lenta')?'Lento':ans.includes('Semi')?'Semi':' Rápido';
+            const cargador = calcCargador(tipo);
+            addOfertaCard(sistema, total, cargador);
+            S.tempData.dim = { sistema, total_kwh:total, cargador };
+            setTimeout(()=>runStep('dim_confirmar'),400);
+          });
+        } else {
+          addOfertaCard(sistema, total, null);
+          S.tempData.dim = { sistema, total_kwh:total };
+          setTimeout(()=>runStep('dim_confirmar'),400);
+        }
+      },800);
+    },
+  },
+
+  dim_confirmar: {
+    msgs:[`¿Guardamos este dimensionamiento y enviamos por mail?`],
+    opts:[{label:'✅ Confirmar y enviar',cls:'green'},{label:'🔄 Ajustar manualmente',cls:''},{label:'❌ Descartar',cls:'red'}],
+    next: async (ans) => {
+      if(ans.includes('Descartar')) return 'proy_acciones';
+      if(ans.includes('Ajustar'))   return 'dim_manual';
+
+      const d = S.tempData.dim||{};
+      const s = d.sistema||{};
+      const factor = CFG?.params?.factor_kwh_kwp||120;
+      const tarifa = CFG?.params?.tarifa_kwh||0.09;
+
+      try {
+        const diseñoData = {
+          owner_email: S.owner?.email,
+          nombre_proyecto: S.proyectoActual?.nombre_proyecto,
+          cliente_nombre: S.leadActual?.nombre_contacto,
+          potencia_total_kw: s.kwp||0,
+          costo_total_usd: s.costo||0,
+          precio_oferta_usd: s.costo||0,
+          produccion_estimada_kwh_anio: Math.round((s.kwp||0)*factor*12),
+          dias_obra_estimados: Math.round((s.kwp||0)*0.5),
+        };
+        const r = await apiPost({ action:'crearDiseño', proyecto_id:S.proyectoActual?.proyecto_id, data:diseñoData });
+        if(r.status==='ok'){
+          showToast('✅ Dimensionamiento guardado','ok');
+          showTyping(()=>{
+            addBubble(`✅ *Dimensionamiento guardado*\nID: ${r.diseño_id}\n\n${r.requiere_aprobacion ? '⚠️ Supera los umbrales — *pendiente de aprobación de ingeniería*.' : '✅ Aprobado automáticamente. Podés avanzar con la propuesta.'}`,'in');
+            addOptions([{label:'🏠 Menú',cls:''}],()=>runStep('menu'));
+          },800);
+        } else { showToast('❌ '+(r.error||'Error'),'err'); return 'proy_acciones'; }
+      } catch(e){ showToast('❌ Error de conexión','err'); return 'proy_acciones'; }
+      return null;
+    },
+  },
+
+  dim_manual: {
+    msgs:[`⚙️ Ingresá la potencia total en kW:`],
+    free:true,
+    next:(v)=>{ S.tempData.dim_manual={potencia:v}; return 'dim_manual_costo'; },
+  },
+  dim_manual_costo: {
+    msgs:[`💰 ¿Costo total en USD?`],
+    free:true,
+    next:(v)=>{
+      S.tempData.dim={
+        sistema:{ kwp:parseFloat(S.tempData.dim_manual?.potencia)||0, costo:parseFloat(v)||0 },
+        total_kwh: S.tempData.req?.consumo_kwh_mensual||0,
+      };
+      return 'dim_confirmar';
+    },
+  },
+
+  dim_ver: {
+    msgs:[`⚡ Mostrando dimensionamiento del proyecto…`],
+    onEnter: () => {
+      const req = S.tempData.req||{};
+      const consumo = parseFloat(req.consumo_kwh_mensual||S.proyectoActual?.consumo_kwh||0)||0;
+      const sistema = calcSistema(consumo);
+      showTyping(()=>{
+        addOfertaCard(sistema, consumo, null);
+        setTimeout(()=>runStep('proy_acciones'),400);
+      },600);
+    },
+  },
+
+  // ══ SEGUIMIENTO ══
+  seg_tipo:{
+    msgs:[`📝 ¿Tipo de contacto?`],
+    opts:()=>withOtro(['Llamada','WhatsApp','Email','Reunión presencial','Reunión virtual']),
+    next:(ans,opt)=>{ if(opt?.isOtro)return 'seg_tipo_otro'; S.tempData.seg={tipo_contacto:ans,proyecto_id:S.proyectoActual?.proyecto_id,comercial:S.owner?.email}; return 'seg_resultado'; },
+  },
+  seg_tipo_otro:{msgs:[`✏️ Especificá el tipo:`],free:true,next:(v)=>{S.tempData.seg={tipo_contacto:v,proyecto_id:S.proyectoActual?.proyecto_id,comercial:S.owner?.email};return 'seg_resultado';}},
+  seg_resultado:{msgs:[`💬 ¿Resultado / resumen del contacto?`],free:true,next:(v)=>{S.tempData.seg.resultado=v;S.tempData.seg.notas=v;return 'seg_proxima';}},
+  seg_proxima:{
+    msgs:[`📅 ¿Próxima acción? _(o "ninguna")_`],
+    free:true,
+    next: async (v) => {
+      if(v.toLowerCase()!=='ninguna') S.tempData.seg.proxima_accion=v;
+      try{
+        await apiPost({action:'crearSeguimiento',data:S.tempData.seg});
+        showToast('✅ Seguimiento registrado','ok');
+      } catch(e){ showToast('❌ Error','err'); }
+      showTyping(()=>{
+        addBubble('✅ *Seguimiento registrado*','in');
+        addOptions([{label:'🔙 Volver al lead',cls:''},{label:'🏠 Menú',cls:''}],(a)=>{
+          if(a.includes('lead')){ addLeadCard(S.leadActual,S.proyectoActual); runStep('lead_acciones'); }
+          else runStep('menu');
+        });
+      },600);
+      return null;
+    },
+  },
+
+  // ══ PENDIENTES ══
+  pendientes: {
+    msgs:[`📋 Cargando tus pendientes…`],
+    onEnter: async () => {
+      try {
+        const r = await apiGet({ action:'listarPendientes', email:S.owner?.email||'' });
+        const proyectos = r.proyectos||[];
+        showTyping(()=>{
+          if(proyectos.length===0){
+            addBubble('✅ No tenés proyectos pendientes.','in');
+            addOptions([{label:'🏠 Menú',cls:''}],()=>runStep('menu'));
+          } else {
+            addBubble(`📋 *${proyectos.length}* proyecto${proyectos.length>1?'s':''} pendiente${proyectos.length>1?'s':''}:`,'in');
+            proyectos.forEach(p=>{
+              const unidadCls = (p.unidad_negocio||'').toLowerCase().replace(/\s/g,'').includes('energ')?'green':
+                (p.unidad_negocio||'').toLowerCase().includes('movil')?'blue':
+                (p.unidad_negocio||'').toLowerCase().includes('ing')?'yellow':'purple';
+              makeCard(unidadCls,[`
+                <div class="card-title">${p.nombre_proyecto||'Sin nombre'}</div>
+                <div class="card-sub">${p.unidad_negocio||''}</div>
+                ${crRow('📊 Etapa',`<span class="badge b-etapa">${p.etapa_pipeline||'—'}</span>`)}
+                ${crRow('⚡ Producto',p.tipo_producto||'—')}
+                ${crRow('🎯 Prioridad',p.prioridad||'—')}
+                ${crRow('💰 Monto est.',p.monto_estimado_usd?'$'+p.monto_estimado_usd:'—')}
+              `]);
+            });
+            setTimeout(()=>{ addOptions([{label:'🏠 Menú',cls:''}],()=>runStep('menu')); },300);
+          }
+        },800);
+      } catch(e){ showToast('❌ Error de conexión','err'); runStep('menu'); }
+    },
+  },
+
+  // ══ RESUMEN ══
+  resumen: {
+    msgs:[`📊 Cargando resumen…`],
+    onEnter: async () => {
+      try {
+        const r = await apiGet({ action:'obtenerResumen' });
+        showTyping(()=>{ addResumenCard(r); setTimeout(()=>{ addOptions([{label:'🏠 Menú',cls:''}],()=>runStep('menu')); },300); },800);
+      } catch(e){ showToast('❌ Error de conexión','err'); runStep('menu'); }
+    },
+  },
+};
+
+// Helper para decidir flujo según unidad
+function decidirFlujoProy(unidad){
+  const u = unidad.toLowerCase();
+  if(u.includes('energ'))  return 'proy_tipo_energia';
+  if(u.includes('movil'))  return 'proy_tipo_movilidad';
+  return 'proy_descripcion'; // Ingeniería y Software
+}
+
+// ═══════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════
+document.getElementById('sendBtn').onclick=()=>{
+  const v=document.getElementById('inp').value.trim();
+  if(!v) return;
+  document.getElementById('inp').value='';
+  handleFree(v);
+};
+document.getElementById('inp').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('sendBtn').click(); });
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadConfig().then(()=>setTimeout(()=>runStep('pin'),400));
+</script>
+</body>
+</html>
