@@ -126,7 +126,11 @@ let CFG = null;
 
 async function loadConfig() {
   try {
-    const r = await fetch(APPS_SCRIPT_URL + '?action=config');
+    const r = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'config' }),
+    });
     CFG = await r.json();
     setStatus('● en línea', 'var(--green)');
   } catch(e) {
