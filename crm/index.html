@@ -152,19 +152,13 @@ const now = () => {
 // ═══════════════════════════════════════════
 // API
 // ═══════════════════════════════════════════
-function apiGet(params) {
-  // JSONP to avoid CORS — works with Google Apps Script
-  return new Promise((resolve, reject) => {
-    const cb = 'cb_' + Date.now();
-    const url = APPS_SCRIPT_URL + '?' + new URLSearchParams({...params, callback: cb}).toString();
-    const script = document.createElement('script');
-    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
-    window[cb] = (data) => { cleanup(); resolve(data); };
-    function cleanup(){ clearTimeout(timeout); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
-    script.onerror = () => { cleanup(); reject(new Error('Script load error')); };
-    script.src = url;
-    document.head.appendChild(script);
-  });
+async function apiGet(params) {
+  // Use AllOrigins proxy to bypass CORS
+  const targetUrl = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const proxyUrl  = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+  const r = await fetch(proxyUrl);
+  const data = await r.json();
+  return JSON.parse(data.contents);
 }
 
 async function apiPost(body) {
