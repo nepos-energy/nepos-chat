@@ -258,15 +258,18 @@ html,body{
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhaVTRfbgYJKZ9ZHgxQh0OVBnz7gNmZKNqF8oGxMbJ2ZYsT4fOOW7mKbKy1nO0CtxP/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpNY0b3reevZzOdUlTjdGAD2gmaSlalxabQ3kUj2k40MwuSGAD0CUpCh7apH0FTB1DGg/exec';
 const WA_NUMBER  = '593983358832';
 const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, los conocí en la Feria de Movilidad y me interesa saber más sobre energía solar.');
+
+let KWH_EV_VEHICULO = 400;
+let KWH_PER_KWP_VAR = 120;
 
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
 const S = {
-  flujo: '',        // 'ev_hogar' | 'solar_puro' | 'empresa'
+  flujo: '',
   nombre: '',
   email: '',
   telefono: '',
@@ -298,7 +301,6 @@ const SISTEMAS = [
   { key:'s200', kwp:200, contado:'$147.000', ahorro:'~$2.200/mes'},
 ];
 
-// kWh por kWp instalado (factor de producción Ecuador ~120 kWh/kWp/mes)
 const KWH_PER_KWP = 120;
 
 function recomendarSistema(kwh_total) {
@@ -380,7 +382,6 @@ function addSistemaCard(sistema, kwh_total, flujo){
     <div class="spec"><span class="si">📐</span><span>Requiere ~${Math.round(sistema.kwp * 6)} m² de techo</span></div>
     <div class="spec"><span class="si">🛡️</span><span>Garantía 25 años en paneles</span></div>`;
 
-  // Cargadores section for EV flows
   let cargadoresHTML = '';
   if(flujo === 'ev_hogar' || flujo === 'empresa'){
     cargadoresHTML = `
@@ -507,7 +508,6 @@ function handleFree(val){
 // STEPS — FLUJO PRINCIPAL
 // ═══════════════════════════════════════════
 const STEPS = [
-  // 0 — bienvenida
   {
     msgs: [`👋 ¡Hola! Soy el *agente inteligente* de *Nepos Energy*.\n\nGracias por visitarnos en la *Feria de Movilidad 2026* ☀️⚡\n\n¿Qué te trae por acá hoy?`],
     opts: ['🚗 Tengo / voy a tener un EV', '☀️ Quiero reducir mi factura energética', '🏢 Soy empresa o tengo flota'],
@@ -517,7 +517,6 @@ const STEPS = [
       S.flujo='empresa'; return 1;
     },
   },
-  // 1 — nombre
   {
     msgs: s => {
       if(s.flujo==='ev_hogar')   return [`Genial 🚗⚡ ¿Cuál es tu nombre?`];
@@ -527,7 +526,6 @@ const STEPS = [
     free: true,
     next: a => { S.nombre = a.trim().split(' ')[0]; return 2; },
   },
-  // 2 — consumo / empresa
   {
     msgs: s => {
       if(s.flujo==='empresa') return [`Mucho gusto, *${s.nombre}* 😊\n\n¿Cuántos vehículos tiene la flota?`];
@@ -545,7 +543,6 @@ const STEPS = [
       return S.flujo==='ev_hogar' ? 3 : 'solar_vivienda';
     },
   },
-  // 3 — gasolina (solo EV hogar)
   {
     msgs: [`⛽ ¿Cuánto gastás actualmente en gasolina al mes?\n\n_(esto nos ayuda a estimar cuánta energía necesitará tu EV)_`],
     opts: ['Menos de $40','$40–$80','$80–$150','Más de $150'],
@@ -554,7 +551,6 @@ const STEPS = [
       return 4;
     },
   },
-  // 4 — vivienda (EV hogar)
   {
     msgs: [`🏠 ¿Cuál es tu tipo de vivienda?`],
     opts: ['Casa propia con techo','Casa arrendada','Departamento','Negocio / Local'],
@@ -566,8 +562,6 @@ const STEPS = [
 // EXTRA BRANCHES
 // ═══════════════════════════════════════════
 const EXTRA = {
-
-  // ── SOLAR PURO ──
   solar_vivienda: {
     msgs: [`🏠 ¿La instalación es para tu hogar o negocio?`],
     opts: ['Hogar propio','Casa arrendada','Negocio / Local','Industria'],
@@ -590,8 +584,6 @@ const EXTRA = {
     opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
     next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
   },
-
-  // ── EV HOGAR ──
   oferta_ev: {
     msgs: s => {
       const extra_ev = Math.round((s.gasolina / 0.65) * 0.18 * 10);
@@ -611,8 +603,6 @@ const EXTRA = {
     opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
     next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
   },
-
-  // ── EMPRESA ──
   empresa_consumo: {
     msgs: [`🏭 ¿Cuánto paga la empresa en electricidad mensualmente?`],
     opts: ['Menos de $500','$500–$2.000','$2.000–$5.000','Más de $5.000'],
@@ -633,8 +623,7 @@ const EXTRA = {
   },
   oferta_empresa: {
     msgs: s => {
-      // Add EV consumption estimate per vehicle
-      const kwh_ev = s.n_vehiculos * 400; // ~400 kWh/mes por vehículo promedio
+      const kwh_ev = s.n_vehiculos * KWH_EV_VEHICULO;
       const total = s.consumo + kwh_ev;
       const sistema = recomendarSistema(total);
       S.combo = sistema.key;
@@ -650,8 +639,6 @@ const EXTRA = {
     opts: ['Sí, que nos contacten ✅','Tengo más preguntas 💬'],
     next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
   },
-
-  // ── CONTACTO ──
   contacto: {
     msgs: s => [`📱 ¡Perfecto, *${s.nombre}*! ¿Cuál es tu número de celular?`],
     free: true,
@@ -671,8 +658,6 @@ const EXTRA = {
     next: () => 'fin',
     onEnter: () => saveToSheet(),
   },
-
-  // ── MÁS INFO ──
   mas_info: {
     msgs: [`Claro, ¿qué querés saber?\n\n💰 *Precios y financiamiento*\n📋 *Contrato PPA (sin inversión inicial)*\n📐 *Cómo es la instalación*\n⚡ *Cargadores para EV*`],
     opts: ['Precios 💰','Contrato PPA 📋','La instalación 📐','Cargadores ⚡','Hablar con un asesor 👨‍💼'],
@@ -704,7 +689,6 @@ const EXTRA = {
     opts: ['Quiero que me contacten ✅','Ver más opciones'],
     next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
   },
-
   fin: {
     msgs: [`_Podés cerrar esta ventana o reiniciar el chat._`],
     opts: [],
@@ -713,11 +697,11 @@ const EXTRA = {
 };
 
 // ═══════════════════════════════════════════
-// GOOGLE SHEETS
+// GOOGLE SHEETS — CRM Integration
 // ═══════════════════════════════════════════
 async function saveToSheet(){
   const payload = {
-    timestamp:    new Date().toISOString(),
+    action:       'crearLeadExterno',
     nombre:       S.nombre,
     telefono:     S.telefono,
     email:        S.email,
