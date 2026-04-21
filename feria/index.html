@@ -290,24 +290,27 @@ const now = () => {
 // ═══════════════════════════════════════════
 // SISTEMAS SOLARES
 // ═══════════════════════════════════════════
+// Tabla de sistemas Nepos Energy (precios reales)
+// TODO: mover a Config CRM cuando implementemos config dinámico
 const SISTEMAS = [
-  { key:'s3',   kwp:3,   contado:'$3.617',   ahorro:'~$40/mes'  },
-  { key:'s7',   kwp:7,   contado:'$5.564',   ahorro:'~$70/mes'  },
-  { key:'s10',  kwp:10,  contado:'$7.810',   ahorro:'~$110/mes' },
-  { key:'s15',  kwp:15,  contado:'$13.213',  ahorro:'~$170/mes' },
-  { key:'s30',  kwp:30,  contado:'$22.049',  ahorro:'~$340/mes' },
-  { key:'s50',  kwp:50,  contado:'$36.750',  ahorro:'~$560/mes' },
-  { key:'s100', kwp:100, contado:'$73.500',  ahorro:'~$1.100/mes'},
-  { key:'s200', kwp:200, contado:'$147.000', ahorro:'~$2.200/mes'},
+  { key:'s7',  kwp:7,  contado:'$5.564',  ahorro:'~$63/mes'  },
+  { key:'s10', kwp:10, contado:'$7.810',  ahorro:'~$90/mes'  },
+  { key:'s20', kwp:20, contado:'$14.999', ahorro:'~$180/mes' },
+  { key:'s30', kwp:30, contado:'$22.048', ahorro:'~$270/mes' },
+  { key:'s50', kwp:50, contado:'$36.002', ahorro:'~$450/mes' },
+  { key:'s75', kwp:75, contado:'$52.866', ahorro:'~$675/mes' },
 ];
 
 const KWH_PER_KWP = 120;
 
+// Factura $ ≈ consumo kWh en Ecuador residencial (tabla Nepos)
 function recomendarSistema(kwh_total) {
-  for (const s of SISTEMAS) {
-    if (s.kwp * KWH_PER_KWP >= kwh_total) return s;
-  }
-  return SISTEMAS[SISTEMAS.length - 1];
+  if(kwh_total <= 70)  return SISTEMAS[0]; // 7 kWp
+  if(kwh_total <= 100) return SISTEMAS[1]; // 10 kWp
+  if(kwh_total <= 200) return SISTEMAS[2]; // 20 kWp
+  if(kwh_total <= 300) return SISTEMAS[3]; // 30 kWp
+  if(kwh_total <= 500) return SISTEMAS[4]; // 50 kWp
+  return SISTEMAS[5];                      // 75 kWp
 }
 
 // ═══════════════════════════════════════════
