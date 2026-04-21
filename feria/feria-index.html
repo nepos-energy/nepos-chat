@@ -258,7 +258,7 @@ html,body{
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhaVTRfbgYJKZ9ZHgxQh0OVBnz7gNmZKNqF8oGxMbJ2ZYsT4fOOW7mKbKy1nO0CtxP/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpNY0b3reevZzOdUlTjdGAD2gmaSlalxabQ3kUj2k40MwuSGAD0CUpCh7apH0FTB1DGg/exec';
 const WA_NUMBER  = '593983358832';
 const WA_MESSAGE = encodeURIComponent('Hola Nepos Energy, los conocí en la Feria de Movilidad y me interesa saber más sobre energía solar.');
 
@@ -751,7 +751,7 @@ const EXTRA = {
 // ═══════════════════════════════════════════
 async function saveToSheet(){
   const payload = {
-    timestamp:    new Date().toISOString(),
+    action:       'crearLeadExterno',
     nombre:       S.nombre,
     telefono:     S.telefono,
     email:        S.email,
