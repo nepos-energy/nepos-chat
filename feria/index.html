@@ -557,18 +557,25 @@ const STEPS = [
   {
     msgs: [`🏠 ¿Cuál es tu tipo de vivienda?`],
     opts: ['Casa propia con techo','Casa arrendada','Departamento','Negocio / Local'],
-    next: a => { S.vivienda = a; return 'oferta_ev'; },
+    next: a => { S.vivienda = a; return 'pedir_telefono'; },
   },
 ];
 
-// ═══════════════════════════════════════════
-// EXTRA BRANCHES
-// ═══════════════════════════════════════════
 const EXTRA = {
   solar_vivienda: {
     msgs: [`🏠 ¿La instalación es para tu hogar o negocio?`],
     opts: ['Hogar propio','Casa arrendada','Negocio / Local','Industria'],
-    next: a => { S.vivienda = a; return 'oferta_solar'; },
+    next: a => { S.vivienda = a; return 'pedir_telefono'; },
+  },
+  pedir_telefono: {
+    msgs: s => [`🔍 ¡Perfecto, *${s.nombre}*! Estamos calculando tu sistema ideal.\n\nAntes de mostrarte la propuesta, ¿cuál es tu número de celular?`],
+    free: true,
+    next: a => { S.telefono = a.trim(); return 'pedir_email'; },
+  },
+  pedir_email: {
+    msgs: [`📧 ¿Y tu email de contacto?`],
+    free: true,
+    next: a => { S.email = a.trim(); return S.flujo==='ev_hogar' ? 'oferta_ev' : S.flujo==='empresa' ? 'oferta_empresa' : 'oferta_solar'; },
   },
   oferta_solar: {
     msgs: s => {
@@ -576,16 +583,16 @@ const EXTRA = {
       S.combo = sistema.key;
       const esPPA = s.vivienda.includes('arrend') || s.vivienda.includes('Depart');
       return [
-        `🔍 Calculando tu sistema ideal, *${s.nombre}*…`,
         `✅ Basándonos en tu consumo de *~${s.consumo} kWh/mes*, esta es nuestra recomendación:`,
         { type:'sistema', sistema, kwh: s.consumo, flujo: 'solar_puro' },
         esPPA
           ? `📋 Como tu propiedad es *${s.vivienda.toLowerCase()}*, podemos ofrecerte un *contrato PPA* sin inversión inicial. Un asesor te explicará los detalles.`
-          : `¿Te gustaría que un asesor te contacte para preparar tu propuesta formal?`,
+          : `¿Te gustaría recibir más información sobre esta propuesta?`,
       ];
     },
-    opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
-    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
+    onEnter: () => saveToSheet(),
+    opts: [],
+    next: () => 'fin',
   },
   oferta_ev: {
     msgs: s => {
@@ -595,16 +602,34 @@ const EXTRA = {
       S.combo = sistema.key;
       const esPPA = s.vivienda.includes('Depart');
       return [
-        `🔍 Analizando tu perfil, *${s.nombre}*…`,
         `✅ Con tu consumo actual + el estimado de tu EV (*~${total} kWh/mes en total*), te recomendamos:`,
         { type:'sistema', sistema, kwh: total, flujo: 'ev_hogar' },
         esPPA
-          ? `📋 Como vivís en departamento, el *contrato PPA* puede ser ideal para vos: sin inversión inicial. Un asesor te explicará cómo funciona.`
-          : `El sistema incluye opciones de carga para tu EV. ¿Querés que un asesor te contacte?`,
+          ? `📋 Como vivís en departamento, el *contrato PPA* puede ser ideal: sin inversión inicial.`
+          : `¿Te gustaría recibir más información sobre esta propuesta?`,
+        { type:'wa' },
       ];
     },
-    opts: ['Sí, que me contacten ✅','Tengo más preguntas 💬'],
-    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
+    onEnter: () => saveToSheet(),
+    opts: [],
+    next: () => 'fin',
+  },
+  oferta_empresa: {
+    msgs: s => {
+      const kwh_ev = s.n_vehiculos * KWH_EV_VEHICULO;
+      const total = s.consumo + kwh_ev;
+      const sistema = recomendarSistema(total);
+      S.combo = sistema.key;
+      return [
+        `✅ Consumo total estimado: *~${total.toLocaleString()} kWh/mes*. Nuestra recomendación:`,
+        { type:'sistema', sistema, kwh: total, flujo: 'empresa' },
+        `¿Te gustaría recibir más información sobre esta propuesta?`,
+        { type:'wa' },
+      ];
+    },
+    onEnter: () => saveToSheet(),
+    opts: [],
+    next: () => 'fin',
   },
   empresa_consumo: {
     msgs: [`🏭 ¿Cuánto paga la empresa en electricidad mensualmente?`],
@@ -621,45 +646,8 @@ const EXTRA = {
     opts: ['🌙 Carga lenta (nocturna)','⚡ Semi-rápida (2–4 hs)','🚀 Rápida (menos de 1 hora)','Todavía no lo sé'],
     next: a => {
       S.tipo_carga = a.includes('lenta') ? 'lento' : a.includes('Semi') ? 'semirrapido' : a.includes('Rápida') ? 'rapido' : 'por_definir';
-      return 'oferta_empresa';
+      return 'pedir_telefono';
     },
-  },
-  oferta_empresa: {
-    msgs: s => {
-      const kwh_ev = s.n_vehiculos * KWH_EV_VEHICULO;
-      const total = s.consumo + kwh_ev;
-      const sistema = recomendarSistema(total);
-      S.combo = sistema.key;
-      return [
-        `🔍 Dimensionando el sistema para *${s.n_vehiculos} vehículos* + consumo de la empresa…`,
-        `✅ Consumo total estimado: *~${total.toLocaleString()} kWh/mes*. Nuestra recomendación:`,
-        { type:'sistema', sistema, kwh: total, flujo: 'empresa' },
-        s.tipo_carga !== 'por_definir'
-          ? `Para el tipo de carga que elegiste (*${CARGADORES[s.tipo_carga]?.nombre || s.tipo_carga}*), incluimos esa opción en la propuesta. ¿Querés que un asesor los contacte?`
-          : `¿Querés que un asesor prepare una propuesta completa para tu empresa?`,
-      ];
-    },
-    opts: ['Sí, que nos contacten ✅','Tengo más preguntas 💬'],
-    next: a => a.includes('Sí') ? 'contacto' : 'mas_info',
-  },
-  contacto: {
-    msgs: s => [`📱 ¡Perfecto, *${s.nombre}*! ¿Cuál es tu número de celular?`],
-    free: true,
-    next: a => { S.telefono = a.trim(); return 'contacto_email'; },
-  },
-  contacto_email: {
-    msgs: [`📧 ¿Y tu email de contacto?`],
-    free: true,
-    next: a => { S.email = a.trim(); return 'guardar'; },
-  },
-  guardar: {
-    msgs: s => [
-      `✅ *¡Todo listo, ${s.nombre}!*\n\nUn asesor de Nepos Energy te va a contactar en las próximas horas hábiles para:\n📋 Preparar tu propuesta personalizada\n📐 Coordinar visita técnica sin costo\n💡 Resolver todas tus dudas\n\n¡Gracias por tu interés en la energía limpia! 🌱⚡`,
-      { type:'wa' },
-    ],
-    opts: [],
-    next: () => 'fin',
-    onEnter: () => saveToSheet(),
   },
   mas_info: {
     msgs: [`Claro, ¿qué querés saber?\n\n💰 *Precios y financiamiento*\n📋 *Contrato PPA (sin inversión inicial)*\n📐 *Cómo es la instalación*\n⚡ *Cargadores para EV*`],
@@ -669,36 +657,36 @@ const EXTRA = {
       if(a.includes('PPA'))            return 'info_ppa';
       if(a.includes('instalación'))    return 'info_instalacion';
       if(a.includes('Cargadores'))     return 'info_cargadores';
-      return 'contacto';
+      return 'fin';
     },
   },
   info_precios: {
-    msgs: [`💰 *Precios del sistema solar*\n\nLos precios varían según la potencia que necesitás:\n\n• 3 kWp → $3.617\n• 7 kWp → $5.564\n• 10 kWp → $7.810\n• 15 kWp → $13.213\n• 30 kWp → $22.049\n• 50–200 kWp → consultar\n\nIncluyen instalación completa + garantía 25 años.\n\nPara financiamiento o contrato PPA, un asesor te arma una propuesta a medida.`],
-    opts: ['Quiero que me contacten ✅','Ver más opciones'],
-    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+    msgs: [`💰 *Precios del sistema solar*\n\nLos precios varían según la potencia que necesitás:\n\n• 3 kWp → $3.617\n• 7 kWp → $5.564\n• 10 kWp → $7.810\n• 15 kWp → $13.213\n• 30 kWp → $22.049\n• 50–200 kWp → consultar\n\nIncluyen instalación completa + garantía 25 años.`],
+    opts: ['Ver más opciones'],
+    next: () => 'mas_info',
   },
   info_ppa: {
-    msgs: [`📋 *Contrato PPA (Power Purchase Agreement)*\n\n✅ Nosotros instalamos el sistema\n✅ Vos pagás solo por la energía que generás\n✅ Sin inversión inicial\n✅ Contrato 15 años + opción de compra\n\nIdeal para quienes no quieren desembolso inicial o están en propiedad arrendada.\n\nUn asesor te explicará el precio por kWh según tu perfil.`],
-    opts: ['Me interesa, que me contacten ✅','Ver más opciones'],
-    next: a => a.includes('Me interesa') ? 'contacto' : 'mas_info',
+    msgs: [`📋 *Contrato PPA (Power Purchase Agreement)*\n\n✅ Nosotros instalamos el sistema\n✅ Vos pagás solo por la energía que generás\n✅ Sin inversión inicial\n✅ Contrato 15 años + opción de compra`],
+    opts: ['Ver más opciones'],
+    next: () => 'mas_info',
   },
   info_instalacion: {
-    msgs: [`📐 *¿Cómo es la instalación?*\n\n1. Visita técnica sin costo para evaluar tu techo\n2. Propuesta personalizada\n3. Firma del contrato\n4. Instalación en 1–3 días\n5. Activación y monitoreo remoto\n\nGarantía 25 años en paneles + 10 años en inversores.`],
-    opts: ['Quiero que me contacten ✅','Ver más opciones'],
-    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+    msgs: [`📐 *¿Cómo es la instalación?*\n\n1. Visita técnica sin costo\n2. Propuesta personalizada\n3. Firma del contrato\n4. Instalación en 1–3 días\n5. Activación y monitoreo remoto\n\nGarantía 25 años en paneles + 10 años en inversores.`],
+    opts: ['Ver más opciones'],
+    next: () => 'mas_info',
   },
   info_cargadores: {
-    msgs: [`⚡ *Opciones de carga para EV*\n\n🌙 *Lenta* — 3.7 kW, 8–12 hs, ~$1.000\nIdeal para carga nocturna en casa\n\n⚡ *Semi-rápida* — 7–22 kW, 2–4 hs, ~$2.500\nIdeal para uso diario, hogar o empresa\n\n🚀 *Rápida* (DC) — 50 kW+, 20–45 min, ~$25.000\nIdeal para flotas y estaciones públicas\n\n_Precios referenciales — confirmación con asesor._`],
-    opts: ['Quiero que me contacten ✅','Ver más opciones'],
-    next: a => a.includes('contacten') ? 'contacto' : 'mas_info',
+    msgs: [`⚡ *Opciones de carga para EV*\n\n🌙 *Lenta* — 3.7 kW, 8–12 hs, ~$1.000\n⚡ *Semi-rápida* — 7–22 kW, 2–4 hs, ~$2.500\n🚀 *Rápida* (DC) — 50 kW+, 20–45 min, ~$25.000\n\n_Precios referenciales._`],
+    opts: ['Ver más opciones'],
+    next: () => 'mas_info',
   },
   fin: {
-    msgs: [`_Podés cerrar esta ventana o reiniciar el chat._`],
+    msgs: [`_Podés cerrar esta ventana o escanear el QR para continuar por WhatsApp._`,{ type:'wa' }],
     opts: [],
     next: () => 'fin',
   },
 };
-
+  
 // ═══════════════════════════════════════════
 // GOOGLE SHEETS — CRM Integration
 // ═══════════════════════════════════════════
