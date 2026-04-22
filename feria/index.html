@@ -715,8 +715,11 @@ async function saveToSheet(){
     '&combo='        + encodeURIComponent(S.combo||'') +
     '&origen='       + encodeURIComponent(S.origen) +
     '&vivienda='     + encodeURIComponent(S.vivienda);
-  // Usar Image beacon para evitar CORB
-  new Image().src = url;
+   try {
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+  } catch(e) {
+    console.warn('saveToSheet error:', e);
+  }
 
   const t = document.getElementById('toast');
   t.classList.add('show');
