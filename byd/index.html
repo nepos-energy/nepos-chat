@@ -512,9 +512,11 @@ function initState() {
     segId:         '',
     factura:       0,
     gasolina:      0,
+    modeloBYD:     '',    // nombre del modelo elegido
+    consumoEV:     0,     // kWh/mes del modelo elegido
     m2:            null,
     tieneEspacio:  null,
-    codigoBYD:     ''   // ← se llena al guardar el lead
+    codigoBYD:     ''
   };
 }
 
@@ -784,30 +786,32 @@ function calcAhorro(segId, gasolina, m2Disponibles) {
   const segConsumo = segmentoPorFactura(segId);
   const segEspacio = m2Disponibles ? segmentoPorM2(m2Disponibles) : segConsumo;
 
-  // Orden de segmentos para comparar cuál es "menor"
   const orden = ['F1','F2','F3','F4','N1','N2','N3','N4'];
   const idxConsumo = orden.indexOf(segConsumo.id);
   const idxEspacio = orden.indexOf(segEspacio.id);
 
-  // El sistema recomendado es el menor de los dos
   const limitadoPorEspacio = idxEspacio < idxConsumo;
   const seg = limitadoPorEspacio ? segEspacio : segConsumo;
+
+  // Consumo EV mensual en $ (kWh × tarifa)
+  const TARIFA = parseFloat(CONFIG.byd_costo_kwh) || 0.0989;
+  const consumoEV    = state.consumoEV || 0;
+  const costoEVmes   = Math.round(consumoEV * TARIFA);  // $ que cuesta cargar el BYD
 
   // N4 requiere estudio
   if (seg.costo === null) {
     return {
       seg, limitadoPorEspacio: false, coberturaPct: 100,
-      ahorroElec: Math.round(seg.consumo * 0.70),
-      ahorroGaso: Math.round(gasolina * 0.60),
-      ahorroTotal: Math.round(seg.consumo * 0.70) + Math.round(gasolina * 0.60),
-      ahorroAnual: (Math.round(seg.consumo * 0.70) + Math.round(gasolina * 0.60)) * 12,
+      ahorroElec:  Math.round(seg.consumo * 0.70),
+      ahorroGaso:  Math.round(gasolina * 0.60),
+      ahorroEV:    costoEVmes,
+      ahorroTotal: Math.round(seg.consumo * 0.70) + Math.round(gasolina * 0.60) + costoEVmes,
+      ahorroAnual: (Math.round(seg.consumo * 0.70) + Math.round(gasolina * 0.60) + costoEVmes) * 12,
       kwp: null, potencia: null, costoSistema: null, paybackAnios: null,
-      requiereEstudio: true
+      requiereEstudio: true, modeloBYD: state.modeloBYD
     };
   }
 
-  // Cobertura: si el espacio limita, el sistema cubre menos que el 100% de la factura
-  // Estimamos proporción por kWp instalado vs kWp necesario para el consumo ideal
   let coberturaPct = 100;
   if (limitadoPorEspacio && segConsumo.kwp && seg.kwp) {
     coberturaPct = Math.round((seg.kwp / segConsumo.kwp) * 100);
@@ -816,17 +820,18 @@ function calcAhorro(segId, gasolina, m2Disponibles) {
 
   const ahorroElec  = Math.round(seg.consumo * 0.70 * (coberturaPct / 100));
   const ahorroGaso  = Math.round(gasolina * 0.60);
-  const ahorroTotal = ahorroElec + ahorroGaso;
+  const ahorroEV    = costoEVmes;
+  const ahorroTotal = ahorroElec + ahorroGaso + ahorroEV;
   const ahorroAnual = ahorroTotal * 12;
   const paybackAnios = (seg.costo / ahorroAnual).toFixed(1);
 
   return {
     seg, limitadoPorEspacio, coberturaPct,
-    segConsumoId: segConsumo.id,  // para mostrar cuál sería el ideal
-    ahorroElec, ahorroGaso, ahorroTotal, ahorroAnual,
+    segConsumoId: segConsumo.id,
+    ahorroElec, ahorroGaso, ahorroEV, ahorroTotal, ahorroAnual,
     kwp: seg.kwp, potencia: seg.potencia,
     costoSistema: seg.costo, paybackAnios,
-    requiereEstudio: false
+    requiereEstudio: false, modeloBYD: state.modeloBYD
   };
 }
 
@@ -935,14 +940,55 @@ async function step_gasolina() {
   state.step = 'gasolina';
   const seg = getSegmento(state.segId);
   await showTyping(600);
-  await addMsg(`💛 Planilla en rango <strong>${seg.rango}</strong> — ¡excelente potencial solar!<br><br>⛽ <strong>¿Cuánto gastás en gasolina al mes?</strong><br><span style="font-size:14px;color:#556080">Si ya tenés BYD eléctrico elegí $0 — calculamos solo el ahorro solar</span>`);
+  await addMsg(`💛 Planilla en rango <strong>${seg.rango}</strong> — ¡excelente potencial solar!<br><br>⛽ <strong>¿Cuánto gastás en gasolina al mes?</strong><br><span style="font-size:11px;color:#556080">Si ya tenés BYD eléctrico elegí $0 — calculamos solo el ahorro solar</span>`);
 
   showOptions([
-    { icon: '🚗', label: 'Ya tengo BYD — $0 gasolina', action: async () => { state.gasolina = 0;   await step_espacio(); } },
-    { icon: '⛽', label: 'Menos de $50 / mes',          action: async () => { state.gasolina = 30;  await step_espacio(); } },
-    { icon: '⛽', label: '$50 – $100 / mes',            action: async () => { state.gasolina = 75;  await step_espacio(); } },
-    { icon: '⛽', label: 'Más de $100 / mes',           action: async () => { state.gasolina = 120; await step_espacio(); } },
+    { icon: '🚗', label: 'Ya tengo BYD — $0',  action: async () => { state.gasolina = 0;   await step_modelo(); } },
+    { icon: '⛽', label: 'Menos de $50',         action: async () => { state.gasolina = 30;  await step_modelo(); } },
+    { icon: '⛽', label: '$50 – $100',           action: async () => { state.gasolina = 75;  await step_modelo(); } },
+    { icon: '⛽', label: 'Más de $100',          action: async () => { state.gasolina = 120; await step_modelo(); } },
   ]);
+  addRestartBtn();
+}
+
+// Modelos BYD Ecuador con consumo eléctrico mensual estimado
+// Asume 1.200 km/mes promedio urbano Ecuador
+const MODELOS_BYD = [
+  { nombre: 'Dolphin',   kwh100: 15, tipo: 'eléctrico',  emoji: '🐬' },
+  { nombre: 'Yuan Plus', kwh100: 16, tipo: 'eléctrico',  emoji: '🚗' },
+  { nombre: 'Han',       kwh100: 17, tipo: 'eléctrico',  emoji: '🏎️' },
+  { nombre: 'Tang',      kwh100: 20, tipo: 'eléctrico',  emoji: '🚙' },
+  { nombre: 'Atto 8',    kwh100: 18, tipo: 'eléctrico',  emoji: '🚐' },
+  { nombre: 'Song Plus', kwh100: 8,  tipo: 'híbrido',    emoji: '⚡' },
+  { nombre: 'Shark',     kwh100: 8,  tipo: 'híbrido',    emoji: '🦈' },
+];
+const KM_MES = 1200; // km promedio mensual Ecuador
+
+async function step_modelo() {
+  state.step = 'modelo';
+  await showTyping(500);
+  await addMsg('🚗 <strong>¿Cuál es tu BYD o cuál estás por adquirir?</strong><br><span style="font-size:11px;color:#556080">Lo usamos para calcular cuánta energía necesitarás cargar desde tus paneles</span>');
+
+  const opts = MODELOS_BYD.map(m => ({
+    icon: m.emoji,
+    label: m.nombre + (m.tipo === 'híbrido' ? ' (híbrido)' : ''),
+    action: async () => {
+      state.modeloBYD  = m.nombre;
+      state.consumoEV  = Math.round(m.kwh100 * KM_MES / 100);
+      await step_espacio();
+    }
+  }));
+  opts.push({
+    icon: '❓',
+    label: 'Todavía no sé',
+    action: async () => {
+      state.modeloBYD = 'No definido';
+      state.consumoEV = 0;
+      await step_espacio();
+    }
+  });
+
+  showOptions(opts);
   addRestartBtn();
 }
 
@@ -1057,6 +1103,7 @@ async function step_resultado() {
           <div style="font-size:13px;font-weight:600;color:var(--amarillo)">${c.limitadoPorEspacio ? c.coberturaPct+'%' : state.gasolina > 0 ? '+$'+c.ahorroGaso+'/mes' : '+$'+c.ahorroElec+'/mes'}</div>
         </div>
       </div>
+      ${c.ahorroEV > 0 ? `<div style="background:rgba(255,217,49,0.15);border-radius:8px;padding:8px;margin-top:6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;opacity:0.9">⚡ Carga ${c.modeloBYD} cubierta por el sol</span><span style="font-size:13px;font-weight:700;color:var(--amarillo)">+$${c.ahorroEV}/mes</span></div>` : ''}
     </div>
   </div>`;
 
@@ -1146,6 +1193,7 @@ function guardarLeadParcial(c) {
     notas:   'Lead parcial · Segmento: ' + (c.seg ? c.seg.id : '') +
              ' | Planilla: ' + (c.seg ? c.seg.rango : '') +
              ' | Gasolina/mes: $' + state.gasolina +
+             ' | Modelo BYD: ' + (state.modeloBYD || 'No definido') +
              (c.requiereEstudio ? ' | Requiere estudio técnico' :
                ' | Sistema: ' + c.kwp + ' kWp ($' + (c.costoSistema||'').toLocaleString() + ')' +
                ' | Ahorro: $' + c.ahorroTotal + '/mes')
@@ -1175,6 +1223,7 @@ async function guardarLead() {
     consumo_kwh: Math.round(c.kwp * 108),   // kwp × producción mensual referencial
     notas:     'Segmento: ' + c.seg.id +
                ' | Planilla: ' + c.seg.rango +
+               ' | Modelo BYD: ' + (state.modeloBYD || 'No definido') +
                ' | Gasolina/mes: $' + state.gasolina +
                ' | M2: ' + (state.m2 || 'N/D') +
                ' | Espacio: ' + (state.tieneEspacio === true ? 'Sí' : state.tieneEspacio === false ? 'No' : 'Arrendatario') +
