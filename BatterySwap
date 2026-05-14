@@ -1,1 +1,736 @@
-"Hello"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Battery Swap Argentina</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal:    #00C49A;
+  --teal-d:  #00896B;
+  --gold:    #F0B429;
+  --ink:     #0A0E14;
+  --ink2:    #131923;
+  --paper:   #F2EDE4;
+  --muted:   rgba(242,237,228,0.5);
+  --border:  rgba(242,237,228,0.12);
+  --bebas:   'Bebas Neue', sans-serif;
+  --serif:   'Instrument Serif', Georgia, serif;
+  --sans:    'DM Sans', sans-serif;
+  --mono:    'DM Mono', monospace;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--ink);
+  overflow: hidden;
+  font-family: var(--sans);
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── CONTAINER: fixed 9:16 centered ── */
+#app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #06090D;
+}
+
+#stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 9/16));
+  height: min(100vh, calc(100vw * 16/9));
+  max-width: 420px;
+  max-height: calc(420px * 16/9);
+  overflow: hidden;
+  background: var(--ink);
+}
+
+/* ── CARDS ── */
+.card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 44px 32px 36px;
+  opacity: 0;
+  transform: translateY(32px) scale(0.98);
+  transition: opacity 0.5s cubic-bezier(.4,0,.2,1),
+              transform 0.5s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+  overflow: hidden;
+}
+.card.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+.card.exit {
+  opacity: 0;
+  transform: translateY(-24px) scale(1.01);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* ── PROGRESS BAR ── */
+#progress {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  z-index: 50;
+  display: flex;
+  gap: 3px;
+  padding: 0 6px;
+}
+.prog-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.prog-seg.done { background: var(--teal); }
+.prog-seg.active {
+  background: rgba(255,255,255,0.15);
+  position: relative;
+}
+.prog-seg.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--teal);
+  transform-origin: left;
+  animation: fillBar 4s linear forwards;
+}
+@keyframes fillBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ── NAV TAP ZONES ── */
+#tap-prev, #tap-next {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40%;
+  z-index: 40;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#tap-prev { left: 0; }
+#tap-next { right: 0; }
+
+/* ── ARROW HINTS ── */
+#arrow-prev, #arrow-next {
+  position: absolute;
+  bottom: 18px;
+  z-index: 45;
+  font-size: 18px;
+  opacity: 0.25;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#arrow-prev { left: 20px; }
+#arrow-next { right: 20px; }
+
+/* ── COUNTER ── */
+#counter {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  z-index: 45;
+  pointer-events: none;
+  letter-spacing: 0.08em;
+}
+
+/* ── TYPOGRAPHY ── */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 12px;
+}
+.eyebrow.gold { color: var(--gold); }
+.eyebrow.muted { color: var(--muted); }
+
+.big-num {
+  font-family: var(--bebas);
+  font-size: clamp(72px, 20vw, 96px);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  color: var(--teal);
+}
+.big-num.gold { color: var(--gold); }
+.big-num.paper { color: var(--paper); }
+
+.headline {
+  font-family: var(--serif);
+  font-size: clamp(28px, 8vw, 38px);
+  line-height: 1.1;
+  font-weight: 400;
+}
+.headline em { font-style: italic; color: var(--teal); }
+.headline.gold em { color: var(--gold); }
+
+.subhead {
+  font-family: var(--sans);
+  font-size: clamp(13px, 3.5vw, 15px);
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ── DIVIDER ── */
+.hr {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ── STAT ROW ── */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:first-child { border-top: 1px solid var(--border); }
+.stat-name { font-size: 13px; font-weight: 300; color: var(--muted); }
+.stat-val {
+  font-family: var(--bebas);
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+  line-height: 1;
+}
+.stat-val.teal { color: var(--teal); }
+.stat-val.gold { color: var(--gold); }
+
+/* ── PILL ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pill.teal { background: rgba(0,196,154,0.15); color: var(--teal); }
+.pill.gold { background: rgba(240,180,41,0.15); color: var(--gold); }
+.pill.muted { background: rgba(255,255,255,0.07); color: var(--muted); }
+
+/* ── ROLE BLOCK ── */
+.role-block {
+  border-left: 3px solid;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 0 6px 6px 0;
+}
+.role-block.co  { border-color: #4A90E2; background: rgba(74,144,226,0.08); }
+.role-block.me  { border-color: var(--teal); background: rgba(0,196,154,0.08); }
+.role-block.neo { border-color: var(--gold); background: rgba(240,180,41,0.08); }
+.role-flag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+.role-flag.co  { color: #4A90E2; }
+.role-flag.me  { color: var(--teal); }
+.role-flag.neo { color: var(--gold); }
+.role-body { font-size: 12px; font-weight: 300; color: var(--muted); line-height: 1.6; }
+.role-body span { color: var(--paper); font-weight: 400; }
+
+/* ── EQUITY BAR ── */
+.eq-wrap { margin: 16px 0 8px; }
+.eq-label { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.eq-bar { display: flex; height: 28px; border-radius: 4px; overflow: hidden; gap: 2px; }
+.eq-seg { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 500; border-radius: 2px; }
+.eq-seg.co  { background: #4A90E2; color: white; }
+.eq-seg.me  { background: var(--teal-d); color: white; }
+.eq-seg.neo { background: rgba(240,180,41,0.7); color: var(--ink); }
+.eq-seg.pool{ background: rgba(255,255,255,0.15); color: var(--muted); }
+
+/* ── HIGHLIGHT BOX ── */
+.hi-box {
+  border: 1px solid rgba(0,196,154,0.3);
+  border-left: 3px solid var(--teal);
+  background: rgba(0,196,154,0.07);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.hi-box.gold {
+  border-color: rgba(240,180,41,0.3);
+  border-left-color: var(--gold);
+  background: rgba(240,180,41,0.07);
+}
+.hi-box-val {
+  font-family: var(--bebas);
+  font-size: 36px;
+  color: var(--teal);
+  line-height: 1;
+}
+.hi-box-val.gold { color: var(--gold); }
+.hi-box-label { font-size: 12px; font-weight: 300; color: var(--muted); margin-top: 2px; }
+
+/* ── STEP ROW ── */
+.step-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.step-num {
+  font-family: var(--bebas);
+  font-size: 32px;
+  color: var(--teal);
+  line-height: 1;
+  min-width: 28px;
+}
+.step-body { flex: 1; }
+.step-title { font-size: 13px; font-weight: 500; color: var(--paper); margin-bottom: 2px; }
+.step-sub { font-size: 11px; font-weight: 300; color: var(--muted); line-height: 1.5; }
+
+/* ── BG EFFECTS ── */
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── CARD BACKGROUNDS ── */
+/* C0 — cover: dark with city silhouette */
+#c0 { background: var(--ink); }
+/* C1 — hook: dark */
+#c1 { background: var(--ink2); }
+/* C2 — pain point */
+#c2 { background: #0D1520; }
+/* C3 — window */
+#c3 { background: var(--ink); }
+/* C4 — model */
+#c4 { background: #0A1410; }
+/* C5 — numbers */
+#c5 { background: var(--ink2); }
+/* C6 — steps */
+#c6 { background: #0A0E14; }
+/* C7 — close */
+#c7 { background: var(--teal-d); }
+
+/* All content above bg */
+.card > *:not(.bg-glow):not(.city-bg) { position: relative; z-index: 2; }
+.bg-glow { position: absolute !important; z-index: 0 !important; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card.active .an { opacity: 0; animation: fadeUp 0.45s ease forwards; }
+.card.active .a1 { animation-delay: 0.08s; }
+.card.active .a2 { animation-delay: 0.18s; }
+.card.active .a3 { animation-delay: 0.28s; }
+.card.active .a4 { animation-delay: 0.38s; }
+.card.active .a5 { animation-delay: 0.48s; }
+.card.active .a6 { animation-delay: 0.58s; }
+
+/* ── CITY SVG BG ── */
+.city-bg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 45%;
+  z-index: 1;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="stage">
+
+  <!-- Progress -->
+  <div id="progress"></div>
+  <!-- Tap zones -->
+  <div id="tap-prev" onclick="prev()"></div>
+  <div id="tap-next" onclick="next()"></div>
+  <div id="arrow-prev">←</div>
+  <div id="arrow-next">→</div>
+  <div id="counter"></div>
+
+
+  <div class="card active" id="c0">
+    <svg class="city-bg" viewBox="0 0 420 240" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0A0E14" stop-opacity="1"/>
+          <stop offset="45%" stop-color="#0A0E14" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="90" width="35" height="150" fill="#111827"/>
+      <rect x="32" y="110" width="28" height="130" fill="#0F1825"/>
+      <rect x="56" y="70" width="44" height="170" fill="#121C2E"/>
+      <rect x="96" y="100" width="22" height="140" fill="#0E1620"/>
+      <rect x="114" y="55" width="52" height="185" fill="#111827"/>
+      <rect x="163" y="80" width="32" height="160" fill="#0F1825"/>
+      <rect x="191" y="45" width="62" height="195" fill="#121C2E"/>
+      <polygon points="234,28 239,240 245,240" fill="#1E2D45"/>
+      <polygon points="236,32 239,48 242,32 239,26" fill="#253550"/>
+      <rect x="252" y="65" width="58" height="175" fill="#111827"/>
+      <rect x="307" y="50" width="68" height="190" fill="#0F1825"/>
+      <rect x="372" y="75" width="48" height="165" fill="#121C2E"/>
+      <rect x="59" y="80" width="5" height="4" fill="#F0C060" opacity="0.7"/>
+      <rect x="69" y="80" width="5" height="4" fill="#F0C060" opacity="0.5"/>
+      <rect x="59" y="90" width="5" height="4" fill="#F0C060" opacity="0.8"/>
+      <rect x="118" y="68" width="6" height="4" fill="#F0C060" opacity="0.9"/>
+      <rect x="130" y="68" width="6" height="4" fill="#F0C060" opacity="0.6"/>
+      <rect x="142" y="68" width="6" height="4" fill="#F0C060" opacity="0.8"/>
+      <rect x="118" y="80" width="6" height="4" fill="#F0C060" opacity="0.7"/>
+      <rect x="196" y="58" width="7" height="5" fill="#F0C060" opacity="0.8"/>
+      <rect x="209" y="58" width="7" height="5" fill="#F0C060" opacity="0.6"/>
+      <rect x="222" y="58" width="7" height="5" fill="#F0C060" opacity="0.9"/>
+      <rect x="196" y="70" width="7" height="5" fill="#F0C060" opacity="0.5"/>
+      <rect x="314" y="62" width="8" height="5" fill="#F0C060" opacity="0.8"/>
+      <rect x="328" y="62" width="8" height="5" fill="#F0C060" opacity="0.6"/>
+      <rect x="342" y="62" width="8" height="5" fill="#F0C060" opacity="0.9"/>
+      <rect x="356" y="62" width="8" height="5" fill="#F0C060" opacity="0.7"/>
+      <ellipse cx="210" cy="236" rx="200" ry="10" fill="#F0A830" opacity="0.07"/>
+      <rect width="420" height="240" fill="url(#cf)"/>
+    </svg>
+    <div class="an a1" style="padding-bottom:16px">
+      <div class="eyebrow">Buenos Aires · Mayo 2026</div>
+      <div style="font-family:var(--bebas);font-size:clamp(52px,14vw,72px);line-height:0.9;letter-spacing:0.03em;color:var(--paper)">
+        BATTERY<br><span style="color:var(--teal)">SWAP</span><br>ARGENTINA
+      </div>
+      <div style="margin-top:14px;font-size:13px;font-weight:300;color:var(--muted);line-height:1.5;max-width:280px">
+        Una propuesta de Nepos Energy<br>y Mariano Elmiger para Unergy.
+      </div>
+    </div>
+    <div class="an a2" style="margin-top:16px;display:flex;gap:8px">
+      <span class="pill teal">Confidencial</span>
+      <span class="pill muted">Draft v1.0</span>
+    </div>
+  </div>
+
+  <!-- C1 — EL MERCADO EN UN NÚMERO -->
+  <div class="card" id="c1">
+    <div class="bg-glow" style="width:320px;height:320px;background:radial-gradient(circle,rgba(0,196,154,0.13) 0%,transparent 70%);top:-80px;right:-80px"></div>
+    <div class="an a1" >
+      <div class="eyebrow">El mercado — Argentina</div>
+      <div style="font-family:var(--serif);font-size:clamp(15px,4.5vw,19px);font-style:italic;color:var(--paper);opacity:0.75;margin-bottom:10px;letter-spacing:0.01em;line-height:1.2">Buenos Aires,<br>la ciudad de la furia.</div>
+      <div class="big-num">3°</div>
+      <div style="font-family:var(--serif);font-size:clamp(20px,5.5vw,26px);line-height:1.25;margin-top:8px;margin-bottom:20px">
+        Mercado de delivery de LATAM.<br>
+        <em>Sin ningún operador<br>de swap todavía.</em>
+      </div>
+    </div>
+    <div class="an a2">
+      <div class="stat-row">
+        <span class="stat-name">Ingresos delivery 2024</span>
+        <span class="stat-val teal">$1.86B</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Riders en moto activos</span>
+        <span class="stat-val">105k</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Motos EV circulando</span>
+        <span class="stat-val">20k+</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Operadores de swap</span>
+        <span class="stat-val" style="color:#E05A5A">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- C2 — LA VENTANA COMPETITIVA -->
+  <div class="card" id="c2">
+    <div class="bg-glow" style="width:300px;height:300px;background:radial-gradient(circle,rgba(240,180,41,0.11) 0%,transparent 70%);bottom:-60px;right:-40px"></div>
+    <div class="an a1" >
+      <div class="eyebrow gold">¿Y la competencia?</div>
+      <div class="headline gold" style="margin-bottom:18px">
+        Vammo cerró<br>USD 45M.<br><em>Apunta a LATAM.</em>
+      </div>
+    </div>
+    <div class="an a2">
+      <div style="padding:10px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Vammo — Brasil</span>
+        <span style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted)">150 est. · expansión declarada</span><span class="pill gold">Alerta</span></span>
+      </div>
+      <div style="padding:10px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Gogoro / Terpel</span>
+        <span style="font-size:11px;color:var(--muted)">Colombia · Chile activos</span>
+      </div>
+      <div style="padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:500;color:var(--teal)">Argentina hoy</span>
+        <span class="pill teal">Sin competencia</span>
+      </div>
+    </div>
+    <div class="an a3" style="margin-top:14px;font-size:12px;font-weight:300;color:var(--muted);line-height:1.65">
+      Quien llega primero con <strong style="color:var(--paper)">20–30 estaciones en CABA</strong> construye una red que tarda años en replicarse.
+    </div>
+  </div>
+
+  <!-- C3 — EL EQUIPO LOCAL -->
+  <div class="card" id="c3">
+    <div class="bg-glow" style="width:280px;height:280px;background:radial-gradient(circle,rgba(0,196,154,0.1) 0%,transparent 70%);top:-40px;left:-60px"></div>
+    <div class="an a1" >
+      <div class="eyebrow">Por qué nosotros</div>
+      <div class="headline" style="margin-bottom:18px">
+        <em>Hay equipo.</em>
+      </div>
+    </div>
+    <div class="an a2">
+      <div class="role-block co">
+        <div class="role-flag co">🇨🇴 Unergy</div>
+        <div class="role-body"><span>Tecnología + IP</span> validada · <span>capital</span> · know-how operativo</div>
+      </div>
+      <div class="role-block me">
+        <div class="role-flag me">🇦🇷 Mariano Elmiger</div>
+        <div class="role-body"><span>Market dev Argentina</span> · estructura legal · acuerdos B2B · operación local</div>
+      </div>
+      <div class="role-block neo">
+        <div class="role-flag neo">⚡ Nepos Energy</div>
+        <div class="role-body"><span>Relación existente</span> con Unergy · asesoría técnica remota desde Ecuador</div>
+      </div>
+    </div>
+    <div class="an a3" style="margin-top:12px">
+      <div class="eq-label">Cap table propuesto</div>
+      <div class="eq-bar">
+        <div class="eq-seg co"  style="width:45%">Unergy 45%</div>
+        <div class="eq-seg me"  style="width:35%">ME 35%</div>
+        <div class="eq-seg neo" style="width:7%">NE</div>
+        <div class="eq-seg pool"style="width:13%">Pool</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C4 — LOS NÚMEROS -->
+  <div class="card" id="c4">
+    <div class="bg-glow" style="width:300px;height:300px;background:radial-gradient(circle,rgba(0,196,154,0.1) 0%,transparent 70%);bottom:0;left:50%;transform:translateX(-50%)"></div>
+    <div class="an a1" >
+      <div class="eyebrow">El modelo estimado</div>
+      <div class="big-num" style="font-size:clamp(52px,14vw,72px)">USD<br>473k</div>
+      <div style="font-size:12px;font-weight:300;color:var(--muted);margin-top:6px">Ingresos anuales año 3 · 35 estaciones · 2.200 usuarios</div>
+    </div>
+    <div class="hr an a2"></div>
+    <div class="an a3">
+      <div class="stat-row">
+        <span class="stat-name">TIR estimada (5 años)</span>
+        <span class="stat-val teal">22–28%</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Payback desde despliegue</span>
+        <span class="stat-val">30–36m</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">CAPEX por estación</span>
+        <span class="stat-val">~$20k</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">EBITDA positivo desde</span>
+        <span class="stat-val teal">Año 2</span>
+      </div>
+    </div>
+    <div class="an a4" style="margin-top:10px;font-size:9px;font-style:italic;color:rgba(255,255,255,0.2)">Estimaciones preliminares — modelo detallado en Discovery Phase</div>
+  </div>
+
+  <!-- C5 — LA PROPUESTA CONCRETA -->
+  <div class="card" id="c5">
+    <div class="bg-glow" style="width:280px;height:280px;background:radial-gradient(circle,rgba(240,180,41,0.1) 0%,transparent 70%);top:-60px;right:-40px"></div>
+    <div class="an a1" >
+      <div class="eyebrow gold">La propuesta</div>
+      <div class="headline gold" style="margin-bottom:16px">
+        Antes de tirar<br>la carne<br><em>al asador.</em>
+      </div>
+    </div>
+    <div class="an a2 hi-box gold" style="margin-bottom:16px">
+      <div class="hi-box-val gold">Discovery Phase</div>
+      <div class="hi-box-label">6 meses · financiado por Unergy · go/no-go explícito</div>
+    </div>
+    <div class="an a3">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Validar el mercado local</div>
+          <div class="step-sub">Entrevistas riders · willingness to pay · 200+ pre-registros</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Cerrar primer LOI B2B</div>
+          <div class="step-sub">Rappi · PedidosYa · flotas logísticas</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Decisión en mes 6</div>
+          <div class="step-sub">Con datos reales · sin comprometer más capital</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C6 — PRÓXIMOS PASOS -->
+  <div class="card" id="c6">
+    <div class="bg-glow" style="width:260px;height:260px;background:radial-gradient(circle,rgba(0,196,154,0.09) 0%,transparent 70%);bottom:-40px;left:-40px"></div>
+    <div class="an a1" >
+      <div class="eyebrow">¿Cómo seguimos?</div>
+      <div class="headline" style="margin-bottom:20px">
+        Cuatro pasos.<br><em>Seis meses.</em>
+      </div>
+    </div>
+    <div class="an a2">
+      <div class="step-row">
+        <div class="step-num" style="color:var(--teal)">1</div>
+        <div class="step-body">
+          <div class="step-title">Term Sheet</div>
+          <div class="step-sub">Semanas 2–3 · equity, inversión, entregables</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num" style="color:var(--teal)">2</div>
+        <div class="step-body">
+          <div class="step-title">Kick-off en Buenos Aires</div>
+          <div class="step-sub">Mes 2 · inicio Discovery Phase</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num" style="color:var(--teal)">3</div>
+        <div class="step-body">
+          <div class="step-title">Resultados y data real</div>
+          <div class="step-sub">Meses 3–5 · riders, LOI, locaciones, legal</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num" style="color:var(--gold)">4</div>
+        <div class="step-body">
+          <div class="step-title">Go / No-Go</div>
+          <div class="step-sub">Mes 6 · decisión fundada · arranque Etapa 2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C7 — CIERRE -->
+  <div class="card" id="c7">
+    <div class="bg-glow" style="width:380px;height:380px;background:radial-gradient(circle,rgba(0,137,107,0.35) 0%,transparent 65%);top:-100px;left:50%;transform:translateX(-50%)"></div>
+    <div style="padding-bottom:12px">
+      <div class="an a1 eyebrow" style="color:rgba(255,255,255,0.55)">Argentina · 2026</div>
+      <div class="an a2" style="font-family:var(--bebas);font-size:clamp(38px,11vw,54px);line-height:0.92;letter-spacing:0.02em;color:white;margin-bottom:18px">
+        EL QUE PEGA<br>PRIMERO<br><span style="color:var(--teal)">PEGA DOS<br>VECES.</span>
+      </div>
+      <div class="an a3" style="font-family:var(--serif);font-size:clamp(13px,3.5vw,17px);font-style:italic;color:rgba(255,255,255,0.7);line-height:1.55;margin-bottom:20px;max-width:300px">
+        Argentina está abierta. El producto existe. El equipo está listo.
+      </div>
+      <div class="an a4" style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill teal">USD 30–35k Discovery</span>
+        <span class="pill muted">Go/No-Go mes 6</span>
+      </div>
+      <div class="an a5" style="margin-top:18px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:0.08em">
+        NEPOS ENERGY · MARIANO ELMIGER · MAYO 2026
+      </div>
+    </div>
+  </div>
+
+
+</div><!-- end stage -->
+</div><!-- end app -->
+
+<script>
+const CARDS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
+const N = CARDS.length;
+let cur = 0;
+let autoTimer = null;
+
+function buildProgress() {
+  const bar = document.getElementById('progress');
+  CARDS.forEach((_, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'prog-seg' + (i === 0 ? ' active' : '');
+    seg.id = 'ps' + i;
+    bar.appendChild(seg);
+  });
+}
+
+function updateProgress(idx) {
+  CARDS.forEach((_, i) => {
+    const seg = document.getElementById('ps' + i);
+    seg.className = 'prog-seg' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  });
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx >= N) return;
+  const prev = document.getElementById(CARDS[cur]);
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(() => prev.classList.remove('exit'), 400);
+  cur = idx;
+  const next = document.getElementById(CARDS[cur]);
+  next.classList.add('active');
+  updateProgress(cur);
+  updateCounter();
+  updateArrows();
+  startAuto();
+}
+
+function next() { if (cur < N - 1) goTo(cur + 1); }
+function prev() { if (cur > 0) goTo(cur - 1); }
+
+function updateCounter() {
+  document.getElementById('counter').textContent = `${cur + 1} / ${N}`;
+}
+
+function updateArrows() {
+  document.getElementById('arrow-prev').style.opacity = cur === 0 ? '0' : '0.25';
+  document.getElementById('arrow-next').style.opacity = cur === N - 1 ? '0' : '0.25';
+}
+
+function startAuto() {
+  if (autoTimer) clearTimeout(autoTimer);
+  if (cur < N - 1) {
+    autoTimer = setTimeout(() => next(), 5000);
+  }
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+
+// Touch swipe
+let tx = 0, ty = 0;
+document.getElementById('stage').addEventListener('touchstart', e => {
+  tx = e.touches[0].clientX;
+  ty = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('stage').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  const dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+    dx < 0 ? next() : prev();
+  }
+}, { passive: true });
+
+buildProgress();
+updateCounter();
+updateArrows();
+startAuto();
+</script>
+</body>
+</html>
