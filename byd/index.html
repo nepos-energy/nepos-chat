@@ -767,15 +767,15 @@ function reconstruirSegmentosDesdeConfig(cfg) {
 function getSegmento(id) { return SEGMENTOS.find(s => s.id === id); }
 
 // Segmento máximo que entra en los m² disponibles
+// Devuelve null si no alcanza ni para F1 (menos de 19m²)
 function segmentoPorM2(m2) {
-  // Recorre de mayor a menor y devuelve el más grande que entra
-  const orden = ['N3','N2','N1','F4','F3','F2','F1'];
-  for (const id of orden) {
+  const desc = ['N3','N2','N1','F4','F3','F2','F1'];
+  for (const id of desc) {
     const seg = SEGMENTOS.find(s => s.id === id);
     if (seg && seg.m2 && m2 >= seg.m2) return seg;
   }
-  // Si no entra ni F1, devuelve F1 igual (mínimo viable)
-  return SEGMENTOS.find(s => s.id === 'F1');
+  // Menos de 19m² — no entra ningún sistema estándar
+  return null;
 }
 
 // Segmento ideal por consumo eléctrico (factura)
@@ -786,6 +786,23 @@ function segmentoPorFactura(segId) {
 function calcAhorro(segId, gasolina, m2Disponibles) {
   const segConsumo = segmentoPorFactura(segId);
   const segEspacio = m2Disponibles ? segmentoPorM2(m2Disponibles) : segConsumo;
+
+  // Sin espacio suficiente para ningún sistema estándar
+  if (m2Disponibles && segEspacio === null) {
+    return {
+      seg: segConsumo,
+      sinEspacio: true,
+      m2Disponibles,
+      m2Minimo: SEGMENTOS.find(s => s.id === 'F1').m2,
+      requiereEstudio: true,
+      limitadoPorEspacio: false,
+      coberturaPct: 0,
+      ahorroElec: 0, ahorroGaso: 0, ahorroEV: 0,
+      ahorroTotal: 0, ahorroAnual: 0,
+      kwp: null, potencia: null, costoSistema: null, paybackAnios: null,
+      modeloBYD: state.modeloBYD
+    };
+  }
 
   const orden = ['F1','F2','F3','F4','N1','N2','N3','N4'];
   const idxConsumo = orden.indexOf(segConsumo.id);
@@ -1039,8 +1056,26 @@ async function step_resultado() {
   const div  = document.createElement('div');
   div.className = 'msg bot';
 
-  // N4: requiere estudio técnico — card especial
-  if (c.requiereEstudio) {
+  // Sin espacio suficiente para ningún sistema estándar
+  if (c.sinEspacio) {
+    div.innerHTML = `<div class="avatar">☀️</div><div class="bubble" style="max-width:85%">
+      <div class="result-card">
+        <div class="result-title">⚠️ Espacio insuficiente</div>
+        <div class="result-ahorro" style="font-size:18px">Menos de ${c.m2Minimo}m² necesarios</div>
+        <div class="result-sub">Con ${c.m2Disponibles}m² disponibles no entra ningún sistema estándar</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;line-height:1.5">
+          Tenemos alternativas como paneles en fachada, techo compartido o modelo PPA. Un asesor evaluará su caso sin costo.
+        </div>
+      </div>
+    </div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    await new Promise(r => setTimeout(r, 600));
+    await showTyping(700);
+    await addMsg(`No se preocupe — hay soluciones para espacios reducidos. ¿Le gustaría que un asesor evalúe las opciones disponibles para usted?`);
+    await step_contacto();
+    return;
+  }
     div.innerHTML = `<div class="avatar">☀️</div><div class="bubble" style="max-width:72%">
       <div class="result-card">
         <div class="result-title">☀️ ${c.seg.combo}</div>
