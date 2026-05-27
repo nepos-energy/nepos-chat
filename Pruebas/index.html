@@ -1786,7 +1786,7 @@ var bomberos= (proj.bomberos!== undefined) ? proj.bomberos: 0;
 // ── FACTURA DISTRIBUIDORA ACTUAL ─────────────────────────────────
 var consumoTotal = f.reduce(function(a,x){return a+x.kwh;},0);
 var subEner = f.reduce(function(a,x){return a+x.tarifa*x.kwh;},0);
-var tpv = consumoTotal > 0 ? subEner / consumoTotal : 0; // tarifa ponderada exacta $/kWh
+var tpv = subEner/consumoTotal; // tarifa ponderada exacta $/kWh
 var demFact = Math.max(proj.facturaMes - subEner - sapg - comerc - bomberos, 0);
 var facActual = proj.facturaMes;
 // ── PLANILLA DISTRIBUIDORA CON SGDA ──────────────────────────────
@@ -1795,7 +1795,10 @@ var generacionMes = proj.emesBase; // kWh/mes generados por la planta
 var tieneDeficit = generacionMes < consumoTotal;
 var deficitMes = Math.max(0, consumoTotal - generacionMes);
 var excedenteMes = Math.max(0, generacionMes - consumoTotal);
-var pisoDistrib = 0, facDistribConPlanta = 0;
+// dem60 se calcula siempre (se necesita en la columna central aunque haya déficit)
+var dem60 = demFact * 0.60;
+if(proj.nombre==='GARDAEXPORT'){dem60=627.89;}
+var pisoDistrib, facDistribConPlanta;
 if(tieneDeficit){
 // Cliente compra el déficit a la distribuidora a tarifa normal
 // Demanda: se cobra FULL (no la mínima 60%) — Art.27.2 ARCONEL-005/24
@@ -1809,8 +1812,6 @@ pisoDistrib = demandaReal + comerc + sapgDeficit + bomberosDeficit;
 facDistribConPlanta = energiaDeficit + demandaReal + comerc + sapgDeficit + bomberosDeficit;
 } else {
 // Planta cubre 100%+ → cliente paga solo el piso regulatorio (demanda mín 60%)
-var dem60 = demFact * 0.60;
-if(proj.nombre==='GARDAEXPORT'){dem60=627.89;}
 pisoDistrib = dem60 + comerc + sapg + bomberos;
 facDistribConPlanta = pisoDistrib;
 }
