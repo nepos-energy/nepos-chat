@@ -2043,7 +2043,52 @@ if(ft)ft.innerHTML=
 "LRTI art.9.1 · art.10 · art.55 num.11 · art.56 · IVA 15% vigente. | "+
 "<em>Análisis técnico Nepos Energy. No constituye asesoría jurídica individual.</em>";
 }
-loadProj(0);
+"<em>Análisis técnico Nepos Energy. No constituye asesoría jurídica individual.</em>";
+}
+var _hash = window.location.hash.replace('#','');
+if(_hash) {
+  try {
+    var _data = JSON.parse(decodeURIComponent(escape(atob(_hash))));
+    PROYECTOS.unshift({
+      nombre: _data.nombre || 'Proyecto CRM',
+      cliente: _data.cliente || 'Cliente',
+      kwp: _data.kwp || 0,
+      capex: _data.capex || 0,
+      energia: _data.energia || 0,
+      emesBase: _data.emesBase || 0,
+      om: _data.om || 0,
+      deg: _data.deg || 0.4,
+      conIVA: false,
+      demanda: 0,
+      defaults: _data.params
+        ? {tn:_data.params.tn,en:_data.params.en,yr:_data.params.yr,er:_data.params.er,wc:_data.params.wc,dm:9,om:_data.om||500,dg:_data.deg||0.4}
+        : {tn:0.09,en:1.5,yr:15,er:3,wc:12,dm:9,om:500,dg:0.4},
+      facturaMes: _data.facturaMes || 0,
+      franjas: _data.franjas || [],
+      distCompany: _data.distCompany || '',
+      ubicacion: _data.tarifaTipo || '',
+      sapg:0, comerc:1.41, bomberos:0,
+      notaIVA: 'Datos importados desde CRM Nepos.',
+      notaSolar: 'Generación anual: '+Math.round(_data.energia||0).toLocaleString()+' kWh/año · '+(_data.kwp||0)+' kWp instalados.',
+      penalizacion: null
+    });
+    var chipWrap = document.querySelector('.proj-selector');
+    if(chipWrap){
+      var chips = chipWrap.querySelectorAll('.proj-chip');
+      chips.forEach(function(c,i){ c.onclick = function(){ loadProj(i+1); }; c.classList.remove('active'); });
+      var newChip = document.createElement('button');
+      newChip.className = 'proj-chip active';
+      newChip.textContent = (_data.nombre||'Proyecto CRM') + ' · ' + (_data.kwp||'—') + ' kWp';
+      newChip.onclick = function(){ loadProj(0); };
+      chipWrap.insertBefore(newChip, chipWrap.children[1]);
+    }
+    loadProj(0);
+  } catch(e) {
+    loadProj(0);
+  }
+} else {
+  loadProj(0);
+}
 </script>
 </body>
 </html>
