@@ -1,0 +1,3261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEPOS ENERGY — EaaS Platform v3.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --az:#185FA5;--az-dk:#0C447C;--az-lt:#EFF6FF;--az-bd:#BFDBFE;
+  --vd:#16a34a;--vd-lt:#F0FDF4;--vd-bd:#BBF7D0;
+  --am:#D97706;--am-lt:#FFFBEB;--am-bd:#FDE68A;
+  --rj:#DC2626;--rj-lt:#FFF5F5;--rj-bd:#FECACA;
+  --g1:#F9FAFB;--g2:#F3F4F6;--g3:#E5E7EB;--g4:#D1D5DB;
+  --tx:#1A1A1A;--t2:#374151;--t3:#6B7280;--t4:#9CA3AF;
+  --nr:#EF9F27;--mo:#7C3AED;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-serif;background:#EEF0F4;color:var(--tx);font-size:13px;line-height:1.5}
+.topbar{background:#fff;border-bottom:2px solid var(--g3);padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;height:52px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-svg{width:32px;height:32px}
+.logo-name{font-size:15px;font-weight:800;color:var(--az);letter-spacing:-.4px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.badge{background:var(--az-lt);color:var(--az);border:1px solid var(--az-bd);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:600}
+.wrap{max-width:1100px;margin:0 auto;padding:14px 18px}
+.stepper{display:flex;background:#fff;border:1px solid var(--g3);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.step{flex:1;padding:9px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--t4);cursor:pointer;border-right:1px solid var(--g3);transition:all .15s;white-space:nowrap}
+.step:last-child{border-right:none}
+.step.active{background:var(--az);color:#fff}
+.step.done{background:var(--vd-lt);color:var(--vd)}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border:1px solid var(--g3);border-radius:10px;padding:15px 17px;margin-bottom:11px}
+.ct{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;padding-bottom:8px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.g3g{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.kpi{background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:10px;text-align:center}
+.kpi-l{font-size:9.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.kpi-v{font-size:21px;font-weight:800;color:var(--tx);line-height:1.1}
+.kpi-s{font-size:9.5px;color:var(--t4);margin-top:2px}
+.kpi.az{border-color:var(--az-bd);background:var(--az-lt)}.kpi.az .kpi-v{color:var(--az)}
+.kpi.vd{border-color:var(--vd-bd);background:var(--vd-lt)}.kpi.vd .kpi-v{color:var(--vd)}
+.kpi.rj{border-color:var(--rj-bd);background:var(--rj-lt)}.kpi.rj .kpi-v{color:var(--rj)}
+.kpi.am{border-color:var(--am-bd);background:var(--am-lt)}.kpi.am .kpi-v{color:var(--am)}
+.frow{display:flex;flex-direction:column;gap:2px;margin-bottom:9px}
+.frow label{font-size:11.5px;color:var(--t2);font-weight:500}
+.fctl{display:flex;align-items:center;gap:7px}
+.fctl input[type=range]{flex:1;accent-color:var(--az);min-width:0}
+.fctl input[type=number],.fctl input[type=text]{width:94px;padding:4px 7px;border:1px solid var(--g4);border-radius:6px;font-size:12px;text-align:right;background:#fff;color:var(--tx);transition:border .15s}
+.fctl input:focus{outline:none;border-color:var(--az);box-shadow:0 0 0 2px rgba(24,95,165,.12)}
+/* TARIFA HIGHLIGHTED INPUT */
+.fctl input.tarifa-hl{border:2px solid var(--az);background:var(--az-lt);color:var(--az);font-weight:700;width:110px}
+.unit{font-size:10.5px;color:var(--t4);min-width:44px}
+.hint{font-size:10px;color:var(--t4);margin-top:1px}
+.hint-az{font-size:10.5px;color:var(--az);margin-top:2px;font-weight:500}
+.alert{padding:9px 13px;border-radius:8px;font-size:12px;margin-bottom:9px;line-height:1.6}
+.al-info{background:var(--az-lt);color:#1d4ed8;border:1px solid var(--az-bd)}
+.al-green{background:var(--vd-lt);color:#15803d;border:1px solid var(--vd-bd)}
+.al-amber{background:var(--am-lt);color:#92400e;border:1px solid var(--am-bd)}
+.al-red{background:var(--rj-lt);color:#991b1b;border:1px solid var(--rj-bd)}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{font-size:10.5px;font-weight:600;color:var(--t3);text-align:right;padding:5px 7px;border-bottom:1px solid var(--g3);background:var(--g1)}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:4px 7px;text-align:right;border-bottom:1px solid var(--g2);color:var(--t2)}
+.tbl td:first-child{text-align:left;color:var(--t3)}
+.tbl tr:last-child td{font-weight:700;background:var(--g1);color:var(--tx)}
+.tbl tr:hover td{background:#f0f9ff}
+.btn{padding:7px 14px;font-size:12px;font-weight:600;border:1px solid var(--g4);border-radius:7px;cursor:pointer;background:#fff;color:var(--t2);transition:all .15s}
+.btn:hover{background:var(--g1)}
+.btn-p{background:var(--az);color:#fff;border-color:var(--az)}.btn-p:hover{background:var(--az-dk)}
+.btn-g{background:var(--vd);color:#fff;border-color:var(--vd)}.btn-g:hover{background:#15803d}
+.btn-dk{background:#1a1a1a;color:#fff;border-color:#1a1a1a}.btn-dk:hover{background:#374151}
+.nav{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:11px;border-top:1px solid var(--g2);flex-wrap:wrap}
+.cw{position:relative;width:100%}.cw200{height:200px}.cw220{height:220px}.cw260{height:260px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--g3);border-radius:10px;padding:9px 13px;margin-bottom:12px}
+.chip{padding:5px 13px;font-size:11.5px;font-weight:600;border:1.5px solid var(--g4);border-radius:20px;cursor:pointer;background:#fff;color:var(--t3);transition:all .15s}
+.chip:hover{border-color:var(--az);color:var(--az)}
+.chip.active{background:var(--az);color:#fff;border-color:var(--az)}
+.tabs{display:flex;border-bottom:2px solid var(--g3);margin-bottom:13px}
+.tab{padding:8px 15px;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab.active{color:var(--az);border-bottom-color:var(--az)}
+.tog{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-tr{position:absolute;cursor:pointer;inset:0;background:var(--g4);border-radius:20px;transition:.2s}
+.tog-th{position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sep{height:1px;background:var(--g2);margin:9px 0}
+.fn{font-size:10px;color:var(--t4);background:var(--g1);border-radius:7px;padding:8px 11px;line-height:1.7;margin-top:7px}
+/* DISCOUNT+TARIFF LINKED BLOCK */
+.disc-tarifa-box{background:linear-gradient(135deg,var(--az-lt) 0%,#fff 100%);border:2px solid var(--az-bd);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+.disc-tarifa-box .dt-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.dt-arrow{text-align:center;font-size:18px;color:var(--az);font-weight:700}
+.disc-field label,.tarifa-field label{font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block}
+.disc-field .fctl,.tarifa-field .fctl{gap:5px}
+/* SENSITIVITY TABLES */
+.sens-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.sens-tbl th{padding:5px 6px;background:var(--g1);font-size:10px;color:var(--t3);border:1px solid var(--g3)}
+.sens-tbl td{padding:4px 6px;text-align:center;border:1px solid var(--g3)}
+.sg{background:#dcfce7;color:#166534;font-weight:600}.sa{background:#fef9c3;color:#713f12}.sr{background:#fee2e2;color:#991b1b;font-weight:600}
+.footnote-reg{background:#f8fafc;border-radius:8px;padding:9px 13px;font-size:10px;color:var(--t4);line-height:1.7;margin-bottom:4px}
+@media(max-width:640px){.g2,.g4,.g5{grid-template-columns:1fr}.g3g{grid-template-columns:1fr 1fr}}
+@media print{
+  body{background:#fff;font-size:10.5px}
+  .topbar{position:static}
+  .stepper,.nav,.chips,.btn,.fctl input[type=range],.fctl input[type=number],.fctl input[type=text],.unit{display:none!important}
+  .wrap{padding:10px 14px;max-width:100%}
+  .panel{display:block!important}
+  .panel:not(.active){display:none!important}
+  .cw200,.cw220,.cw260{height:160px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-mark">
+    <svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="36" height="36" rx="8" fill="#185FA5"/>
+      <path d="M13 8 L20 4 L27 8 L27 22 C27 28 20 34 20 34 C20 34 13 28 13 22 Z" fill="white" opacity="0.9"/>
+      <path d="M22 15 L18 15 L17 22 L20.5 22 L19 28 L24 20 L20.5 20 L22 15Z" fill="#185FA5"/>
+    </svg>
+    <div>
+      <div class="logo-name">NEPOS ENERGY <span style="font-size:10px;font-weight:400;color:var(--t4)">EaaS Platform v3.0</span></div>
+      <div style="font-size:9.5px;color:var(--t4);margin-top:-1px">Cotización EaaS · ARCONEL-006/25 · Pliego 2026</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge">ARCONEL-006/25</span>
+    <span class="badge">SGDA-005/24</span>
+    <span class="badge">Pliego 2026</span>
+    <span style="font-size:10px;color:var(--t4)" id="top-proj">—</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- CHIPS -->
+<div class="chips">
+  <span style="font-size:11.5px;color:var(--t3);font-weight:600;margin-right:3px">Proyecto:</span>
+  <button class="chip active" id="chip-0" onclick="loadProj(0)">COMUMAP · 320 kWp</button>
+  <button class="chip" id="chip-1" onclick="loadProj(1)">Bal.Fortaleza · 214 kWp</button>
+  <button class="chip" id="chip-2" onclick="loadProj(2)">La Verde · 22.7 kWp</button>
+  <button class="chip" id="chip-3" onclick="loadProj(3)">Rosas del Corazón · 138 kWp</button>
+  <button class="chip" id="chip-4" onclick="loadProj(4)">Rosas 2 · 120 kWp</button>
+  <button class="chip" id="chip-5" onclick="loadProj(5)">GARDAEXPORT · 1.120 kWp</button>
+  <button class="chip" style="border-style:dashed;color:var(--az)" id="chip-new-btn" onclick="openNewProj()">+ Nuevo proyecto</button>
+</div>
+
+<!-- STEPPER -->
+<div class="stepper">
+  <div class="step active" id="step-0" onclick="goTo(0)">1 · Tarifas</div>
+  <div class="step" id="step-1" onclick="goTo(1)">2 · Parámetros EaaS</div>
+  <div class="step" id="step-2" onclick="goTo(2)">3 · CAPEX vs OPEX</div>
+  <div class="step" id="step-3" onclick="goTo(3)">4 · Dashboards</div>
+  <div class="step" id="step-4" onclick="goTo(4)">5 · Sensibilidades</div>
+  <div class="step" id="step-5" onclick="goTo(5)">6 · Facturación</div>
+</div>
+
+<!-- ═══════════════════ PASO 0 — TARIFAS ═══════════════════ -->
+<div class="panel active" id="panel-0">
+  <div class="alert al-info" id="p0-alert"></div>
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="ct">📋 Pliego Tarifario ARCONEL-006/25 vigente 2025-2026</div>
+        <div id="p0-pliego"></div>
+      </div>
+      <div class="card">
+        <div class="ct">⚡ Consumo real por franja horaria</div>
+        <div id="p0-franjas"></div>
+        <div class="sep"></div>
+        <div id="p0-resumen"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">🥧 Distribución del consumo mensual</div>
+        <div class="cw cw220"><canvas id="c-franjas"></canvas></div>
+        <div class="sep"></div>
+        <div class="ct">🌞 Generación solar & SGDA</div>
+        <div id="p0-solar" style="font-size:11.5px;color:var(--t2);line-height:1.9"></div>
+      </div>
+      <div class="card">
+        <div class="ct">🏗️ Datos del proyecto</div>
+        <div id="p0-proyecto"></div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button class="btn btn-p" onclick="goTo(1)">Parámetros EaaS →</button></div>
+</div>
+
+<!-- ═══════════════════ PASO 1 — PARÁMETROS EaaS ═══════════════════ -->
+<div class="panel" id="panel-1">
+  <div class="g2">
+    <div>
+      <!-- DESCUENTO + TARIFA NEPOS — BLOQUE PRINCIPAL -->
+      <div class="disc-tarifa-box">
+        <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+          💡 Precio del servicio Nepos — ajusta descuento o tarifa directamente
+        </div>
+        <div class="dt-row">
+          <div class="disc-field">
+            <label>Descuento sobre tarifa red (%)</label>
+            <div class="fctl">
+              <input type="range" min="0.5" max="30" step="0.5" id="s-dc" value="9" oninput="sN('dc');onDcChange()">
+              <input type="number" id="n-dc" value="9" step="0.5" min="0.5" max="30" oninput="sS('dc');onDcChange()">
+              <span class="unit">%</span>
+            </div>
+            <div class="hint-az" id="dc-info">9% de descuento sobre tarifa ponderada</div>
+          </div>
+          <div class="dt-arrow">⟷</div>
+          <div class="tarifa-field">
+            <label>Tarifa Nepos al cliente (USD/kWh)</label>
+            <div class="fctl">
+              <input type="number" id="n-tn" value="0.10014" step="0.00001" min="0.01" max="0.30" oninput="onTnChange()" style="width:115px;padding:5px 8px;border:2px solid var(--az);border-radius:7px;font-size:13px;font-weight:700;text-align:right;background:var(--az-lt);color:var(--az)">
+              <span class="unit" style="color:var(--az);font-weight:600">$/kWh</span>
+            </div>
+            <div class="hint-az" id="tn-info">5 decimales · actualiza automáticamente</div>
+          </div>
+        </div>
+        <div style="margin-top:9px;padding:8px 10px;background:rgba(24,95,165,.06);border-radius:7px;font-size:11px;color:var(--t2)">
+          <strong>Tarifa ponderada red:</strong> <span id="tpv-display" style="color:var(--az);font-weight:700">—</span> | 
+          <strong>Ahorro mes 1:</strong> <span id="ahorro-mes1-display" style="color:var(--vd);font-weight:700">—</span> | 
+          <strong>Cuota c/IVA:</strong> <span id="cuota-iva-display" style="color:var(--rj);font-weight:700">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📋 Contrato EaaS</div>
+        <div class="frow">
+          <label>Modelo de contrato</label>
+          <select id="sel-modelo" style="padding:5px 8px;border:1px solid var(--g4);border-radius:6px;font-size:12px;background:#fff;color:var(--t2)">
+            <option value="cuota-fija">1. Cuota fija mensual (Solar as a Service)</option>
+            <option value="shared-savings">2. Shared Savings (% del ahorro)</option>
+            <option value="tarifa-variable">3. Tarifa variable indexada ($/kWh)</option>
+            <option value="hibrido">4. Modelo híbrido (fijo + variable)</option>
+            <option value="take-or-pay">5. Take-or-Pay (mínimo garantizado)</option>
+            <option value="guaranteed-savings">6. Guaranteed Savings</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>Plazo contrato EaaS (años)</label>
+          <div class="fctl"><input type="range" min="5" max="25" step="1" id="s-yr" value="15" oninput="sN('yr')"><input type="number" id="n-yr" value="15" oninput="sS('yr')"><span class="unit">años</span></div>
+        </div>
+        <div class="frow">
+          <label>Escalación tarifa Nepos (%/año)</label>
+          <div class="fctl"><input type="range" min="0" max="6" step="0.5" id="s-en" value="1.5" oninput="sN('en')"><input type="number" id="n-en" value="1.5" step="0.5" oninput="sS('en')"><span class="unit">%/año</span></div>
+        </div>
+        <div class="frow">
+          <label>Escalación tarifa distribuidora (%/año)</label>
+          <div class="fctl"><input type="range" min="0" max="10" step="0.5" id="s-er" value="3" oninput="sN('er')"><input type="number" id="n-er" value="3" step="0.5" oninput="sS('er')"><span class="unit">%/año</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">🔧 OPEX &amp; Técnico</div>
+        <div class="frow"><label>O&amp;M anual base (USD/año)</label><div class="fctl"><input type="range" min="0" max="20000" step="100" id="s-om" value="1500" oninput="sN('om')"><input type="number" id="n-om" value="1500" oninput="sS('om')"><span class="unit">USD/año</span></div></div>
+        <div class="frow"><label>Seguro anual (% del CAPEX)</label><div class="fctl"><input type="range" min="0" max="1.5" step="0.1" id="s-seg" value="0.5" oninput="sN('seg')"><input type="number" id="n-seg" value="0.5" step="0.1" oninput="sS('seg')"><span class="unit">%/año</span></div></div>
+        <div class="frow"><label>Reposición inversores (% CAPEX, año <span id="inv-yr-lbl">10</span>)</label><div class="fctl"><input type="range" min="5" max="20" step="1" id="s-cinv" value="10" oninput="sN('cinv')"><input type="number" id="n-cinv" value="10" oninput="sS('cinv')"><span class="unit">%</span></div></div>
+        <div class="frow"><label>Año de reposición inversores</label><div class="fctl"><input type="range" min="8" max="15" step="1" id="s-yrinv" value="10" oninput="sN('yrinv');document.getElementById('inv-yr-lbl').textContent=this.value"><input type="number" id="n-yrinv" value="10" oninput="sS('yrinv')"><span class="unit">año</span></div></div>
+        <div class="frow"><label>Inflación OPEX (%/año)</label><div class="fctl"><input type="range" min="0" max="8" step="0.5" id="s-inf" value="2.5" oninput="sN('inf')"><input type="number" id="n-inf" value="2.5" step="0.5" oninput="sS('inf')"><span class="unit">%/año</span></div></div>
+        <div class="frow"><label>Degradación paneles (%/año)</label><div class="fctl"><input type="range" min="0" max="1.5" step="0.1" id="s-dg" value="0.5" oninput="sN('dg')"><input type="number" id="n-dg" value="0.5" step="0.1" oninput="sS('dg')"><span class="unit">%/año</span></div></div>
+        <div class="frow"><label>Irradiación media (kWh/kWp/día)</label><div class="fctl"><input type="range" min="3.5" max="6.0" step="0.1" id="s-irr" value="4.6" oninput="sN('irr')"><input type="number" id="n-irr" value="4.6" step="0.1" oninput="sS('irr')"><span class="unit">kWh/kWp/d</span></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="ct">💰 Finanzas Nepos</div>
+        <div class="frow"><label>WACC / Tasa de descuento (%)</label><div class="fctl"><input type="range" min="5" max="25" step="0.5" id="s-wc" value="12" oninput="sN('wc')"><input type="number" id="n-wc" value="12" step="0.5" oninput="sS('wc')"><span class="unit">%</span></div></div>
+        <div class="frow"><label>Margen Nepos sobre servicio (%)</label><div class="fctl"><input type="range" min="5" max="40" step="1" id="s-mg" value="20" oninput="sN('mg')"><input type="number" id="n-mg" value="20" oninput="sS('mg')"><span class="unit">%</span></div></div>
+        <div class="sep"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <label class="tog"><input type="checkbox" id="chk-fin" onchange="toggleFin()"><span class="tog-tr"><span class="tog-th" id="tog-th"></span></span></label>
+          <div><div style="font-size:12px;font-weight:600;color:var(--t2)">Apalancamiento bancario</div><div class="hint">Modelar proyecto con deuda</div></div>
+        </div>
+        <div id="fin-panel" style="display:none">
+          <div style="background:var(--az-lt);border:1px solid var(--az-bd);border-radius:8px;padding:11px;margin-bottom:9px">
+            <div class="frow" style="margin-bottom:7px"><label>Deuda sobre CAPEX (%)</label><div class="fctl"><input type="range" min="0" max="90" step="5" id="s-dp" value="70" oninput="sN('dp')"><input type="number" id="n-dp" value="70" oninput="sS('dp')"><span class="unit">%</span></div></div>
+            <div class="frow" style="margin-bottom:7px"><label>TEA deuda (% anual) — banca verde ~9.6%</label><div class="fctl"><input type="range" min="3" max="20" step="0.1" id="s-td" value="9.6" oninput="sN('td')"><input type="number" id="n-td" value="9.6" step="0.1" oninput="sS('td')"><span class="unit">%</span></div></div>
+            <div class="frow"><label>Plazo deuda (años)</label><div class="fctl"><input type="range" min="1" max="15" step="1" id="s-pd" value="10" oninput="sN('pd')"><input type="number" id="n-pd" value="10" oninput="sS('pd')"><span class="unit">años</span></div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-p" onclick="runAll()">▶ Calcular</button>
+          <button class="btn btn-g" onclick="optimizarTarifa()">⚡ Optimizar</button>
+          <button class="btn" onclick="resetParams()">↺ Reset</button>
+        </div>
+        <div id="opt-hint" class="hint-az" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📊 Vista rápida — KPIs clave</div>
+        <div id="p1-kpis" class="g3g"></div>
+      </div>
+
+      <div class="card">
+        <div class="ct">⚖️ Marco legal EaaS</div>
+        <div style="font-size:11.5px;color:var(--t2);line-height:1.9">
+          ✅ <strong>ARCONEL-005/24:</strong> Balance neto energético SGDA por período.<br>
+          ✅ <strong>ARCONEL-001/20:</strong> DF mínimo 60% — incluido en piso EaaS.<br>
+          ✅ <strong>Art.9.1 LRTI:</strong> Exoneración IR sobre generación solar.<br>
+          ✅ <strong>Art.10 LRTI:</strong> Deducción 100% adicional (Ley Compet. Energética).<br>
+          ✅ <strong>IVA 15%:</strong> Sobre cuota de servicios Nepos.<br>
+          🚫 Prohibida comercialización de energía entre Nepos y consumidor regulado.<br>
+          ✅ Esquemas: EaaS · Solar as a Service · Shared Savings · Arrendamiento.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="btn" onclick="goTo(0)">← Tarifas</button>
+    <button class="btn btn-p" onclick="goTo(2)">CAPEX vs OPEX →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PASO 2 — CAPEX vs OPEX ═══════════════════ -->
+<div class="panel" id="panel-2">
+  <div class="g4" style="margin-bottom:12px" id="cmp-kpis"></div>
+  <div class="g2" style="margin-bottom:11px">
+    <div class="card"><div class="ct">📈 Costo acumulado — 3 escenarios</div><div id="leg-cmp" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:5px"></div><div class="cw cw260"><canvas id="c-cmp"></canvas></div></div>
+    <div class="card"><div class="ct">💚 Ahorro anual cliente vs tarifa red</div><div class="cw cw260"><canvas id="c-ahorro"></canvas></div></div>
+  </div>
+  <div class="g2" style="margin-bottom:11px">
+    <div class="card" id="cmp-capex-card"></div>
+    <div class="card" id="cmp-opex-card"></div>
+  </div>
+  <div class="card" style="border:2px solid var(--az)" id="cmp-fin-card"></div>
+  <div class="card" style="margin-top:11px">
+    <div class="ct">📋 Tabla de flujos Nepos — uso interno</div>
+    <div style="overflow-x:auto"><table class="tbl" id="t-flujos"></table></div>
+  </div>
+  <div class="card" style="border:2px solid var(--vd);margin-top:11px" id="cmp-post-card"></div>
+  <div class="nav">
+    <button class="btn" onclick="goTo(1)">← Parámetros</button>
+    <button class="btn btn-dk" onclick="window.print()">⬇ PDF</button>
+    <button class="btn btn-p" onclick="goTo(3)">Dashboards →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PASO 3 — DASHBOARDS ═══════════════════ -->
+<div class="panel" id="panel-3">
+  <div class="tabs">
+    <div class="tab active" id="tab-ceo" onclick="switchDash('ceo')">👔 CEO</div>
+    <div class="tab" id="tab-cfo" onclick="switchDash('cfo')">📊 CFO</div>
+    <div class="tab" id="tab-com" onclick="switchDash('com')">🤝 Comercial</div>
+    <div class="tab" id="tab-ing" onclick="switchDash('ing')">⚙️ Ingeniería</div>
+    <div class="tab" id="tab-cli" onclick="switchDash('cli')">🏭 Cliente</div>
+  </div>
+  <div id="dash-ceo"></div>
+  <div id="dash-cfo" style="display:none"></div>
+  <div id="dash-com" style="display:none"></div>
+  <div id="dash-ing" style="display:none"></div>
+  <div id="dash-cli" style="display:none"></div>
+  <div class="nav">
+    <button class="btn" onclick="goTo(2)">← CAPEX vs OPEX</button>
+    <button class="btn btn-dk" onclick="window.print()">⬇ PDF</button>
+    <button class="btn btn-p" onclick="goTo(4)">Sensibilidades →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PASO 4 — SENSIBILIDADES ═══════════════════ -->
+<div class="panel" id="panel-4">
+  <div class="g2" style="margin-bottom:11px">
+    <div class="card"><div class="ct">📊 TIR Nepos — Descuento vs CAPEX (±%)</div><div id="sens-tir"></div></div>
+    <div class="card"><div class="ct">📊 VPN — Escalación tarifa vs Degradación</div><div id="sens-vpn"></div></div>
+  </div>
+  <div class="g2" style="margin-bottom:11px">
+    <div class="card"><div class="ct">📊 DSCR — TEA vs % Deuda</div><div id="sens-dscr"></div></div>
+    <div class="card"><div class="ct">📊 Ahorro cliente — Tarifa red vs Descuento %</div><div id="sens-ahorro"></div></div>
+  </div>
+  <div class="card"><div class="ct">🌡️ Tornado — Impacto variables sobre TIR</div><div class="cw cw260"><canvas id="c-tornado"></canvas></div></div>
+  <div class="nav">
+    <button class="btn" onclick="goTo(3)">← Dashboards</button>
+    <button class="btn btn-p" onclick="goTo(5)">Facturación →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ PASO 5 — FACTURACIÓN ═══════════════════ -->
+<div class="panel" id="panel-5">
+
+  <!-- 1 · FACTURACIÓN EN TODOS LOS MODELOS -->
+  <div class="alert al-green" id="p5-badge" style="font-size:13px;font-weight:600;text-align:center;padding:13px"></div>
+  <div class="g4" style="margin-bottom:13px" id="p5-kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-bottom:13px">
+    <div id="fac-actual" style="border:2px solid var(--rj);border-radius:10px 0 0 10px;overflow:hidden"></div>
+    <div id="fac-sgda" style="border-top:2px solid var(--vd);border-bottom:2px solid var(--vd);overflow:hidden"></div>
+    <div id="fac-nepos" style="border:2px solid var(--az);border-radius:0 10px 10px 0;overflow:hidden"></div>
+  </div>
+
+  <!-- 2 · COSTO DE INACCIÓN -->
+  <div id="p5-inaccion" style="margin-bottom:13px"></div>
+
+  <!-- 3 · CLÁUSULAS CONTRACTUALES EaaS -->
+  <div class="card" style="margin-bottom:11px" id="p5-clausulas-card"></div>
+
+  <!-- 4 · NORMATIVA APLICADA -->
+  <div class="footnote-reg" id="p5-footer"></div>
+
+  <!-- oculto — sens-card se mantiene en DOM para no romper el JS que lo rellena -->
+  <div id="p5-sens-card" style="display:none"></div>
+
+  <div class="nav">
+    <button class="btn" onclick="goTo(4)">← Sensibilidades</button>
+    <button class="btn btn-dk" onclick="window.print()">⬇ PDF completo</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════ MODAL NUEVO PROYECTO ══════════════════════ -->
+<div id="modal-np" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;overflow-y:auto;padding:20px 12px">
+<div style="max-width:760px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+
+  <!-- HEADER -->
+  <div style="background:var(--az);padding:18px 22px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="color:#fff;font-size:16px;font-weight:800">Nuevo Proyecto EaaS — NEPOS ENERGY</div>
+      <div style="color:rgba(255,255,255,.75);font-size:11.5px;margin-top:2px">Complete los datos del proyecto para iniciar la cotización</div>
+    </div>
+    <button onclick="closeNewProj()" style="background:rgba(255,255,255,.2);border:none;border-radius:7px;color:#fff;font-size:18px;width:32px;height:32px;cursor:pointer;line-height:1">✕</button>
+  </div>
+
+  <!-- BODY -->
+  <div style="padding:20px 22px">
+
+    <!-- SECCIÓN 1: DATOS BÁSICOS -->
+    <div style="font-size:10.5px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--az-bd)">
+      1 · Datos básicos del proyecto
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Nombre del proyecto *</label>
+        <input id="np-nombre" type="text" placeholder="Ej: Empresa ABC - Planta Guayaquil" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)">
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Nombre del cliente *</label>
+        <input id="np-cliente" type="text" placeholder="Razón social del cliente" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)">
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Distribuidora eléctrica</label>
+        <select id="np-dist" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12px;background:#fff;color:var(--tx)">
+          <option value="EEQ">EEQ — Quito y área metropolitana</option>
+          <option value="EMELNORTE">EMELNORTE — Imbabura, Carchi, Cayambe</option>
+          <option value="CNEL EP">CNEL EP — Zonas costeras</option>
+          <option value="ELEPCO">ELEPCO — Cotopaxi</option>
+          <option value="ELEMENTAL">ELEMENTAL — Pichincha rural</option>
+          <option value="EERSA">EERSA — Riobamba</option>
+          <option value="CENTROSUR">CENTROSUR — Cuenca</option>
+          <option value="EEASA">EEASA — Ambato</option>
+          <option value="OTRA">Otra distribuidora</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Ubicación del proyecto</label>
+        <input id="np-ubic" type="text" placeholder="Ciudad, Provincia" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)">
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: TIPO DE TARIFA -->
+    <div style="font-size:10.5px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--az-bd)">
+      2 · Tipo de consumidor y tarifa eléctrica
+    </div>
+
+    <!-- SELECTOR TIPO TARIFA -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div id="np-tipo-bv" onclick="setTipoTarifa('BV')" style="border:2px solid var(--az);border-radius:9px;padding:12px 14px;cursor:pointer;background:var(--az-lt)">
+        <div style="font-size:12px;font-weight:700;color:var(--az);margin-bottom:3px">⚡ Bajo Voltaje (BV)</div>
+        <div style="font-size:11px;color:var(--t3)">Tarifa horaria: Día/Noche<br>Demanda $2,704/kW · Día $0,062 · Noche $0,052</div>
+      </div>
+      <div id="np-tipo-mv" onclick="setTipoTarifa('MV')" style="border:2px solid var(--g4);border-radius:9px;padding:12px 14px;cursor:pointer;background:var(--g1)">
+        <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:3px">⚡⚡ Medio Voltaje Industrial (MV)</div>
+        <div style="font-size:11px;color:var(--t3)">Dem.Hor.Diferenciada · ARCONEL-006/25<br>Dem.$2,620/kW · Media$0,1178 · Punta$0,1318 · Base$0,1001</div>
+      </div>
+    </div>
+    <input type="hidden" id="np-tipo-val" value="BV">
+
+    <!-- OPCIÓN: Adjuntar planillas -->
+    <div style="background:var(--az-lt);border:1.5px solid var(--az-bd);border-radius:9px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--az);margin-bottom:6px">📎 Opción A — Adjuntar planillas de luz (PDF)</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:8px">La herramienta extrae automáticamente consumos, demanda y cargos fijos de las planillas. Recomendado: 3-4 meses recientes.</div>
+      <input type="file" id="np-planillas" multiple accept=".pdf,.png,.jpg,.jpeg" style="font-size:11.5px;color:var(--t2)">
+      <div id="np-planillas-info" style="font-size:10.5px;color:var(--am);margin-top:5px;font-weight:500"></div>
+      <div id="np-planillas-preview" style="margin-top:8px"></div>
+    </div>
+
+    <!-- OPCIÓN: Ingresar tarifas manualmente -->
+    <div style="border:1.5px solid var(--g3);border-radius:9px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--t2);margin-bottom:8px">📝 Opción B — Ingresar datos manualmente</div>
+
+      <!-- Campos BV -->
+      <div id="np-campos-bv">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Consumo total (kWh/mes)</label>
+            <input id="np-cons-bv" type="number" placeholder="Ej: 15000" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Demanda máxima (kW)</label>
+            <input id="np-dem-bv" type="number" placeholder="Ej: 45" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Factura mensual promedio ($)</label>
+            <input id="np-fac-bv" type="number" placeholder="Ej: 1800" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">% consumo en horario día (06-22h)</label>
+            <input id="np-pct-dia" type="number" placeholder="Ej: 65" min="0" max="100" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateBvFranjas()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">% consumo en horario noche (22-06h)</label>
+            <input id="np-pct-noche" type="number" placeholder="Ej: 35" min="0" max="100" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateBvFranjas()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos MV -->
+      <div id="np-campos-mv" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:9px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">kWh Media (L-V 08-18h)</label>
+            <input id="np-kwh-media" type="number" placeholder="Ej: 55000" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateMvTarifa()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">kWh Punta (L-V 18-22h)</label>
+            <input id="np-kwh-punta" type="number" placeholder="Ej: 9500" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateMvTarifa()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">kWh Base (22-08h+S/D)</label>
+            <input id="np-kwh-base" type="number" placeholder="Ej: 65000" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateMvTarifa()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">kWh FdS punta (S/D 18-22h)</label>
+            <input id="np-kwh-fds" type="number" placeholder="Ej: 3000" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" oninput="npUpdateMvTarifa()">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Demanda facturable (kW)</label>
+            <input id="np-dem-mv" type="number" placeholder="Ej: 120" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Demanda máx. 12 meses (kW)</label>
+            <input id="np-demmax-mv" type="number" placeholder="Ej: 150" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Factura mensual promedio ($)</label>
+            <input id="np-fac-mv" type="number" placeholder="Ej: 12000" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:8px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">SAPG (alumb. público) $/mes</label>
+            <input id="np-sapg" type="number" placeholder="Ej: 253.60" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Comercialización $/mes</label>
+            <input id="np-comerc" type="number" placeholder="EEQ=4.182 / EMELNORTE=1.41" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" value="4.182">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:3px">Contribución Bomberos $/mes</label>
+            <input id="np-bomb" type="number" placeholder="Ej: 28.92" style="width:100%;padding:6px 9px;border:1px solid var(--g4);border-radius:6px;font-size:12px" value="28.92">
+          </div>
+        </div>
+        <!-- Tarifa ponderada preview MV -->
+        <div id="np-mv-tpv-preview" style="display:none;margin-top:8px;background:var(--az-lt);border:1px solid var(--az-bd);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--az)">
+          <strong>Tarifa ponderada:</strong> <span id="np-mv-tpv-val">—</span> USD/kWh &nbsp;|&nbsp;
+          <strong>Consumo total:</strong> <span id="np-mv-cons-val">—</span> kWh/mes
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: PLANTA SOLAR -->
+    <div style="font-size:10.5px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--az-bd)">
+      3 · Datos de la planta solar fotovoltaica
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Potencia instalada (kWp) *</label>
+        <input id="np-kwp" type="number" placeholder="Ej: 200" min="1" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)" oninput="npCalcGen()">
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Generación estimada (kWh/mes)</label>
+        <input id="np-gen-mes" type="number" placeholder="Auto-calculado" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx);background:#f8fafc" readonly>
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Generación estimada (kWh/año)</label>
+        <input id="np-gen-año" type="number" placeholder="Auto-calculado" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx);background:#f8fafc" readonly>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Irradiación específica sitio (kWh/kWp/día)</label>
+        <input id="np-irr" type="number" placeholder="Ej: 4.6 (Ecuador promedio)" value="4.6" step="0.1" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)" oninput="npCalcGen()">
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Performance Ratio (%)</label>
+        <input id="np-pr" type="number" placeholder="80" value="80" min="60" max="95" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)" oninput="npCalcGen()">
+      </div>
+    </div>
+    <!-- Adjuntar informe de generación -->
+    <div style="background:var(--vd-lt);border:1.5px solid var(--vd-bd);border-radius:9px;padding:11px 13px;margin-bottom:16px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--vd);margin-bottom:5px">📄 Adjuntar informe de generación (opcional)</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Si tienes el informe de simulación solar (PVSyst, SAM, Archelios, etc.), adjúntalo para extraer la generación anual exacta.</div>
+      <input type="file" id="np-informe-gen" accept=".pdf,.xlsx,.csv,.txt,.xls" style="font-size:11.5px;color:var(--t2)">
+      <div id="np-informe-info" style="font-size:10.5px;color:var(--am);margin-top:4px;font-weight:500"></div>
+    </div>
+
+    <!-- SECCIÓN 4: CAPEX -->
+    <div style="font-size:10.5px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--az-bd)">
+      4 · CAPEX del proyecto
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">CAPEX total del proyecto (USD) *</label>
+        <input id="np-capex" type="number" placeholder="Ej: 120000" min="1" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)" oninput="npCalcCapexkwp()">
+        <div id="np-capex-kwp" style="font-size:10px;color:var(--t4);margin-top:3px"></div>
+      </div>
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">O&amp;M anual estimado (USD/año)</label>
+        <input id="np-om" type="number" placeholder="Ej: 1500 (típico ~0.5% CAPEX)" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)">
+        <div id="np-om-pct" style="font-size:10px;color:var(--t4);margin-top:3px"></div>
+      </div>
+    </div>
+    <!-- Adjuntar cotización CAPEX -->
+    <div style="background:var(--am-lt);border:1.5px solid var(--am-bd);border-radius:9px;padding:11px 13px;margin-bottom:16px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--am);margin-bottom:5px">📎 Adjuntar cotización CAPEX Nepos (opcional)</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Si tienes la cotización de NEPOS ENERGY, adjúntala para extraer automáticamente el valor del CAPEX, desglose de equipos y condiciones comerciales.</div>
+      <input type="file" id="np-cotizacion" accept=".pdf,.xlsx,.docx" style="font-size:11.5px;color:var(--t2)">
+      <div id="np-cotizacion-info" style="font-size:10.5px;color:var(--am);margin-top:4px;font-weight:500"></div>
+    </div>
+
+    <!-- SECCIÓN 5: DEGRADACIÓN -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11.5px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Degradación paneles (%/año)</label>
+        <input id="np-deg" type="number" placeholder="0.5" value="0.5" step="0.1" min="0" max="2" style="width:100%;padding:7px 10px;border:1.5px solid var(--g4);border-radius:7px;font-size:12.5px;color:var(--tx)">
+      </div>
+      <div style="background:var(--g1);border:1px solid var(--g3);border-radius:9px;padding:12px;font-size:11.5px;color:var(--t2)">
+        <strong>Ref. irradiación Ecuador:</strong><br>
+        Sierra: 4.3–5.1 kWh/kWp/día<br>
+        Costa: 4.5–5.3 kWh/kWp/día<br>
+        Oriente: 3.8–4.6 kWh/kWp/día
+      </div>
+    </div>
+
+    <!-- PREVIEW CALCULADO -->
+    <div id="np-preview" style="display:none;background:var(--az);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+      <div style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Vista previa — Resumen del proyecto</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="np-preview-kpis"></div>
+    </div>
+
+    <!-- ERRORES -->
+    <div id="np-errores" style="display:none;background:var(--rj-lt);border:1px solid var(--rj-bd);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--rj);margin-bottom:10px"></div>
+
+  </div>
+
+  <!-- FOOTER MODAL -->
+  <div style="background:var(--g1);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--g3)">
+    <div style="font-size:11px;color:var(--t4)">* Campos obligatorios para generar la cotización EaaS</div>
+    <div style="display:flex;gap:9px">
+      <button onclick="npPreview()" style="padding:8px 16px;font-size:12px;font-weight:600;border:1.5px solid var(--az);border-radius:7px;cursor:pointer;background:#fff;color:var(--az)">👁 Vista previa</button>
+      <button onclick="closeNewProj()" style="padding:8px 16px;font-size:12px;font-weight:600;border:1px solid var(--g4);border-radius:7px;cursor:pointer;background:#fff;color:var(--t2)">Cancelar</button>
+      <button onclick="npCrear()" style="padding:8px 18px;font-size:12px;font-weight:700;border:none;border-radius:7px;cursor:pointer;background:var(--az);color:#fff">⚡ Crear proyecto y cotizar</button>
+    </div>
+  </div>
+
+</div>
+</div>
+<!-- ══════════════════════ FIN MODAL ══════════════════════ -->
+
+</div><!-- /wrap -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<!-- pdf.js 2.16.105 build legacy: worker inlineado, funciona en file:// y cualquier servidor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+// PLIEGO TARIFARIO ARCONEL-006/25 · VIGENTE 2025-2026
+// Verificado con planillas reales EMELNORTE ene-abr 2026
+// ════════════════════════════════════════════════════════
+var T = {
+  BV:{
+    nombre:"BV Horaria (Bajo Voltaje)",
+    demanda:2.704,   // USD/kW · demanda facturable directa (sin FGDI)
+    dia:0.0620,      // USD/kWh · 06:00–22:00 (L-V y S/D)
+    noche:0.0520,    // USD/kWh · 22:00–06:00
+    comerc:4.182,    // USD/mes · pliego general
+    IVA:0.15
+  },
+  MV:{
+    nombre:"MV Industrial Con Dem Hor Dif (Medio Voltaje) — ARCONEL-006/25",
+    demanda:2.620,   // USD/kW · pliego base (se aplica × FGDI por proyecto)
+    punta:0.1318,    // USD/kWh · L-V 18:00–22:00 — VERIFICADO planillas reales
+    media:0.1178,    // USD/kWh · L-V 08:00–18:00 — VERIFICADO planillas reales
+    base:0.1001,     // USD/kWh · 22:00–08:00 + S/D exc.punta — VERIFICADO
+    fds:0.1178,      // USD/kWh · S/D/F 18:00–22:00 (= precio media) — VERIFICADO
+    comerc:1.41,     // USD/mes · EMELNORTE real (otras dist. pueden variar)
+    IVA:0.00         // MT industrial: energía IVA 0%
+  }
+};
+
+// Irradiación mensual Ecuador (kWh/kWp/día) — promedio representativo Sierra/Costa
+var IRR_M = [4.8,5.0,4.9,4.6,4.4,4.3,4.5,4.7,4.8,4.6,4.5,4.7];
+var DIAS_M = [31,28,31,30,31,30,31,31,30,31,30,31];
+var MESES  = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+// ════════════════════════════════════════════════════════
+// PROYECTOS
+// ════════════════════════════════════════════════════════
+var PROY = [
+  {
+    nombre:"COMUMAP",cliente:"COMUMAP",kwp:320,capex:180483,om:1500,deg:0.5,
+    facturaMes:8374.24,distComp:"CNEL EP",ubic:"Chanduy, Santa Elena",tipo:"BV",
+    sapg:0,comerc:4.182,bomberos:0,demKW:95,demMax12:95,
+    franjas:[
+      {nom:"A — L-V 08-18h (solar)",kwh:22680,tarifa:0.0620,per:"dia",  col:"#185FA5"},
+      {nom:"B — L-V 18-22h",        kwh:7280, tarifa:0.0620,per:"dia",  col:"#EF9F27"},
+      {nom:"C — Valle 22-06h",      kwh:25200,tarifa:0.0520,per:"noche",col:"#888780"},
+      {nom:"D — S,D,F 18-22h",      kwh:1680, tarifa:0.0620,per:"dia",  col:"#D85A30"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:1500,dg:0.5},
+    notaIVA:"Tarifa BV Horaria. Día $0,062/kWh · Noche $0,052/kWh · Demanda $2,704/kW. SAPG/bomberos por confirmar planilla real.",
+    notaSolar:"320 kWp genera ~38.099 kWh/mes. Cubre franja A completa. Excedentes → banco SGDA."
+  },
+  {
+    nombre:"Bal. Fortaleza",cliente:"Balanceados Fortaleza",kwp:214,capex:118981,om:1495,deg:0.4,
+    facturaMes:2430,distComp:"EEQ",ubic:"El Chaupi, Mejía",tipo:"MV",
+    sapg:93.00,comerc:4.182,bomberos:28.92,demKW:42,demMax12:42,
+    franjas:[
+      {nom:"A — Punta L-V 18-22h",  kwh:1850, tarifa:0.1318,per:"punta",col:"#D85A30"},
+      {nom:"B — Media L-V 08-18h",  kwh:12245,tarifa:0.1178,per:"media",col:"#185FA5"},
+      {nom:"C — Base 22-08h",       kwh:3670, tarifa:0.1001,per:"base", col:"#888780"},
+      {nom:"D — FdS punta 18-22h",  kwh:20,   tarifa:0.1178,per:"fds",  col:"#EF9F27"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:1495,dg:0.4},
+    notaIVA:"Tarifa MTCGCD32 — MV Industrial Dem Hor Dif (EEQ). ARCONEL-006/25. Punta $0,1318 · Media $0,1178 · Base $0,1001 · FdS $0,1178 · Demanda $2,620/kW.",
+    notaSolar:"214 kWp genera ~22.382 kWh/mes. 76% consumo en franja media — perfil óptimo.",
+    penalizacion:"⚠️ Penalización bajo FP (~$93/mes). Solar no la elimina. Evaluar banco de capacitores."
+  },
+  {
+    nombre:"La Verde",cliente:"La Verde",kwp:22.7,capex:14925,om:1000,deg:0.5,
+    facturaMes:375,distComp:"EEQ",ubic:"Machachi, Mejía",tipo:"BV",
+    sapg:18.00,comerc:4.182,bomberos:28.92,demKW:8,demMax12:8,
+    franjas:[
+      {nom:"Energía activa total (BT única)",kwh:3238,tarifa:0.0620,per:"dia",col:"#185FA5"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:1000,dg:0.5},
+    notaIVA:"Tarifa BTCGSD01 — BV Comercial tarifa única. $0,062/kWh sin distinción horaria.",
+    notaSolar:"22.7 kWp genera ~2.310 kWh/mes. Cubre 71% del consumo (3.238 kWh/mes)."
+  },
+  {
+    nombre:"Rosas del Corazón",cliente:"Rosas del Corazón",kwp:138,capex:74684,om:550,deg:0.4,
+    facturaMes:2140,distComp:"EEQ",ubic:"Machachi, Mejía",tipo:"MV",
+    sapg:155.30,comerc:4.182,bomberos:28.92,demKW:38,demMax12:38,
+    franjas:[
+      {nom:"A — Punta L-V 18-22h",kwh:1704, tarifa:0.1318,per:"punta",col:"#D85A30"},
+      {nom:"B — Media L-V 08-18h",kwh:9631, tarifa:0.1178,per:"media",col:"#185FA5"},
+      {nom:"C — Base 22-08h",     kwh:9034, tarifa:0.1001,per:"base", col:"#888780"},
+      {nom:"D — FdS punta",       kwh:660,  tarifa:0.1178,per:"fds",  col:"#EF9F27"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:550,dg:0.4},
+    notaIVA:"Tarifa MTCGCD32 — MV Industrial Dem Hor Dif (EEQ). ARCONEL-006/25. Promedio ene-mar 2025.",
+    notaSolar:"138 kWp genera ~14.872 kWh/mes. Cubre 73% del consumo (20.029 kWh/mes)."
+  },
+  {
+    nombre:"Rosas 2",cliente:"Rosas del Corazón 2",kwp:120,capex:74684,om:700,deg:1.0,
+    facturaMes:2810,distComp:"EEQ",ubic:"Machachi, Mejía",tipo:"MV",
+    sapg:155.30,comerc:4.182,bomberos:28.92,demKW:45,demMax12:45,
+    franjas:[
+      {nom:"A — Punta L-V 18-22h",kwh:1847, tarifa:0.1318,per:"punta",col:"#D85A30"},
+      {nom:"B — Media L-V 08-18h",kwh:10221,tarifa:0.1178,per:"media",col:"#185FA5"},
+      {nom:"C — Base 22-08h",     kwh:8075, tarifa:0.1001,per:"base", col:"#888780"},
+      {nom:"D — FdS punta",       kwh:545,  tarifa:0.1178,per:"fds",  col:"#EF9F27"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:700,dg:1.0},
+    notaIVA:"Tarifa MTCGCD32 — MV Industrial Dem Hor Dif (EEQ). ARCONEL-006/25. Promedio feb-abr 2026.",
+    notaSolar:"120 kWp genera ~14.693 kWh/mes. Cubre 71% del consumo (20.689 kWh/mes)."
+  },
+  {
+    // GARDAEXPORT — DATOS REALES 4 PLANILLAS EMELNORTE ene-abr 2026
+    // Tarifas verificadas por mínimos cuadrados: media=$0.1178 · punta=$0.1318 · base=$0.1001
+    // FGDI real = 0.8733 → tarifa demanda efectiva $2.2880/kW
+    nombre:"GARDAEXPORT",cliente:"GARDAEXPORT S.A.",kwp:1120,capex:880494,om:4300,deg:0.5,
+    facturaMes:15912.71,  // promedio 4 facturas reales
+    distComp:"EMELNORTE",ubic:"Panamericana Norte, San José de Ayora, Cayambe",tipo:"MV",
+    sapg:253.60,comerc:1.41,bomberos:28.92,   // valores reales planilla EMELNORTE
+    demKW:414,demMax12:457,                   // prom=413.60kW · máx=457.38kW (feb)
+    tarDemReal:2.2880,                        // $2.620×FGDI(0.8733) — verificado 4 meses
+    franjas:[
+      {nom:"A — Media L-V 08-18h (solar)",kwh:54668,tarifa:0.1178,per:"media",col:"#185FA5"},
+      {nom:"B — Punta L-V 18-22h",        kwh:9575, tarifa:0.1318,per:"punta",col:"#D85A30"},
+      {nom:"C — Base 22-08h + S/D",       kwh:66041,tarifa:0.1001,per:"base", col:"#888780"},
+      {nom:"D — FdS punta 18-22h",        kwh:3140, tarifa:0.1178,per:"fds",  col:"#EF9F27"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:4300,dg:0.5},
+    notaIVA:"DATOS REALES EMELNORTE ene-abr 2026. Cta.200032345742 · MTCGCD32. Tarifa pond. $0,11004/kWh. FGDI=0.8733→demanda $2,2880/kW. SAPG $253,60 · Comerc $1,41 · Bomberos $28,92.",
+    notaSolar:"1.120 kWp genera ~125.365 kWh/mes (PR=80%). Cubre 94% del consumo (133.424 kWh/mes). Excedente ~0 a red bajo escenario actual. La generación supera la franja solar A (54.668 kWh) con excedentes que cubren parte del nocturno vía SGDA.",
+    penalizacion:"⚠️ FP promedio 0.985. Evaluar capacitores para optimizar ahorro adicional."
+  },
+  {
+    nombre:"Nuevo proyecto",cliente:"Cliente nuevo",kwp:100,capex:65000,om:1200,deg:0.5,
+    facturaMes:2000,distComp:"Distribuidora",ubic:"Ecuador",tipo:"MV",
+    sapg:50,comerc:4.182,bomberos:28.92,demKW:30,demMax12:30,
+    franjas:[
+      {nom:"B — Media L-V 08-18h",kwh:8000,tarifa:0.1178,per:"media",col:"#185FA5"},
+      {nom:"C — Base 22-08h",     kwh:4000,tarifa:0.1001,per:"base", col:"#888780"}
+    ],
+    def:{dc:9,en:1.5,yr:15,er:3,wc:12,om:1200,dg:0.5},
+    notaIVA:"Ingrese datos reales de consumo y tarifa del cliente.",
+    notaSolar:"Configure capacidad kWp y consumo del cliente."
+  }
+];
+
+// ════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════════
+var curP = 0;
+var charts = {};
+var activeDash = 'ceo';
+var CUSTOM_PROJ_IDX = 6; // Próximo índice disponible para proyecto custom
+
+// Mantener chip-6 apuntando siempre al modal si no hay proyecto custom
+function chip6Click(){
+  if(PROY[6] && PROY[6]._custom){
+    loadProj(6);
+  } else {
+    openNewProj();
+  }
+}
+
+function $(i){return document.getElementById(i)}
+function gv(k){return parseFloat($("n-"+k).value)||0}
+function gvS(id,d){var e=$("n-"+id);return e?(parseFloat(e.value)||d):d;}
+function fUSD(n){return"$"+Math.round(n).toLocaleString("es-EC")}
+function fUSD2(n){return"$"+n.toLocaleString("es-EC",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fPct(n){return(n*100).toFixed(1)+"%"}
+function fPct2(n){return(n*100).toFixed(2)+"%"}
+function sN(k){var s=$("s-"+k),n=$("n-"+k);if(s&&n)n.value=parseFloat(s.value);}
+function sS(k){var s=$("s-"+k),n=$("n-"+k);if(!s||!n)return;var v=Math.min(parseFloat(s.max),Math.max(parseFloat(s.min),parseFloat(n.value)||0));s.value=v;n.value=v;}
+function dCh(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+// ────────────────────────────────────────────────────────
+// TARIFA PONDERADA REAL del proyecto actual
+// ────────────────────────────────────────────────────────
+function tpvReal(){
+  var f=PROY[curP].franjas;
+  var tot=f.reduce(function(a,x){return a+x.kwh;},0);
+  if(!tot)return 0.0620;
+  return f.reduce(function(a,x){return a+x.tarifa*x.kwh;},0)/tot;
+}
+
+function consumoMesTotal(){
+  return PROY[curP].franjas.reduce(function(a,x){return a+x.kwh;},0);
+}
+function cargoEnergiaMes(){
+  return PROY[curP].franjas.reduce(function(a,x){return a+x.tarifa*x.kwh;},0);
+}
+
+// ────────────────────────────────────────────────────────
+// GENERACIÓN SOLAR MENSUAL
+// ────────────────────────────────────────────────────────
+function genSolarMes(kwp, dg, yr0){
+  var irr = gvS('irr', 4.6);
+  var factor = Math.pow(1-dg, yr0);
+  return IRR_M.map(function(irr_m, i){
+    return kwp * irr_m * DIAS_M[i] * 0.80 * factor;
+  });
+}
+function genSolarAnio(kwp, dg, yr0){
+  var irr = gvS('irr', 4.6);
+  return kwp * irr * 365 * 0.80 * Math.pow(1-dg, yr0);
+}
+
+// ────────────────────────────────────────────────────────
+// DEMANDA FACTURABLE — ARCONEL-001/20 + SGDA-005/24
+// Con SGDA: Demanda facturable = 60% de la demanda máxima 
+//           de los últimos 12 meses (ARCONEL-001/20 Art.3)
+// Sin SGDA: Demanda facturable = max(DM_mes, 60% DMmax12)
+// ────────────────────────────────────────────────────────
+function calcDemanda(p, conSGDA){
+  var Tv = T[p.tipo];
+  var DM      = p.demKW;
+  var DMmax12 = p.demMax12 || DM;
+  // ARCONEL-001/20: el 60% se aplica sobre la demanda máxima de los 12 meses previos
+  var DF60    = 0.60 * DMmax12;
+  // SIN SGDA: se factura max(demanda mes, piso 60%)
+  // CON SGDA: la demanda facturable ES el 60% (el SGDA compensa la energía,
+  //           y la distribuidora factura el piso de 60% de la máx. 12 meses)
+  var DF;
+  if(conSGDA){
+    // Con sistema SGDA activo: demanda facturable = 60% DMmax12 (piso irredukible regulatorio)
+    DF = DF60;
+  } else {
+    // Sin SGDA: factura lo que registre el medidor, mínimo el 60% del máx. 12 meses
+    DF = Math.max(DM, DF60);
+  }
+  var tarDem  = p.tarDemReal || Tv.demanda;
+  var FGDI    = p.tarDemReal ? (p.tarDemReal / Tv.demanda) : 1.0;
+  return {
+    DM:DM, DMmax12:DMmax12, DF60:DF60, DF:DF,
+    tarDem:tarDem, tarDemPliego:Tv.demanda, FGDI:FGDI,
+    cargoDem:DF*tarDem,
+    cargoDemSGDA: DF60 * tarDem  // siempre el piso para referencia
+  };
+}
+
+// ────────────────────────────────────────────────────────
+// NEWTON-RAPHSON TIR (robusto, 400 iteraciones)
+// ────────────────────────────────────────────────────────
+function calcTIR(fl, guess){
+  if(!fl||fl.length<2) return 0;
+  var r = (guess!==undefined)?guess:0.20;
+  // Guard: check if positive cashflows exist
+  var pos = fl.slice(1).some(function(v){return v>0;});
+  if(!pos) return -0.999;
+  for(var i=0;i<400;i++){
+    var f=0,df=0;
+    fl.forEach(function(v,j){
+      var dj=Math.pow(1+r,j);
+      f  += v/dj;
+      df -= j*v/((1+r)*dj);
+    });
+    if(Math.abs(df)<1e-12) break;
+    var delta=f/df;
+    r-=delta;
+    // Clamp to prevent divergence
+    if(r<-0.999) r=-0.999;
+    if(r>100) r=100;
+    if(Math.abs(delta)<1e-10) break;
+  }
+  return r;
+}
+
+// VPN
+function calcVPN(fl, tasa){
+  return fl.reduce(function(s,v,j){return s+v/Math.pow(1+tasa,j);},0);
+}
+
+// LCOE — Levelized Cost of Energy
+function calcLCOE(capex, omBase, dg, kwp, yr){
+  var wc  = gv('wc')/100;
+  var inf = gv('inf')/100;
+  var seg = gv('seg')/100;
+  var totalCost = capex;
+  var totalGen  = 0;
+  for(var y=1;y<=yr;y++){
+    var omY  = omBase*(1+inf)**(y-1);
+    var segY = capex*seg*(1+inf)**(y-1);
+    totalCost += (omY+segY)/Math.pow(1+wc,y);
+    var genY = genSolarAnio(kwp, dg, y-1);
+    totalGen += genY/Math.pow(1+wc,y);
+  }
+  return totalGen>0 ? totalCost/totalGen : 0;
+}
+
+// ════════════════════════════════════════════════════════
+// MOTOR PRINCIPAL — FLUJOS FINANCIEROS NEPOS
+// ════════════════════════════════════════════════════════
+function buildFlujosNepos(){
+  var p    = PROY[curP];
+  var yr   = gv('yr');
+  var tn   = gvS('tn', p.def.tn||0.10);
+  var en   = gv('en')/100;
+  var dg   = gv('dg')/100;
+  var om   = gv('om');
+  var inf  = gv('inf')/100;
+  var seg  = gv('seg')/100;
+  var cinv = gv('cinv')/100;
+  var yinv = gv('yrinv');
+  var wc   = gv('wc')/100;
+  var capex= p.capex;
+  var kwp  = p.kwp;
+
+  // Deuda (si activa)
+  var finOn = $('chk-fin') && $('chk-fin').checked;
+  var dp    = gvS('dp',70)/100;
+  var tea   = gvS('td',9.6)/100;
+  var pd    = gvS('pd',10);
+  var deuda = finOn ? capex*dp : 0;
+  var equity= capex - deuda;
+
+  // Cuota francesa mensual → anual
+  var tem  = Math.pow(1+tea,1/12)-1;
+  var cuotaAnio = (finOn && tem>0) ? deuda*tem/(1-Math.pow(1+tem,-pd*12))*12 : 0;
+
+  // Flujos: año 0 = -equity (si deuda) o -capex (si equity puro)
+  var fl0 = finOn ? -equity : -capex;
+  var flujos  = [fl0];
+  var fEq     = [fl0];   // flujos equity (post servicio deuda)
+  var rows    = [];
+  var ebitda_arr=[], ingr_arr=[], opex_arr=[], fcl_arr=[];
+  var cumEq   = fl0;
+  var pb      = 0;
+
+  for(var y=1; y<=yr; y++){
+    // ── GENERACIÓN con degradación
+    var genY = genSolarAnio(kwp, dg, y-1);
+
+    // ── INGRESO NEPOS: generación × tarifa servicio Nepos escalada
+    // La tarifa Nepos es el precio del kWh del SERVICIO que Nepos cobra al cliente
+    // Se escala en 'en'% anual (contractual)
+    var ingrY = genY * tn * Math.pow(1+en, y-1);
+
+    // ── OPEX NEPOS
+    var omY   = om   * Math.pow(1+inf, y-1);
+    var segY  = capex * seg * Math.pow(1+inf, y-1);
+    var invY  = (y===yinv) ? capex*cinv : 0;
+    var opexY = omY + segY + invY;
+
+    // ── EBITDA
+    var ebitdaY = ingrY - opexY;
+
+    // ── SERVICIO DEUDA (cuota francesa, constante en $ nominales)
+    var servY = (finOn && y<=pd) ? cuotaAnio : 0;
+
+    // ── FLUJO DE CAJA LIBRE (post-deuda)
+    var fclY  = ebitdaY - servY;
+
+    // Flujos para TIR proyecto (sin deuda) y TIR equity (con deuda)
+    flujos.push(ebitdaY);   // proyecto unlevered
+    fEq.push(fclY);         // equity levered
+
+    cumEq += (finOn ? fclY : ebitdaY);
+    if(cumEq>=0 && pb===0) pb=y;
+
+    var dscr = (servY>0) ? ebitdaY/servY : (ebitdaY>0?999:0);
+    ebitda_arr.push(ebitdaY);
+    ingr_arr.push(ingrY);
+    opex_arr.push(opexY);
+    fcl_arr.push(fclY);
+    rows.push({y:y,gen:genY,ingr:ingrY,opex:opexY,serv:servY,ebitda:ebitdaY,fcl:fclY,dscr:dscr,cum:cumEq});
+  }
+
+  // ── VALOR RESIDUAL (20% CAPEX) añadido al ÚLTIMO flujo del año N
+  var vRes = capex * 0.20;
+  var flProyRes = flujos.slice();    // copia
+  flProyRes[yr] += vRes;             // flujos[yr] = flujo año N (índice yr en array 1-indexed)
+  var flEqRes   = fEq.slice();
+  flEqRes[yr]   += vRes;
+
+  // ── TIR y VPN
+  var TIR_proy = calcTIR(flProyRes, 0.15);
+  var TIR_eq   = finOn ? calcTIR(flEqRes, 0.20) : TIR_proy;
+  var VPN_proy = calcVPN(flProyRes, wc);
+  var VPN_eq   = finOn ? calcVPN(flEqRes, wc) : VPN_proy;
+
+  // ── RATIOS CREDITICIOS
+  var vpnEBITDA = calcVPN([0].concat(ebitda_arr), wc);
+  var LLCR = deuda>0 ? vpnEBITDA/deuda : 999;
+  var vpnFCL = calcVPN([0].concat(fcl_arr), wc);
+  var PLCR = deuda>0 ? vpnFCL/deuda : 999;
+  var dscrAll = rows.map(function(r){return r.dscr;}).filter(function(v){return v<999 && v>0;});
+  var dscrMin = dscrAll.length>0 ? Math.min.apply(null,dscrAll) : 999;
+  var dscrMax = dscrAll.length>0 ? Math.max.apply(null,dscrAll) : 999;
+
+  // ── LCOE
+  var LCOE = calcLCOE(capex, om, dg, kwp, yr);
+
+  // ── PAYBACK: posición en flujosConRes (no equity)
+  var cumPb=-capex, pbP=0;
+  for(var y2=1;y2<=yr;y2++){
+    cumPb += ebitda_arr[y2-1];
+    if(cumPb>=0&&pbP===0) pbP=y2;
+  }
+
+  return {
+    rows:rows, flujos:flProyRes, flEqRes:flEqRes,
+    TIR:TIR_proy, TIReq:TIR_eq,
+    VPN:VPN_proy, VPNeq:VPN_eq,
+    pb:pbP, pbEq:pb,
+    LLCR:LLCR, PLCR:PLCR,
+    dscrMin:dscrMin, dscrMax:dscrMax,
+    deuda:deuda, equity:equity, cuotaAnio:cuotaAnio,
+    LCOE:LCOE, vRes:vRes,
+    ebitda_arr:ebitda_arr, ingr_arr:ingr_arr, opex_arr:opex_arr, fcl_arr:fcl_arr
+  };
+}
+
+// ════════════════════════════════════════════════════════
+// FLUJO ESCENARIO CAPEX CLIENTE
+// ════════════════════════════════════════════════════════
+function buildFlujosCapex(){
+  var p   = PROY[curP];
+  var yr  = 20;
+  var dg  = gv('dg')/100;
+  var om  = gv('om');
+  var er  = gv('er')/100;
+  var wc  = gv('wc')/100;
+  var tpv = tpvReal();
+  var cm  = consumoMesTotal();
+
+  var fl = [-p.capex];
+  var cum=-p.capex, pb=0, gBruto=0;
+  for(var y=1;y<=yr;y++){
+    // Ahorro = consumo × tarifa distribuidora escalada × (1-dg)^(y-1) - O&M
+    // El cliente se ahorra lo que pagaba a la distribuidora por la energía generada solar
+    var tarY = tpv * Math.pow(1+er, y-1);
+    var genY = genSolarAnio(p.kwp, dg, y-1);
+    // Ahorro = min(gen, consumo_anual) × tarifa − OM
+    // Si gen > consumo, el ahorro tope es consumo (no puede ahorrar más que su factura)
+    var consAnio = cm * 12;
+    var enAhorrY = Math.min(genY, consAnio) * tarY;
+    var ahY = enAhorrY - om;
+    fl.push(ahY);
+    gBruto += ahY;
+    cum += ahY;
+    if(cum>=0&&pb===0) pb=y;
+  }
+  return {fl:fl, TIR:calcTIR(fl,0.20), VPN:calcVPN(fl,wc), pb:pb, gBruto:gBruto};
+}
+
+// ════════════════════════════════════════════════════════
+// SGDA — ARCONEL-005/24 — BALANCE NETO MENSUAL
+// ════════════════════════════════════════════════════════
+function calcSGDA(){
+  var p  = PROY[curP];
+  var dg = gvS('dg', p.deg||0.5)/100;
+  var Tv = T[p.tipo];
+  var tp = tpvReal();
+  var genMes = genSolarMes(p.kwp, dg, 0);
+  var consM  = consumoMesTotal();
+  var consMes = DIAS_M.map(function(d){return consM/12;});
+
+  var tot = {gen:0,cons:0,auto:0,exc:0,def:0,comp:0,fact:0};
+  var meses = [];
+
+  for(var m=0;m<12;m++){
+    var gen  = genMes[m];
+    var cons = consMes[m];
+    var auto = Math.min(gen, cons);
+    var exc  = Math.max(0, gen-cons);
+    var def  = Math.max(0, cons-gen);
+    // Balance neto período: compensada = autoconsumo + min(excedente, déficit)
+    // Según ARCONEL-005/24: excedentes se compensan en el mismo período de facturación
+    var comp = auto + Math.min(exc, def);
+    var fact = Math.max(0, cons-comp);
+
+    // Crédito en USD (referencia tarifaria — usando tarifa ponderada del proyecto)
+    var credUSD = Math.min(exc,def) * tp;
+
+    tot.gen+=gen; tot.cons+=cons; tot.auto+=auto;
+    tot.exc+=exc; tot.def+=def; tot.comp+=comp; tot.fact+=fact;
+
+    meses.push({mes:MESES[m],gen:gen,cons:cons,auto:auto,exc:exc,def:def,comp:comp,fact:fact,credUSD:credUSD,irr:IRR_M[m]});
+  }
+  return {meses:meses, total:tot};
+}
+
+// ════════════════════════════════════════════════════════
+// SINCRONIZACIÓN DESCUENTO ↔ TARIFA NEPOS
+// ════════════════════════════════════════════════════════
+function onDcChange(){
+  var dc = gvS('dc',9)/100;
+  var tp = tpvReal();
+  var tn = tp * (1-dc);
+  var ntn = $("n-tn");
+  if(ntn) ntn.value = tn.toFixed(5);
+  updateLinkedDisplay(dc, tn, tp);
+}
+function onTnChange(){
+  var tn = parseFloat($("n-tn").value) || 0;
+  var tp = tpvReal();
+  var dc = tp>0 ? (1-tn/tp) : 0;
+  // Actualizar slider descuento
+  var sdc=$("s-dc"),ndc=$("n-dc");
+  var dcPct = Math.max(0.5, Math.min(30, dc*100));
+  if(sdc) sdc.value=dcPct.toFixed(1);
+  if(ndc) ndc.value=dcPct.toFixed(1);
+  updateLinkedDisplay(dc, tn, tp);
+}
+function updateLinkedDisplay(dc, tn, tp){
+  var dcInfo = $("dc-info");
+  var tnInfo = $("tn-info");
+  var tpvD   = $("tpv-display");
+  var ahD    = $("ahorro-mes1-display");
+  var cuotD  = $("cuota-iva-display");
+
+  if(dcInfo) dcInfo.textContent = (dc*100).toFixed(1)+"% descuento sobre tarifa ponderada";
+  if(tnInfo) tnInfo.textContent = "Tarifa: $"+tn.toFixed(5)+"/kWh — "+((1-tn/tp)*100).toFixed(1)+"% menos que red";
+  if(tpvD)   tpvD.textContent   = "$"+tp.toFixed(5)+"/kWh";
+
+  var cm   = consumoMesTotal();
+  var genM = genSolarAnio(PROY[curP].kwp, gvS('dg',PROY[curP].deg||0.5)/100, 0)/12;
+  var cuotaSinIVA = genM * tn;
+  var cuotaIVA    = cuotaSinIVA * 1.15;
+  var ahorroMes   = cm * tp - cuotaSinIVA;  // ahorro en componente energía
+
+  if(ahD)   ahD.textContent   = fUSD(Math.round(ahorroMes))+"/mes en energía";
+  if(cuotD) cuotD.textContent = fUSD(Math.round(cuotaIVA))+"/mes";
+}
+
+// ════════════════════════════════════════════════════════
+// OPTIMIZADOR — maximiza TIR Nepos con descuento >= 8%
+// ════════════════════════════════════════════════════════
+function optimizarTarifa(){
+  var p  = PROY[curP];
+  var tp = tpvReal();
+  var wc = gv('wc')/100;
+  var bestDc=9, bestTIR=-1;
+
+  for(var dc=28; dc>=5; dc-=0.5){
+    var tn_t = tp*(1-dc/100);
+    var ntn=$("n-tn"); if(ntn) ntn.value=tn_t.toFixed(5);
+    var ndc=$("n-dc"); if(ndc) ndc.value=dc.toFixed(1);
+    var sdc=$("s-dc"); if(sdc) sdc.value=dc.toFixed(1);
+    var res = buildFlujosNepos();
+    if(res.TIR >= wc && dc >= 8){
+      bestDc=dc; bestTIR=res.TIR; break;
+    }
+  }
+  // Apply best
+  var tn_f = tp*(1-bestDc/100);
+  var ntn=$("n-tn"); if(ntn) ntn.value=tn_f.toFixed(5);
+  var ndc=$("n-dc"); if(ndc) ndc.value=bestDc.toFixed(1);
+  var sdc=$("s-dc"); if(sdc) sdc.value=bestDc.toFixed(1);
+  updateLinkedDisplay(bestDc/100, tn_f, tp);
+
+  var hint=$("opt-hint");
+  if(hint) hint.textContent="✅ Óptimo: $"+tn_f.toFixed(5)+"/kWh — "+bestDc+"% desc. — TIR="+fPct(bestTIR);
+  runAll();
+}
+
+// ════════════════════════════════════════════════════════
+// TOGGLE FINANCIAMIENTO
+// ════════════════════════════════════════════════════════
+function toggleFin(){
+  var on=$('chk-fin').checked;
+  $('fin-panel').style.display=on?'block':'none';
+  var th=$('tog-th'); if(th) th.style.left=on?'20px':'2px';
+  var tr=document.querySelector('.tog-tr'); if(tr) tr.style.background=on?'var(--az)':'var(--g4)';
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 0 — TARIFAS
+// ════════════════════════════════════════════════════════
+function buildP0(){
+  var p   = PROY[curP];
+  var Tv  = T[p.tipo];
+  var f   = p.franjas;
+  var cm  = consumoMesTotal();
+  var tp  = tpvReal();
+  var ce  = cargoEnergiaMes();
+  var dem = calcDemanda(p, false);
+
+  $("p0-alert").innerHTML = "<strong>"+p.cliente+" · "+p.kwp+" kWp · "+p.ubic+"</strong> | "+
+    p.distComp+" | Tarifa: "+Tv.nombre+"<br><span style='font-size:11px'>"+p.notaIVA+"</span>";
+
+  // Pliego tarifario
+  var ptHtml = "<table class='tbl'><thead><tr><th style='text-align:left'>Componente</th><th>Tarifa ARCONEL-006/25</th><th>Unidad</th></tr></thead><tbody>";
+  if(p.tipo==='BV'){
+    ptHtml += tblR("Demanda (cargo directo)","$"+Tv.demanda.toFixed(3),"USD/kW-mes")+
+              tblR("Energía Día 06-22h","<strong>$"+Tv.dia.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Energía Noche 22-06h","<strong>$"+Tv.noche.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Comercialización","$"+Tv.comerc.toFixed(3),"USD/mes")+
+              tblR("IVA sobre servicio","15%","");
+  } else {
+    ptHtml += tblR("Demanda pliego","$"+Tv.demanda.toFixed(3),"USD/kW (×FGDI=efectivo)")+
+              tblR("Energía Media L-V 08-18h","<strong style='color:var(--az)'>$"+Tv.media.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Energía Punta L-V 18-22h","<strong style='color:var(--rj)'>$"+Tv.punta.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Energía Base 22-08h","<strong>$"+Tv.base.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Fin semana punta 18-22h","<strong>$"+Tv.fds.toFixed(4)+"</strong>","USD/kWh")+
+              tblR("Comercialización","$"+Tv.comerc.toFixed(3),"USD/mes")+
+              tblR("IVA servicio Nepos","15%","");
+    if(p.tarDemReal) ptHtml += tblR("Demanda efectiva (FGDI="+dem.FGDI.toFixed(4)+")","<strong style='color:var(--vd)'>$"+p.tarDemReal.toFixed(4)+"</strong>","USD/kW real planilla");
+  }
+  ptHtml += tblR("<strong>Tarifa ponderada real</strong>","<strong style='color:var(--az)'>$"+tp.toFixed(5)+"</strong>","USD/kWh");
+  ptHtml += "</tbody></table>";
+  $("p0-pliego").innerHTML = ptHtml;
+
+  // Franjas
+  var frHtml="";
+  f.forEach(function(x){
+    var pct=cm>0?(x.kwh/cm*100).toFixed(1):"0";
+    frHtml+="<div style='display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--g2);font-size:12px'>"+
+      "<span style='width:10px;height:10px;border-radius:2px;flex-shrink:0;background:"+x.col+"'></span>"+
+      "<span style='flex:1;font-weight:500'>"+x.nom+"</span>"+
+      "<span style='color:var(--t3)'>"+Math.round(x.kwh).toLocaleString()+" kWh</span>"+
+      "<span style='color:var(--t4);font-size:10px'>("+pct+"%)</span>"+
+      "<span style='color:"+x.col+";font-weight:700;min-width:68px;text-align:right'>$"+x.tarifa.toFixed(4)+"/kWh</span></div>";
+  });
+  $("p0-franjas").innerHTML=frHtml;
+
+  // Resumen
+  $("p0-resumen").innerHTML=
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px'>"+
+      kpi("Consumo/mes",Math.round(cm).toLocaleString()+" kWh","")+
+      kpi("Tarifa ponderada","$"+tp.toFixed(4)+"/kWh","az")+
+      kpi("Cargo energía",fUSD2(ce)+"/mes","rj")+
+      kpi("Cargo demanda",fUSD2(dem.cargoDem)+"/mes","am")+
+    "</div>"+
+    "<div style='font-size:11px;border:1px solid var(--g3);border-radius:7px;overflow:hidden'>"+
+      "<div style='padding:5px 9px;font-size:9.5px;font-weight:700;color:var(--t3);background:var(--g1);text-transform:uppercase'>Composición planilla</div>"+
+      rw("Cargo energía",fUSD2(ce))+
+      rw("Cargo demanda (DF="+dem.DF.toFixed(0)+" kW × $"+dem.tarDem.toFixed(4)+")",fUSD2(dem.cargoDem))+
+      rw("SAPG",p.sapg>0?fUSD2(p.sapg):"<span style='color:var(--am)'>confirmar</span>")+
+      rw("Comercialización","$"+p.comerc.toFixed(2))+
+      rw("Bomberos",p.bomberos>0?fUSD2(p.bomberos):"<span style='color:var(--am)'>confirmar</span>")+
+      "<div style='background:var(--az);color:#fff;padding:8px 10px;display:flex;justify-content:space-between;align-items:center'>"+
+        "<span style='font-size:10px;font-weight:700'>TOTAL FACTURA MENSUAL</span>"+
+        "<span style='font-size:16px;font-weight:800'>"+fUSD(p.facturaMes)+"</span></div>"+
+    "</div>";
+
+  $("p0-solar").innerHTML = p.notaSolar+(p.penalizacion?"<br><span style='color:var(--am)'>"+p.penalizacion+"</span>":"");
+  $("p0-proyecto").innerHTML =
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px'>"+
+      kpi("CAPEX","<strong style='color:var(--az)'>"+fUSD(p.capex)+"</strong>","az")+
+      kpi("Capacidad","<strong>"+p.kwp+" kWp</strong>","")+
+      kpi("O&M base",fUSD(p.om)+"/año","")+
+      kpi("Degradación",(p.deg||0.5)+"% / año","")+
+    "</div>";
+
+  dCh("fr");
+  var eF=$("c-franjas");
+  if(eF) charts["fr"]=new Chart(eF,{type:"doughnut",
+    data:{labels:f.map(function(x){return x.nom.split("—")[0].trim();}),
+      datasets:[{data:f.map(function(x){return x.kwh;}),backgroundColor:f.map(function(x){return x.col;}),borderWidth:2,borderColor:"#fff"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:10}}},cutout:"55%"}});
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 1 — PARÁMETROS
+// ════════════════════════════════════════════════════════
+function buildP1(){
+  var p   = PROY[curP];
+  var res = buildFlujosNepos();
+  var cap = buildFlujosCapex();
+  var tp  = tpvReal();
+  var tn  = gvS('tn', p.def.tn||0.10);
+  var dc  = tp>0?(1-tn/tp)*100:0;
+  var cm  = consumoMesTotal();
+  var genM1 = genSolarAnio(p.kwp, gv('dg')/100, 0)/12;
+
+  // Cuota mensual correcta:
+  // Nepos cobra por la generación solar × tarifa servicio
+  var cuotaSinIVA = genM1 * tn;
+  var cuotaConIVA = cuotaSinIVA * 1.15;
+  var ahorroMesEnergia = cm * tp - cuotaSinIVA;  // ahorro en componente energía
+
+  $("p1-kpis").innerHTML=
+    kpi("TIR Nepos",fPct(res.TIR),gv('yr')+"a · "+gv('wc')+"% WACC","vd")+
+    kpi("VPN Nepos",fUSD(res.VPN),"WACC "+gv('wc')+"%","az")+
+    kpi("Payback Nepos",res.pb+"a","recuperación CAPEX","")+
+    kpi("LCOE",fUSD2(res.LCOE)+"/kWh","costo nivelado","am")+
+    kpi("Ahorro energía mes 1",fUSD(Math.round(ahorroMesEnergia)),dc.toFixed(1)+"% vs red","vd")+
+    kpi("Cuota c/IVA mes 1",fUSD(Math.round(cuotaConIVA)),"factura cliente Nepos","az");
+
+  updateLinkedDisplay(dc/100, tn, tp);
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 2 — CAPEX vs OPEX
+// ════════════════════════════════════════════════════════
+function buildP2(){
+  var p   = PROY[curP];
+  var yr  = gv('yr');
+  var er  = gv('er')/100;
+  var dg  = gv('dg')/100;
+  var wc  = gv('wc')/100;
+  var tn  = gvS('tn', p.def.tn||0.10);
+  var en  = gv('en')/100;
+  var tp  = tpvReal();
+  var cm  = consumoMesTotal();
+
+  var resN = buildFlujosNepos();
+  var resC = buildFlujosCapex();
+  var dem  = calcDemanda(p, false);
+
+  // KPIs comparativos
+  // VPN del ahorro del cliente (cuánto se ahorra en valor presente)
+  var vpnAhCli = 0;
+  for(var y=1;y<=yr;y++){
+    var tarY = tp * Math.pow(1+er, y-1);
+    var genY = genSolarAnio(p.kwp, dg, y-1);
+    var consA= cm*12;
+    var cuotaN = genY * tn * Math.pow(1+en, y-1);
+    var ahCli = Math.min(genY,consA) * tarY - cuotaN;
+    vpnAhCli += ahCli / Math.pow(1.10, y);
+  }
+
+  $("cmp-kpis").innerHTML=
+    kpi("TIR Nepos",fPct(resN.TIR),yr+"a · unlevered","vd")+
+    kpi("VPN Nepos",fUSD(resN.VPN),"WACC "+Math.round(wc*100)+"%","az")+
+    kpi("Payback Nepos",resN.pb+"a","desde CAPEX total","")+
+    kpi("VPN ahorro cliente",fUSD(Math.round(vpnAhCli)),yr+"a · tasa 10%","vd");
+
+  // Acumulado 25 años — 3 escenarios
+  var lbls=[]; var dRed=[],dCap=[],dNpos=[];
+  var cumR=0, cumC=p.capex, cumN=0;
+  for(var y2=0;y2<=25;y2++){
+    lbls.push("A"+y2);
+    dRed.push(Math.round(cumR));
+    dCap.push(Math.round(cumC));
+    dNpos.push(Math.round(cumN));
+    var tY  = tp * Math.pow(1+er, Math.max(0,y2));
+    var gY  = genSolarAnio(p.kwp, dg, Math.max(0,y2));
+    var cA  = cm*12;
+    cumR   += cA * tY;
+    cumC   += gv('om');
+    var cuotaN2 = Math.min(gY,cA) * tn * Math.pow(1+en, Math.max(0,y2));
+    var facDist2= Math.max(0, cA-gY) * tY;
+    cumN   += cuotaN2 + facDist2;
+  }
+
+  $("leg-cmp").innerHTML=
+    lgd("var(--rj)","Solo distribuidora")+lgd("var(--vd)","CAPEX cliente")+lgd("var(--az)","OPEX Nepos EaaS");
+
+  dCh("cmp");
+  var eC=$("c-cmp");
+  if(eC) charts["cmp"]=new Chart(eC,{type:"line",
+    data:{labels:lbls,datasets:[
+      {label:"Solo red",data:dRed,borderColor:"var(--rj)",fill:false,tension:0.2,pointRadius:1,borderWidth:2},
+      {label:"CAPEX",data:dCap,borderColor:"var(--vd)",fill:false,tension:0.2,pointRadius:1,borderWidth:2},
+      {label:"OPEX Nepos",data:dNpos,borderColor:"var(--az)",fill:false,tension:0.2,pointRadius:1,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10}}}},
+      scales:{y:{ticks:{callback:function(v){return"$"+Math.round(v/1000)+"k";},font:{size:10}}}}}});
+
+  // Ahorro anual cliente
+  var yAh=[]; var vAh=[];
+  for(var y3=1;y3<=yr;y3++){
+    yAh.push("A"+y3);
+    var tY3=tp*Math.pow(1+er,y3-1);
+    var gY3=genSolarAnio(p.kwp,dg,y3-1);
+    var cA3=cm*12;
+    var ahY3=Math.min(gY3,cA3)*tY3 - gY3*tn*Math.pow(1+en,y3-1);
+    vAh.push(Math.round(ahY3));
+  }
+  dCh("ahorro");
+  var eA=$("c-ahorro");
+  if(eA) charts["ahorro"]=new Chart(eA,{type:"bar",
+    data:{labels:yAh,datasets:[{label:"Ahorro cliente (USD/año)",data:vAh,backgroundColor:"rgba(22,163,74,0.6)",borderColor:"var(--vd)",borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10}}}},
+      scales:{y:{ticks:{callback:function(v){return"$"+Math.round(v/1000)+"k";},font:{size:10}}}}}});
+
+  // Cards
+  var cuotaNeposMes1SinIVA = genSolarAnio(p.kwp,dg,0)/12 * tn;
+  var cuotaMes1ConIVA = cuotaNeposMes1SinIVA * 1.15;
+  var ahMes1 = cm*tp - cuotaNeposMes1SinIVA;
+
+  $("cmp-capex-card").innerHTML=
+    "<div class='ct' style='color:var(--vd)'>🏗️ Esc. A — CAPEX cliente</div>"+
+    "<div class='g4'>"+
+      kpi("TIR cliente",fPct(resC.TIR),"20 años","vd")+
+      kpi("VPN cliente",fUSD(resC.VPN),"WACC "+Math.round(wc*100)+"%","")+
+      kpi("Payback",resC.pb+"a","recuperación","am")+
+      kpi("Flujo 20 años",fUSD(resC.gBruto),"ahorro bruto","vd")+
+    "</div>"+
+    "<table style='width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px'>"+
+      tblR("Inversión cliente",fUSD(p.capex)+"><span style='display:none")+
+      "</table>"+
+    "<table class='tbl' style='margin-top:6px'>"+
+      "<tr><td>Inversión cliente</td><td style='color:var(--rj);font-weight:700'>"+fUSD(p.capex)+"</td></tr>"+
+      "<tr><td>Ahorro año 1</td><td style='color:var(--vd);font-weight:600'>"+fUSD(Math.round(resC.fl[1]))+"</td></tr>"+
+      "<tr><td>O&M Nepos/año</td><td>"+fUSD(gv('om'))+"</td></tr>"+
+      "<tr><td>Beneficio Art.10 LRTI</td><td style='color:var(--az);font-size:10.5px'>100% deducción IR</td></tr>"+
+    "</table>";
+
+  $("cmp-opex-card").innerHTML=
+    "<div class='ct' style='color:var(--az)'>⚡ Esc. B — OPEX EaaS Nepos</div>"+
+    "<div class='g4'>"+
+      kpi("TIR Nepos",fPct(resN.TIR),yr+"a","az")+
+      kpi("VPN Nepos",fUSD(resN.VPN),"WACC "+Math.round(wc*100)+"%","")+
+      kpi("Payback Nepos",resN.pb+"a","desde CAPEX","am")+
+      kpi("LCOE",fUSD2(resN.LCOE)+"/kWh","nivelado","vd")+
+    "</div>"+
+    "<table class='tbl' style='margin-top:6px'>"+
+      "<tr><td>Inversión cliente</td><td style='font-weight:700;color:var(--vd)'>$0</td></tr>"+
+      "<tr><td>Generación mes 1</td><td>"+Math.round(genSolarAnio(p.kwp,dg,0)/12).toLocaleString()+" kWh</td></tr>"+
+      "<tr><td>Cuota Nepos mes 1 (sin IVA)</td><td style='color:var(--az);font-weight:700'>"+fUSD(Math.round(cuotaNeposMes1SinIVA))+"/mes</td></tr>"+
+      "<tr><td>Cuota Nepos mes 1 (con IVA 15%)</td><td style='font-weight:600'>"+fUSD(Math.round(cuotaMes1ConIVA))+"/mes</td></tr>"+
+      "<tr><td>Ahorro energía mes 1</td><td style='color:var(--vd);font-weight:700'>"+fUSD(Math.round(ahMes1))+"/mes</td></tr>"+
+      "<tr><td>Descuento vs tarifa red</td><td style='color:var(--vd);font-weight:700'>"+((1-tn/tp)*100).toFixed(1)+"%%</td></tr>"+
+    "</table>"+
+    "<div class='fn' style='margin-top:6px'>"+
+      "<strong>Cuota = Generación × Tarifa Nepos.</strong> La tarifa Nepos ($"+tn.toFixed(5)+"/kWh) es "+
+      ((1-tn/tp)*100).toFixed(1)+"% menor que la tarifa ponderada real de "+p.distComp+" ($"+tp.toFixed(5)+"/kWh). "+
+      "IVA 15% aplica sobre la cuota de servicios (no sobre energía — EaaS no es venta de energía)."+
+    "</div>";
+
+  buildFinCard(resN);
+  buildTablaFlujos(resN);
+  buildPostContrato(resN, tp, er, dg);
+}
+
+function buildFinCard(res){
+  var p  = PROY[curP];
+  var wc = gv('wc')/100;
+  var el = $("cmp-fin-card");
+  if(!el) return;
+
+  if(res.deuda===0){
+    el.innerHTML="<div class='ct' style='color:var(--az)'>🏦 Estructura Financiera — 100% Equity Nepos</div>"+
+      "<div class='g5'>"+
+        kpi("CAPEX total",fUSD(p.capex),"inversión Nepos","az")+
+        kpi("TIR proyecto",fPct(res.TIR),gv('yr')+"a unlevered","vd")+
+        kpi("VPN proyecto",fUSD(res.VPN),"WACC "+Math.round(wc*100)+"%","")+
+        kpi("LCOE",fUSD2(res.LCOE)+"/kWh","nivelado","am")+
+        kpi("Payback",res.pb+"a","recuperación","")+
+      "</div>";
+    return;
+  }
+
+  var dscrC=res.dscrMin>=1.35?"var(--vd)":res.dscrMin>=1.25?"var(--am)":"var(--rj)";
+  el.innerHTML="<div class='ct' style='color:var(--az)'>🏦 Project Finance — Modelo Apalancado</div>"+
+    "<div class='g5'>"+
+      kpi("Deuda",fUSD(res.deuda),Math.round(gv('dp'))+"% CAPEX · "+gv('td')+"% TEA · "+gv('pd')+"a","rj")+
+      kpi("Equity Nepos",fUSD(res.equity),(100-Math.round(gv('dp')))+"% CAPEX","az")+
+      kpi("DSCR mínimo",res.dscrMin<900?res.dscrMin.toFixed(2)+"x":"N/A",res.dscrMin>=1.25?"✅ Bankable":"⚠️ Revisar","am")+
+      kpi("LLCR",res.LLCR<900?res.LLCR.toFixed(2)+"x":"N/A","Loan Life Coverage","vd")+
+      kpi("TIR equity",fPct(res.TIReq),gv('yr')+"a levered","vd")+
+    "</div>"+
+    "<div class='g2' style='margin-top:8px;font-size:11.5px'>"+
+      "<div style='background:var(--g1);border:1px solid var(--g3);border-radius:8px;padding:10px'>"+
+        "<div style='font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:5px'>Deuda</div>"+
+        "<div>Monto: <strong>"+fUSD(res.deuda)+"</strong></div>"+
+        "<div>Cuota/año: <strong style='color:var(--rj)'>"+fUSD(res.cuotaAnio)+"</strong></div>"+
+        "<div>Cuota/mes: <strong>"+fUSD(Math.round(res.cuotaAnio/12))+"</strong></div>"+
+      "</div>"+
+      "<div style='background:var(--az-lt);border:1px solid var(--az-bd);border-radius:8px;padding:10px'>"+
+        "<div style='font-size:9.5px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:5px'>Retornos Nepos</div>"+
+        "<div>TIR equity: <strong style='color:var(--vd)'>"+fPct(res.TIReq)+"</strong></div>"+
+        "<div>VPN equity: <strong>"+fUSD(res.VPNeq)+"</strong></div>"+
+        "<div>DSCR: <strong style='color:"+dscrC+"'>"+res.dscrMin.toFixed(2)+"x–"+res.dscrMax.toFixed(2)+"x</strong></div>"+
+        "<div>LLCR: <strong>"+res.LLCR.toFixed(2)+"x</strong> · PLCR: <strong>"+res.PLCR.toFixed(2)+"x</strong></div>"+
+      "</div>"+
+    "</div>";
+}
+
+function buildTablaFlujos(res){
+  var finOn=$('chk-fin')&&$('chk-fin').checked;
+  var thead="<thead><tr>"+
+    "<th style='text-align:left'>Año</th>"+
+    "<th>Gen. kWh</th><th>Ingreso</th><th>OPEX</th><th>EBITDA</th>"+
+    (finOn?"<th>Serv.Deuda</th>":"")+"<th>FCL</th>"+
+    (finOn?"<th>DSCR</th>":"")+
+    "<th>Acumulado</th></tr></thead>";
+  var tbody="<tbody>";
+  res.rows.forEach(function(r){
+    var dc2=r.dscr>=1.35?"var(--vd)":r.dscr>=1.25?"var(--am)":"var(--rj)";
+    tbody+="<tr>"+
+      "<td style='text-align:left'>"+r.y+"</td>"+
+      "<td>"+Math.round(r.gen/1000).toLocaleString()+" MWh</td>"+
+      "<td>"+fUSD(r.ingr)+"</td>"+
+      "<td style='color:var(--rj)'>"+fUSD(r.opex)+"</td>"+
+      "<td style='color:var(--vd)'>"+fUSD(r.ebitda)+"</td>"+
+      (finOn?"<td style='color:var(--rj)'>"+fUSD(r.serv)+"</td>":"")+
+      "<td style='font-weight:600'>"+fUSD(r.fcl)+"</td>"+
+      (finOn?"<td style='font-weight:700;color:"+dc2+"'>"+(r.dscr<900?r.dscr.toFixed(2)+"x":"—")+"</td>":"")+
+      "<td style='font-weight:600;color:"+(r.cum>=0?"var(--vd)":"var(--rj)")+"'>"+fUSD(r.cum)+"</td>"+
+    "</tr>";
+  });
+  tbody+="</tbody>";
+  var t=$("t-flujos");
+  if(t) t.innerHTML=thead+tbody;
+}
+
+function buildPostContrato(res, tp, er, dg){
+  var p  = PROY[curP];
+  var yr = gv('yr');
+  var yrF= 25;
+  var cm = consumoMesTotal();
+  var total=0, rows="";
+
+  for(var y=yr+1;y<=yrF;y++){
+    var tY  = tp*Math.pow(1+er,y-1);
+    var gY  = genSolarAnio(p.kwp,dg,y-1);
+    var cA  = cm*12;
+    var ahY = Math.min(gY,cA)*tY;
+    total+=ahY;
+    rows+="<tr><td style='text-align:left'>"+y+"</td>"+
+      "<td>"+Math.round(gY/1000).toFixed(1)+" MWh</td>"+
+      "<td>$"+tY.toFixed(4)+"/kWh</td>"+
+      "<td style='color:var(--vd);font-weight:700'>"+fUSD(ahY)+"</td></tr>";
+  }
+
+  var el=$("cmp-post-card");
+  if(!el)return;
+  el.innerHTML="<div class='ct' style='color:var(--vd)'>🎁 Post-contrato años "+(yr+1)+"–"+yrF+" — Planta pasa a propiedad de "+p.cliente+"</div>"+
+    "<div class='g3g' style='margin-bottom:11px'>"+
+      kpi("Ahorro energía años "+(yr+1)+"–"+yrF,fUSD(Math.round(total)),"energía solar propia","vd")+
+      kpi("Promedio/mes",fUSD(Math.round(total/((yrF-yr)*12))),"sin pagar a Nepos","vd")+
+      kpi("Total 25 años",fUSD(Math.round(vpnAhorroHelper(tp,er,dg,yr)+total)),"valor completo contrato","vd")+
+    "</div>"+
+    "<div style='overflow-x:auto'><table class='tbl'>"+
+      "<thead><tr><th style='text-align:left'>Año</th><th>Generación</th><th>Tarifa red</th><th>Ahorro</th></tr></thead>"+
+      "<tbody>"+rows+"</tbody></table></div>"+
+    "<div class='fn' style='margin-top:7px'>Al vencer el contrato en el año "+yr+", Nepos transfiere la planta sin costo adicional. "+
+      "Degradación proyectada al "+gv('dg')+"% anual. Tarifa distribuidora escalación "+gv('er')+"% anual. "+
+      "El piso regulatorio (demanda mínima 60% + SAPG + comercialización + bomberos) sigue siendo responsabilidad del cliente.</div>";
+}
+
+function vpnAhorroHelper(tp,er,dg,yr){
+  var tn=gvS('tn',0.10), cm=consumoMesTotal(), en=gv('en')/100, p=PROY[curP], sum=0;
+  for(var y=1;y<=yr;y++){
+    var tY=tp*Math.pow(1+er,y-1);
+    var gY=genSolarAnio(p.kwp,dg,y-1);
+    var cA=cm*12;
+    var ahY=Math.min(gY,cA)*tY - gY*tn*Math.pow(1+en,y-1);
+    sum+=ahY/Math.pow(1.10,y);
+  }
+  return sum;
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 3 — DASHBOARDS
+// ════════════════════════════════════════════════════════
+function buildDashboards(){
+  buildDCEO(); buildDCFO(); buildDCom(); buildDIng(); buildDCli();
+}
+
+function switchDash(id){
+  activeDash=id;
+  ['ceo','cfo','com','ing','cli'].forEach(function(d){
+    var el=$('dash-'+d); if(el) el.style.display=d===id?'block':'none';
+    var tb=$('tab-'+d); if(tb) tb.classList.toggle('active',d===id);
+  });
+}
+
+function buildDCEO(){
+  var p=PROY[curP],res=buildFlujosNepos(),tp=tpvReal(),tn=gvS('tn',p.def.tn||0.10),cm=consumoMesTotal();
+  var dg=gv('dg')/100;
+  var genM1=genSolarAnio(p.kwp,dg,0)/12;
+  var cuotaSinIVA=genM1*tn, cuotaConIVA=cuotaSinIVA*1.15;
+  var ahorroMes=cm*tp-cuotaSinIVA;
+  var sgd=calcSGDA(), cobert=sgd.total.cons>0?sgd.total.comp/sgd.total.cons*100:0;
+  var el=$('dash-ceo'); if(!el)return;
+  el.innerHTML="<div class='g5' style='margin-bottom:13px'>"+
+    kpi("TIR Nepos",fPct(res.TIR),gv('yr')+"a horizonte","vd")+
+    kpi("VPN",fUSD(res.VPN),"WACC "+gv('wc')+"%","az")+
+    kpi("CAPEX",fUSD(p.capex),"inversión total Nepos","rj")+
+    kpi("Payback",res.pb+"a","recuperación CAPEX","")+
+    kpi("Descuento cliente",((1-tn/tp)*100).toFixed(1)+"%%","garantizado","vd")+
+  "</div>"+
+  "<div class='g3g'>"+
+    "<div class='card'><div class='ct'>📊 Resumen ejecutivo</div>"+
+      "<div style='font-size:12px;line-height:1.9'>"+
+        "▸ <strong>"+p.cliente+"</strong> — "+p.kwp+" kWp<br>"+
+        "▸ Tarifa Nepos: <strong>$"+tn.toFixed(5)+"/kWh</strong> vs $"+tp.toFixed(5)+" red<br>"+
+        "▸ Cuota mes 1 (s/IVA): <strong style='color:var(--az)'>"+fUSD(Math.round(cuotaSinIVA))+"/mes</strong><br>"+
+        "▸ Cuota mes 1 (c/IVA): <strong>"+fUSD(Math.round(cuotaConIVA))+"/mes</strong><br>"+
+        "▸ Ahorro energía mes 1: <strong style='color:var(--vd)'>"+fUSD(Math.round(ahorroMes))+"/mes</strong><br>"+
+        "▸ Cobertura solar: <strong>"+cobert.toFixed(0)+"%%</strong> del consumo<br>"+
+        "▸ Generación año 1: <strong>"+Math.round(sgd.total.gen/1000)+" MWh/año</strong>"+
+      "</div></div>"+
+    "<div class='card'><div class='ct'>💰 Métricas financieras</div>"+
+      "<table class='tbl'>"+
+        "<tr><td>CAPEX total</td><td>"+fUSD(p.capex)+"</td></tr>"+
+        "<tr><td>LCOE</td><td>$"+res.LCOE.toFixed(5)+"/kWh</td></tr>"+
+        "<tr><td>TIR proyecto</td><td style='color:var(--vd);font-weight:700'>"+fPct(res.TIR)+"</td></tr>"+
+        "<tr><td>VPN (WACC "+gv('wc')+"%%)</td><td>"+fUSD(res.VPN)+"</td></tr>"+
+        "<tr><td>Payback</td><td>"+res.pb+" años</td></tr>"+
+        "<tr><td>Valor residual (20%)</td><td>"+fUSD(res.vRes)+"</td></tr>"+
+      "</table></div>"+
+    "<div class='card'><div class='ct'>🌱 Impacto ambiental</div>"+
+      "<div style='font-size:12px;line-height:1.9'>"+
+        "▸ CO₂ evitado/año: <strong style='color:var(--vd)'>~"+Math.round(sgd.total.gen*0.000385)+" tCO₂e</strong><br>"+
+        "▸ Equiv. árboles: <strong>"+Math.round(sgd.total.gen*0.000385*45).toLocaleString()+"</strong><br>"+
+        "▸ kWh limpio/año: <strong>"+Math.round(sgd.total.gen/1000)+" MWh</strong><br>"+
+        "▸ CO₂ 25 años: <strong>"+Math.round(sgd.total.gen*0.000385*25)+" tCO₂e</strong>"+
+      "</div></div>"+
+  "</div>";
+}
+
+function buildDCFO(){
+  var p=PROY[curP],res=buildFlujosNepos(),wc=gv('wc')/100;
+  var el=$('dash-cfo'); if(!el)return;
+  el.innerHTML="<div class='g5' style='margin-bottom:13px'>"+
+    kpi("TIR",fPct(res.TIR),gv('yr')+"a unlevered","vd")+
+    kpi("TIR equity",res.deuda>0?fPct(res.TIReq):"=TIR",res.deuda>0?"levered":"sin deuda","vd")+
+    kpi("VPN",fUSD(res.VPN),"WACC "+Math.round(wc*100)+"%","az")+
+    kpi("DSCR mín.",res.dscrMin<900?res.dscrMin.toFixed(2)+"x":"N/A",res.dscrMin>=1.25?"Bankable ✅":"⚠️",res.dscrMin>=1.25?"vd":"rj")+
+    kpi("LCOE",fUSD2(res.LCOE)+"/kWh","costo nivelado","am")+
+  "</div>"+
+  "<div class='g2'>"+
+    "<div class='card'><div class='ct'>📊 Flujo primeros 10 años</div>"+
+      "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th style='text-align:left'>Año</th><th>Ingreso</th><th>OPEX</th><th>EBITDA</th><th>Acum.</th></tr></thead>"+
+        "<tbody>"+res.rows.slice(0,10).map(function(r){
+          return"<tr><td style='text-align:left'>"+r.y+"</td><td>"+fUSD(r.ingr)+"</td><td style='color:var(--rj)'>"+fUSD(r.opex)+"</td><td style='color:var(--vd)'>"+fUSD(r.ebitda)+"</td><td style='font-weight:600;color:"+(r.cum>=0?"var(--vd)":"var(--rj)")+"'>"+fUSD(r.cum)+"</td></tr>";
+        }).join("")+"</tbody></table></div>"+
+    "</div>"+
+    "<div class='card'><div class='ct'>🏦 Estructura de capital</div>"+
+      "<div style='font-size:12px;line-height:1.9'>"+
+        (res.deuda>0?
+          "▸ Deuda: <strong>"+fUSD(res.deuda)+"</strong> ("+gv('dp')+"% · "+gv('td')+"% TEA · "+gv('pd')+"a)<br>"+
+          "▸ Equity: <strong>"+fUSD(res.equity)+"</strong><br>"+
+          "▸ Cuota deuda/año: <strong style='color:var(--rj)'>"+fUSD(res.cuotaAnio)+"</strong><br>"+
+          "▸ DSCR: <strong>"+res.dscrMin.toFixed(2)+"x–"+res.dscrMax.toFixed(2)+"x</strong><br>"+
+          "▸ LLCR: <strong>"+res.LLCR.toFixed(2)+"x</strong> · PLCR: <strong>"+res.PLCR.toFixed(2)+"x</strong><br>":
+          "▸ 100% Equity: <strong>"+fUSD(p.capex)+"</strong><br>")+
+        "▸ TIR equity: <strong>"+fPct(res.TIReq)+"</strong><br>"+
+        "▸ VPN: <strong>"+fUSD(res.VPN)+"</strong><br>"+
+        "▸ Payback: <strong>"+res.pb+" años</strong><br>"+
+        "▸ Valor residual: <strong>"+fUSD(res.vRes)+"</strong>"+
+      "</div>"+
+    "</div>"+
+  "</div>";
+}
+
+function buildDCom(){
+  var p=PROY[curP],tp=tpvReal(),tn=gvS('tn',p.def.tn||0.10),cm=consumoMesTotal();
+  var dg=gv('dg')/100,er=gv('er')/100,yr=gv('yr'),en=gv('en')/100;
+  var dem=calcDemanda(p,false),Tv=T[p.tipo];
+  var demSGDA2=calcDemanda(p,true);
+  var genM1=genSolarAnio(p.kwp,dg,0)/12;
+  var cuotaSinIVA=genM1*tn, cuotaConIVA=cuotaSinIVA*1.15;
+  var pisoReg=demSGDA2.cargoDemSGDA+(p.sapg||0)+p.comerc+(p.bomberos||0);
+  var facAntes=p.facturaMes;
+  var totalConNepos=cuotaConIVA+pisoReg;
+  var costoInaccionDia=(facAntes-totalConNepos)/30;
+  var ahorroReal=facAntes-totalConNepos;
+  var el=$('dash-com'); if(!el)return;
+  el.innerHTML="<div class='g4' style='margin-bottom:13px'>"+
+    kpi("Ahorro mensual energía",fUSD(Math.round(cm*tp-cuotaSinIVA)),"vs cargo energía anterior","vd")+
+    kpi("Descuento garantizado",((1-tn/tp)*100).toFixed(1)+"%%","sobre tarifa ponderada red","vd")+
+    kpi("Cuota total c/IVA",fUSD(Math.round(cuotaConIVA))+"/mes","cuota servicio Nepos","az")+
+    kpi("Ahorro vs factura total",fUSD(Math.round(ahorroReal))+"/mes",(ahorroReal/facAntes*100).toFixed(1)+"% de la planilla",ahorroReal>0?"vd":"rj")+
+  "</div>"+
+  "<div class='g2'>"+
+    "<div class='card'>"+
+      "<div class='ct'>📋 Propuesta cliente</div>"+
+      "<div style='background:var(--az);border-radius:10px;padding:13px;color:#fff;margin-bottom:10px'>"+
+        "<div style='font-size:11px;opacity:.8;margin-bottom:3px'>CUOTA MENSUAL NEPOS (con IVA 15%)</div>"+
+        "<div style='font-size:30px;font-weight:800'>"+fUSD(Math.round(cuotaConIVA))+"/mes</div>"+
+        "<div style='font-size:11px;opacity:.8;margin-top:3px'>"+Math.round(genM1).toLocaleString()+" kWh × $"+tn.toFixed(5)+"/kWh × 1.15 IVA</div>"+
+      "</div>"+
+      "<div style='font-size:12px;line-height:2.0'>"+
+        "✅ Sin inversión inicial<br>"+
+        "✅ Ahorro garantizado: "+((1-tn/tp)*100).toFixed(1)+"% vs tarifa red<br>"+
+        "✅ Escalación máx. contractual: "+gv('en')+"% anual<br>"+
+        "✅ O&M y monitoreo incluidos<br>"+
+        "✅ Transferencia planta al vencer<br>"+
+      "</div>"+
+    "</div>"+
+    "<div class='card'>"+
+      "<div class='ct'>💰 Flujo cliente antes vs después</div>"+
+      "<div style='border:2px solid var(--rj);border-radius:8px;overflow:hidden;margin-bottom:8px'>"+
+        "<div style='background:var(--rj);color:#fff;padding:6px 10px;font-size:10px;font-weight:700'>ANTES — Solo distribuidora</div>"+
+        "<div style='padding:8px 10px;font-size:12px'>Planilla: <strong style='color:var(--rj)'>"+fUSD(p.facturaMes)+"/mes</strong></div>"+
+      "</div>"+
+      "<div style='border:2px solid var(--vd);border-radius:8px;overflow:hidden;margin-bottom:8px'>"+
+        "<div style='background:var(--vd);color:#fff;padding:6px 10px;font-size:10px;font-weight:700'>DESPUÉS — Con OPEX Nepos</div>"+
+        "<div style='padding:8px 10px;font-size:12px'>"+
+          "Cuota Nepos (c/IVA): <strong>"+fUSD(Math.round(cuotaConIVA))+"/mes</strong><br>"+
+          "Piso regulat. (dem.60%+SAPG+comerc+bomb): "+fUSD(Math.round(pisoReg))+"/mes<br>"+
+          "<strong>Total: "+fUSD(Math.round(totalConNepos))+"/mes</strong>"+
+        "</div>"+
+      "</div>"+
+      "<div style='background:var(--vd-lt);border:2px solid var(--vd);border-radius:8px;padding:10px;text-align:center'>"+
+        "<div style='font-size:11px;color:var(--vd);font-weight:700'>AHORRO NETO VS PLANILLA ANTERIOR</div>"+
+        "<div style='font-size:26px;font-weight:800;color:var(--vd)'>"+fUSD(Math.round(ahorroReal))+"/mes</div>"+
+        "<div style='font-size:10px;color:var(--t3)'>"+(ahorroReal/facAntes*100).toFixed(1)+"% de la planilla anterior</div>"+
+      "</div>"+
+    "</div>"+
+  "</div>";
+}
+
+function buildDIng(){
+  var p=PROY[curP],sgd=calcSGDA(),dem=calcDemanda(p,false),dg=gv('dg')/100;
+  var LCOE=calcLCOE(p.capex,gv('om'),dg,p.kwp,gv('yr'));
+  var el=$('dash-ing'); if(!el)return;
+  el.innerHTML="<div class='g5' style='margin-bottom:13px'>"+
+    kpi("Capacidad FV",p.kwp+" kWp","sistema solar","az")+
+    kpi("Generación año 1",Math.round(sgd.total.gen/1000).toFixed(1)+" MWh","kWh/año · PR=80%","vd")+
+    kpi("Cobertura SGDA",Math.round(sgd.total.comp/sgd.total.cons*100)+"%%","energía compensada","az")+
+    kpi("LCOE","$"+LCOE.toFixed(5)+"/kWh","costo nivelado","am")+
+    kpi("Degradación",gv('dg')+"%%/año","paneles solares","")+
+  "</div>"+
+  "<div class='g2'>"+
+    "<div class='card'><div class='ct'>⚙️ Parámetros técnicos</div>"+
+      "<table class='tbl'><thead><tr><th style='text-align:left'>Parámetro</th><th>Valor</th><th>Unidad</th></tr></thead><tbody>"+
+        eR("Potencia FV",p.kwp,"kWp")+
+        eR("Generación año 1",Math.round(sgd.total.gen/1000).toFixed(1)+" MWh","MWh/año")+
+        eR("PR (Performance Ratio)","0.80","80%")+
+        eR("Irradiación media",gvS('irr',4.6).toFixed(1)+" kWh/kWp/día","Ecuador")+
+        eR("Degradación",gv('dg'),"%/año")+
+        eR("Demanda facturable",dem.DF.toFixed(0),"kW")+
+        eR("FGDI",dem.FGDI.toFixed(4),"")+
+        eR("Cargo demanda efectivo","$"+dem.tarDem.toFixed(4)+"/kW","")+
+      "</tbody></table>"+
+    "</div>"+
+    "<div class='card'><div class='ct'>📊 Balance SGDA anual</div>"+
+      "<div style='font-size:11.5px;line-height:1.9'>"+
+        "▸ Generación: <strong>"+Math.round(sgd.total.gen).toLocaleString()+" kWh/año</strong><br>"+
+        "▸ Consumo: <strong>"+Math.round(sgd.total.cons).toLocaleString()+" kWh/año</strong><br>"+
+        "▸ Autoconsumo: <strong>"+Math.round(sgd.total.auto).toLocaleString()+" kWh</strong><br>"+
+        "▸ Excedente: <strong>"+Math.round(sgd.total.exc).toLocaleString()+" kWh</strong><br>"+
+        "▸ Compensada SGDA: <strong>"+Math.round(sgd.total.comp).toLocaleString()+" kWh</strong><br>"+
+        "▸ Facturable dist.: <strong>"+Math.round(sgd.total.fact).toLocaleString()+" kWh</strong><br>"+
+        "▸ Cobertura: <strong>"+(sgd.total.comp/sgd.total.cons*100).toFixed(1)+"%%</strong><br>"+
+      "</div>"+
+    "</div>"+
+  "</div>";
+}
+
+function buildDCli(){
+  var p=PROY[curP],tp=tpvReal(),tn=gvS('tn',p.def.tn||0.10),cm=consumoMesTotal();
+  var yr=gv('yr'),er=gv('er')/100,dg=gv('dg')/100,en=gv('en')/100;
+  var total=0, rows="";
+  for(var y=1;y<=yr;y++){
+    var tY=tp*Math.pow(1+er,y-1),gY=genSolarAnio(p.kwp,dg,y-1),cA=cm*12;
+    var ahY=Math.min(gY,cA)*tY - gY*tn*Math.pow(1+en,y-1);
+    total+=ahY;
+    rows+="<tr><td style='text-align:left'>"+y+"</td>"+
+      "<td>$"+tn.toFixed(4)+"×"+(1+en)**(y-1>0?y-1:0)+"</td>"+
+      "<td>$"+tY.toFixed(4)+"/kWh</td>"+
+      "<td style='color:var(--vd);font-weight:600'>"+fUSD(ahY)+"</td>"+
+      "<td style='font-weight:700;color:var(--vd)'>"+fUSD(total)+"</td></tr>";
+  }
+  var el=$('dash-cli'); if(!el)return;
+  el.innerHTML="<div class='alert al-green' style='font-size:13px;font-weight:600;text-align:center'>"+
+    "Con Nepos Energy, <strong>"+p.cliente+"</strong> ahorra el equivalente a <strong>"+((1-tn/tp)*100).toFixed(1)+"% de su cargo de energía</strong> desde el día 1. "+
+    "Ahorro proyectado "+yr+" años: <strong>"+fUSD(Math.round(total))+"</strong>"+
+  "</div>"+
+  "<div class='g3g' style='margin-bottom:13px'>"+
+    kpi("Ahorro energía mes 1",fUSD(Math.round(cm*tp-genSolarAnio(p.kwp,dg,0)/12*tn)),((1-tn/tp)*100).toFixed(1)+"% vs distribuidora","vd")+
+    kpi("Ahorro total "+yr+" años",fUSD(Math.round(total)),"acumulado contractual","vd")+
+    kpi("Tarifa Nepos","$"+tn.toFixed(5)+"/kWh","vs $"+tp.toFixed(5)+" dist.","az")+
+  "</div>"+
+  "<div class='card'><div class='ct'>💚 Ahorro proyectado año a año</div>"+
+    "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th style='text-align:left'>Año</th><th>Tarifa Nepos</th><th>Tarifa red</th><th>Ahorro</th><th>Acumulado</th></tr></thead>"+
+    "<tbody>"+rows+"</tbody></table></div>"+
+  "</div>";
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 4 — SENSIBILIDADES
+// ════════════════════════════════════════════════════════
+function buildP4(){
+  var p=PROY[curP],tn=gvS('tn',p.def.tn||0.10),wc=gv('wc')/100,capexB=p.capex,dg=gv('dg')/100;
+  var tp=tpvReal(),cm=consumoMesTotal(),yr=gv('yr'),er=gv('er')/100;
+
+  function tirS(ov){
+    var om2=ov.om||gv('om'),dg2=ov.dg!=null?ov.dg:dg,tn2=ov.tn||tn,cp2=ov.cap||capexB;
+    var en2=ov.en||gv('en')/100,kwp2=p.kwp;
+    var fl=[-cp2];
+    for(var y=1;y<=yr;y++) fl.push(genSolarAnio(kwp2,dg2,y-1)*tn2*Math.pow(1+en2,y-1)-om2);
+    fl[yr]+=cp2*0.20;
+    return calcTIR(fl,0.15);
+  }
+
+  // TIR vs Descuento × CAPEX
+  var dcVals=[5,7,9,11,13,15];
+  var cpPcts=[-20,-10,0,10,20];
+  var tirM=cpPcts.map(function(cp){return dcVals.map(function(dc){
+    return tirS({cap:capexB*(1+cp/100),tn:tp*(1-dc/100)});
+  });});
+  var tirH="<table class='sens-tbl'><thead><tr><th>CAPEX↓ Disc.→</th>";
+  dcVals.forEach(function(d){tirH+="<th>"+d+"%</th>";});
+  tirH+="</tr></thead><tbody>";
+  cpPcts.forEach(function(cp,i){
+    tirH+="<tr><td>CAPEX "+(cp>=0?"+":"")+cp+"%</td>";
+    tirM[i].forEach(function(v){
+      var cls=v>=0.20?"sg":v>=0.12?"sa":"sr";
+      tirH+="<td class='"+cls+"'>"+(v*100).toFixed(1)+"%</td>";
+    });
+    tirH+="</tr>";
+  });
+  $("sens-tir").innerHTML=tirH+"</tbody></table>";
+
+  // VPN vs Escalación × Degradación
+  var erVals=[0,1,2,3,5,7];
+  var dgVals=[0.3,0.5,0.7,1.0,1.5];
+  var vpnM=erVals.map(function(erV){return dgVals.map(function(dgV){
+    return tirS({er:erV/100,dg:dgV/100});
+  });});
+  // Actually use VPN for this table
+  function vpnS(ov){
+    var om2=ov.om||gv('om'),dg2=ov.dg!=null?ov.dg:dg,tn2=ov.tn||tn,cp2=ov.cap||capexB;
+    var en2=ov.en||gv('en')/100,kwp2=p.kwp,er2=ov.er||er;
+    var fl=[-cp2];
+    for(var y=1;y<=yr;y++) fl.push(genSolarAnio(kwp2,dg2,y-1)*tn2*Math.pow(1+en2,y-1)-om2);
+    fl[yr]+=cp2*0.20;
+    return calcVPN(fl,wc);
+  }
+  var vpnMat=erVals.map(function(erV){return dgVals.map(function(dgV){return vpnS({dg:dgV/100});});});
+  var vpnH="<table class='sens-tbl'><thead><tr><th>Escal.↓ Deg.→</th>";
+  dgVals.forEach(function(d){vpnH+="<th>"+d+"%</th>";});
+  vpnH+="</tr></thead><tbody>";
+  erVals.forEach(function(erV,i){
+    vpnH+="<tr><td>Escal. "+erV+"%</td>";
+    vpnMat[i].forEach(function(v){
+      var cls=v>0?"sg":v>-capexB*0.3?"sa":"sr";
+      vpnH+="<td class='"+cls+"'>"+fUSD(Math.round(v))+"</td>";
+    });
+    vpnH+="</tr>";
+  });
+  $("sens-vpn").innerHTML=vpnH+"</tbody></table>";
+
+  // DSCR vs TEA × % Deuda
+  var teaVals=[6,8,10,12,15,18];
+  var dpVals=[40,50,60,70,80];
+  var dscrM=teaVals.map(function(tV){return dpVals.map(function(dpV){
+    var deu=capexB*dpV/100;
+    var tem2=Math.pow(1+tV/100,1/12)-1;
+    var cuota2=deu*tem2/(1-Math.pow(1+tem2,-gvS('pd',10)*12))*12;
+    var ebitda1=genSolarAnio(p.kwp,dg,0)*tn-gv('om');
+    return cuota2>0?ebitda1/cuota2:999;
+  });});
+  var dscrH="<table class='sens-tbl'><thead><tr><th>TEA↓ Deuda→</th>";
+  dpVals.forEach(function(d){dscrH+="<th>"+d+"%%</th>";});
+  dscrH+="</tr></thead><tbody>";
+  teaVals.forEach(function(tV,i){
+    dscrH+="<tr><td>"+tV+"%% TEA</td>";
+    dscrM[i].forEach(function(v){
+      var cls=v>=1.35?"sg":v>=1.25?"sa":"sr";
+      dscrH+="<td class='"+cls+"'>"+(v<900?v.toFixed(2)+"x":"N/A")+"</td>";
+    });
+    dscrH+="</tr>";
+  });
+  $("sens-dscr").innerHTML=dscrH+"</tbody></table>";
+
+  // Ahorro cliente vs tarifa red × descuento Nepos
+  var erAVals=[0,2,4,6,8];
+  var dcAVals=[5,7,9,11,13,15];
+  var ahM=erAVals.map(function(erAV){return dcAVals.map(function(dcAV){
+    var tn2=tp*(1-dcAV/100),genA=genSolarAnio(p.kwp,dg,0);
+    var tpA=tp*(1+erAV/100);
+    return Math.min(genA,cm*12)*tpA - genA*tn2;
+  });});
+  var ahH="<table class='sens-tbl'><thead><tr><th>Escal.↓ Desc.→</th>";
+  dcAVals.forEach(function(d){ahH+="<th>"+d+"%%</th>";});
+  ahH+="</tr></thead><tbody>";
+  erAVals.forEach(function(erAV,i){
+    ahH+="<tr><td>Escal. "+erAV+"%%</td>";
+    ahM[i].forEach(function(v){
+      var cls=v>0?"sg":v>-1000?"sa":"sr";
+      ahH+="<td class='"+cls+"'>"+fUSD(Math.round(v))+"</td>";
+    });
+    ahH+="</tr>";
+  });
+  $("sens-ahorro").innerHTML=ahH+"</tbody></table>";
+
+  // Tornado
+  var base=tirS({});
+  var torVars=[
+    {lbl:"Descuento +/-5pp",lo:tirS({tn:tp*0.95}),hi:tirS({tn:tp*0.85})},
+    {lbl:"CAPEX ±15%",      lo:tirS({cap:capexB*1.15}),hi:tirS({cap:capexB*0.85})},
+    {lbl:"Degradación ±50%",lo:tirS({dg:dg*1.5}),hi:tirS({dg:dg*0.5})},
+    {lbl:"Escal.tarifa ±2pp",lo:tirS({er:Math.max(0,er-0.02)}),hi:tirS({er:er+0.02})},
+    {lbl:"O&M ±30%",        lo:tirS({om:gv('om')*1.3}),hi:tirS({om:gv('om')*0.7})},
+    {lbl:"Irradiación ±10%", lo:tirS({tn:tn*0.90}),hi:tirS({tn:tn*1.10})}
+  ];
+  dCh("tornado");
+  var eT=$("c-tornado");
+  if(eT) charts["tornado"]=new Chart(eT,{type:"bar",
+    data:{labels:torVars.map(function(v){return v.lbl;}),
+      datasets:[
+        {label:"Escenario bajo",data:torVars.map(function(v){return(v.lo-base)*100;}),backgroundColor:"rgba(220,38,38,0.7)"},
+        {label:"Escenario alto",data:torVars.map(function(v){return(v.hi-base)*100;}),backgroundColor:"rgba(22,163,74,0.7)"}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+      plugins:{legend:{labels:{font:{size:10}}},title:{display:true,text:"Δ TIR en pp vs base "+fPct(base),font:{size:11}}},
+      scales:{x:{ticks:{callback:function(v){return v.toFixed(1)+"pp";},font:{size:10}}}}}});
+}
+
+// ════════════════════════════════════════════════════════
+// PASO 5 — FACTURACIÓN
+// ════════════════════════════════════════════════════════
+function buildP5(){
+  var p=PROY[curP],tp=tpvReal(),tn=gvS('tn',p.def.tn||0.10),cm=consumoMesTotal();
+  var Tv=T[p.tipo];
+  var dem=calcDemanda(p, false);       // Factura actual SIN SGDA
+  var demSGDA=calcDemanda(p, true);    // Factura CON SGDA (60% obligatorio)
+  var genM1=genSolarAnio(p.kwp,gv('dg')/100,0)/12;
+
+  // Factura actual (sin solar)
+  var fE=cargoEnergiaMes(), fD=dem.cargoDem, fS=p.sapg||0, fC=p.comerc||4.182, fB=p.bomberos||0;
+  var totalActual=p.facturaMes;
+
+  // Con SGDA (solar + balance neto ARCONEL-005/24)
+  // Demanda con SGDA: 60% de la máxima 12 meses (ARCONEL-001/20)
+  var sgd=calcSGDA();
+  var factMes=sgd.total.fact/12;
+  // Energía facturable por franja (SGDA compensa según franja correspondiente)
+  var fESGDA=factMes * tp;   // energía facturable × tarifa ponderada del proyecto
+  var fDsgda = demSGDA.cargoDem;  // demanda = 60% DMmax12 con SGDA activo
+  // SAPG: cargo fijo NO reducible con solar (base en potencia contratada, no en consumo)
+  var totalSGDA=fESGDA+fDsgda+fS+fC+fB;
+  var ahSGDA=totalActual-totalSGDA;
+
+  // Con Nepos EaaS
+  // Piso regulatorio = 60% demanda máx. + SAPG + comercialización + bomberos
+  var cuotaSinIVA=genM1*tn;
+  var cuotaConIVA=cuotaSinIVA*1.15;
+  var pisoReg=demSGDA.cargoDemSGDA+fS+fC+fB;  // usa el 60% correcto
+  var totalNepos=cuotaConIVA+pisoReg;
+  var ahNepos=totalActual-totalNepos;
+  var ahPct=totalActual>0?ahNepos/totalActual*100:0;
+  
+  // Costo diario de inacción (lo que pierde el cliente cada día sin tomar la decisión)
+  var costoDiarioInaccion = ahNepos / 30.0;
+
+  $("p5-badge").innerHTML="<strong>"+p.cliente+"</strong> paga <strong>"+fUSD2(totalNepos)+"</strong>/mes con Nepos vs "+
+    "<span style='text-decoration:line-through'>"+fUSD2(totalActual)+"</span> anterior → "+
+    "<span style='color:var(--vd)'>Ahorro "+fUSD2(ahNepos)+"/mes ("+ahPct.toFixed(1)+"%%)</span>";
+
+  $("p5-kpis").innerHTML=
+    kpi("Factura actual",fUSD2(totalActual),"planilla distribuidora completa","rj")+
+    kpi("Solo con SGDA",fUSD2(totalSGDA),(ahSGDA>0?fUSD2(ahSGDA)+" menos":"")+" · dem.60% DMmax","am")+
+    kpi("Con Nepos EaaS",fUSD2(totalNepos),"cuota + piso regulatorio","vd")+
+    kpi("Ahorro mensual",fUSD2(ahNepos),ahPct.toFixed(1)+"% vs planilla anterior",ahNepos>0?"vd":"rj");
+
+  function facC(tit,col,rows,totLbl,tot,nota){
+    var h="<div style='background:"+col+";color:#fff;padding:7px 11px;font-size:10.5px;font-weight:700'>"+tit+"</div>"+
+      "<table style='width:100%;border-collapse:collapse'><tbody>";
+    rows.forEach(function(r){h+="<tr style='border-bottom:1px solid var(--g2)'><td style='padding:4px 9px;font-size:10.5px'>"+r[0]+"</td><td style='padding:4px 9px;font-size:11px;font-weight:600;text-align:right'>"+r[1]+"</td></tr>";});
+    h+="</tbody></table><div style='background:"+col+";padding:9px 11px'>"+
+      "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:3px'>"+
+        "<span style='font-size:10px;font-weight:700;color:rgba(255,255,255,.8)'>"+totLbl+"</span>"+
+        "<span style='font-size:17px;font-weight:800;color:#fff'>"+fUSD2(tot)+"</span></div>"+
+      "<div style='font-size:10px;color:rgba(255,255,255,.7)'>"+nota+"</div></div>";
+    return h;
+  }
+
+  $("fac-actual").innerHTML=facC("❌ FACTURA ACTUAL","var(--rj)",
+    [["Cargo energía ("+Math.round(cm).toLocaleString()+" kWh)",fUSD2(fE)],
+     ["Cargo dem. ("+dem.DF.toFixed(1)+"kW × $"+dem.tarDem.toFixed(4)+" — sin SGDA)",fUSD2(fD)],
+     ["SAPG (cargo fijo base potencia contratada)",fS>0?fUSD2(fS):"por confirmar"],
+     ["Comercialización",fUSD2(fC)],
+     ["Contribución Bomberos",fB>0?fUSD2(fB):"por confirmar"]],
+    "TOTAL FACTURA",totalActual,p.distComp+" · ARCONEL-006/25 · tarifa vigente");
+
+  $("fac-sgda").innerHTML=facC("✅ CON SOLAR + SGDA","var(--vd)",
+    [["Energía facturable SGDA ("+Math.round(factMes).toLocaleString()+" kWh)",fUSD2(fESGDA)],
+     ["Cargo dem. 60% DMmax ("+demSGDA.DF60.toFixed(1)+"kW × $"+demSGDA.tarDem.toFixed(4)+")",fUSD2(fDsgda)],
+     ["SAPG (fijo — no reducible con solar)",fS>0?fUSD2(fS):"por confirmar"],
+     ["Comercialización",fUSD2(fC)],
+     ["Contribución Bomberos",fB>0?fUSD2(fB):"por confirmar"]],
+    "TOTAL CON SGDA",totalSGDA,"ARCONEL-005/24 + ARCONEL-001/20 · demand=60% DMmax12");
+
+  $("fac-nepos").innerHTML=facC("⚡ CON NEPOS EaaS","var(--az)",
+    [["Cuota servicios Nepos (sin IVA): "+Math.round(genM1).toLocaleString()+"kWh×$"+tn.toFixed(5),fUSD2(cuotaSinIVA)],
+     ["IVA 15% sobre cuota Nepos (art.55 LRTI)",fUSD2(cuotaSinIVA*0.15)],
+     ["Dem. mín. 60% DMmax ("+demSGDA.DF60.toFixed(1)+"kW × $"+demSGDA.tarDem.toFixed(4)+")",fUSD2(demSGDA.cargoDemSGDA)],
+     ["SAPG (fijo — no reducible con solar)",fS>0?fUSD2(fS):"por confirmar"],
+     ["Comerc. + Bomberos",fUSD2(fC+fB)]],
+    "TOTAL DESEMBOLSO",totalNepos,
+    "Ahorro vs anterior: "+fUSD2(ahNepos)+" ("+ahPct.toFixed(1)+"%)");
+
+  // Cuadro de costo diario de inacción
+  var inacEl = $("p5-inaccion");
+  if(inacEl){
+    var costoDiario = ahNepos / 30.0;
+    var costoMes = ahNepos;
+    var costoAnio = ahNepos * 12;
+    inacEl.innerHTML = "<div style='background:linear-gradient(135deg,#7C3AED,#185FA5);border-radius:12px;padding:14px 18px;color:#fff;margin-bottom:13px'>"+
+      "<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.8;margin-bottom:6px'>⏰ COSTO DE INACCIÓN — Lo que pierde el cliente cada día sin decidirse</div>"+
+      "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center'>"+
+        "<div><div style='font-size:26px;font-weight:800'>"+fUSD2(costoDiario)+"</div><div style='font-size:10px;opacity:.8'>por día</div></div>"+
+        "<div><div style='font-size:26px;font-weight:800'>"+fUSD2(costoMes)+"</div><div style='font-size:10px;opacity:.8'>por mes</div></div>"+
+        "<div><div style='font-size:26px;font-weight:800'>"+fUSD2(costoAnio)+"</div><div style='font-size:10px;opacity:.8'>por año</div></div>"+
+      "</div>"+
+      "<div style='margin-top:8px;font-size:11px;opacity:.75;text-align:center'>Ahorro potencial que "+p.cliente+" deja de percibir cada día que no firma con Nepos Energy</div>"+
+    "</div>";
+  }
+
+  // Sensibilidades
+  var sHtml="<div class='g3g' style='margin-top:8px'>";
+  [-20,-10,0,10,20].filter(function(pct){return pct!==0;}).forEach(function(pct){
+    var tN=tp*(1+pct/100), ahN=Math.min(genSolarAnio(p.kwp,gv('dg')/100,0),cm*12)*tN - genSolarAnio(p.kwp,gv('dg')/100,0)*tn;
+    sHtml+="<div style='text-align:center;background:var(--g1);border:1px solid var(--g3);border-radius:7px;padding:8px'>"+
+      "<div style='font-size:9.5px;color:var(--t3);font-weight:600'>Tarifa red "+(pct>0?"+":"")+pct+"%%</div>"+
+      "<div style='font-size:15px;font-weight:700;color:"+(ahN>0?"var(--vd)":"var(--rj)")+"'>"+fUSD(Math.round(ahN/12))+"/mes</div>"+
+      "<div style='font-size:9px;color:var(--t4)'>"+fUSD(Math.round(ahN))+"/año</div></div>";
+  });
+  $("p5-sens-card").innerHTML="<div class='ct'>📊 Ahorro energético bajo distintas escalaciones</div>"+sHtml+"</div>";
+
+  $("p5-clausulas-card").innerHTML=
+    "<div class='ct'>⚖️ Cláusulas contractuales EaaS</div>"+
+    cls2("a","var(--vd)","Piso irredukible regulatorio","Dem. 60% DMmax12 ("+demSGDA.DF60.toFixed(0)+"kW) + SAPG + Comerc. + Bomberos = "+fUSD2(pisoReg)+"/mes — no cubiertas por cuota Nepos.")+
+    cls2("b","var(--az)","Revisión tarifaria automática","Cambio ARCONEL activa revisión para mantener "+((1-tn/tp)*100).toFixed(1)+"% descuento sobre tarifa ponderada.")+
+    cls2("c","var(--am)","Garantía producción ≥95%%","Déficit de generación ajusta cuota proporcional. Seguro anual "+gv('seg')+"% cubre contingencias.")+
+    cls2("d","var(--t3)","Marco ARCONEL-005/24","Contrato de SERVICIOS. No es venta de energía. IVA 15% sobre cuota servicio Nepos.");
+
+  $("p5-footer").innerHTML="<strong>Normativa aplicada:</strong> LOSPEE · Ley Compet. Energética (RO 475/2024) · ARCONEL-005/24 (SGDA, balance neto por período) · "+
+    "ARCONEL-001/20 (Dem. mín. 60% DMmax12) · ARCONEL-006/25 (Pliego MV/BV vigente 2025-2026) · "+
+    "BV Horaria: Dem.$2,704/kW · Día(06-22h)$0,0620 · Noche(22-06h)$0,0520 · Comerc.$4,182 | "+
+    "MV ARCONEL-006/25: Dem.$2,620/kW(×FGDI) · Media(08-18h)$0,1178 · Punta(18-22h)$0,1318 · Base(22-08h)$0,1001 · FdS$0,1178 | "+
+    "<strong>DEMANDA CON SGDA:</strong> Con sistema SGDA activo, la demanda facturable es el 60% de la demanda máxima registrada en los 12 meses previos (ARCONEL-001/20, Art.3). "+
+    "<strong>SAPG:</strong> Cargo de alumbrado público calculado sobre la potencia contratada — NO se reduce con instalación solar fotovoltaica. "+
+    "IVA 15% LRTI art.55 num.11 sobre cuota de servicios · Deducción 100% adicional art.10 LRTI (Ley Comp.Energética). "+
+    "<em>Análisis técnico NEPOS ENERGY SAS. No constituye asesoría jurídica ni tributaria. Verifique tarifas vigentes con su distribuidora.</em>";
+}
+
+// ════════════════════════════════════════════════════════
+// HELPERS UI
+// ════════════════════════════════════════════════════════
+function kpi(lbl,val,sub,tipo){
+  var c="kpi"+(tipo?" "+tipo:"");
+  return"<div class='"+c+"'><div class='kpi-l'>"+lbl+"</div><div class='kpi-v'>"+val+"</div><div class='kpi-s'>"+sub+"</div></div>";
+}
+function tblR(k,v,u){return"<tr><td style='text-align:left'>"+k+"</td><td style='text-align:right'>"+v+"</td><td style='text-align:right;color:var(--t4);font-size:10px'>"+u+"</td></tr>";}
+function rw(k,v){return"<div style='display:flex;justify-content:space-between;padding:3px 9px;border-bottom:1px solid var(--g2);font-size:11.5px'><span>"+k+"</span><span style='font-weight:600'>"+v+"</span></div>";}
+function eR(k,v,u){return"<tr><td style='text-align:left'>"+k+"</td><td>"+v+"</td><td style='color:var(--t3)'>"+u+"</td></tr>";}
+function lgd(col,txt){return"<div style='display:flex;align-items:center;gap:5px;font-size:11px'><span style='width:12px;height:3px;background:"+col+";display:inline-block'></span>"+txt+"</div>";}
+function cls2(id,col,tit,txt){return"<div style='margin-bottom:5px;padding:6px 9px;border-left:3px solid "+col+";background:var(--g1);border-radius:0 6px 6px 0;font-size:11.5px'><strong>"+id+") "+tit+":</strong> "+txt+"</div>";}
+
+// ════════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ════════════════════════════════════════════════════════
+function goTo(i){
+  for(var j=0;j<=5;j++){
+    var pn=$("panel-"+j);if(pn)pn.classList.toggle("active",j===i);
+    var s=$("step-"+j);if(s){s.classList.toggle("active",j===i);s.classList.toggle("done",j<i);}
+  }
+  if(i>=1) setTimeout(runAll,60);
+}
+
+// ════════════════════════════════════════════════════════
+// RUN ALL
+// ════════════════════════════════════════════════════════
+function runAll(){
+  buildP0();
+  buildP1();
+  if($("panel-2").classList.contains("active")) buildP2();
+  if($("panel-3").classList.contains("active")) buildDashboards();
+  if($("panel-4").classList.contains("active")) buildP4();
+  if($("panel-5").classList.contains("active")) buildP5();
+}
+
+// ════════════════════════════════════════════════════════
+// LOAD PROYECTO
+// ════════════════════════════════════════════════════════
+function loadProj(i){
+  curP=i;
+  var p=PROY[i];
+  // Activar chips: chips 0-5 fijos + chips custom
+  for(var j=0;j<=5;j++){var c=$("chip-"+j);if(c)c.classList.toggle("active",j===i);}
+  for(var j=6;j<=15;j++){var c2=$("chip-"+j);if(c2)c2.classList.toggle("active",j===i);}
+  var tn=$("top-proj");if(tn)tn.textContent=p.cliente+" · "+p.kwp+" kWp";
+
+  function sv(id,val){var s=$("s-"+id),n=$("n-"+id);if(s)s.value=val;if(n)n.value=val;}
+  sv("en",  p.def.en||1.5);
+  sv("yr",  p.def.yr||15);
+  sv("er",  p.def.er||3);
+  sv("wc",  p.def.wc||12);
+  sv("om",  p.def.om||p.om);
+  sv("dg",  p.def.dg||p.deg||0.5);
+  sv("mg",  20); sv("inf",2.5); sv("seg",0.5); sv("cinv",10); sv("yrinv",10);
+  sv("irr", 4.6);
+  sv("dp",70); sv("td",9.6); sv("pd",10);
+
+  // Set descuento default and compute tn
+  var dcDef = p.def.dc || 9;
+  var dcS=$("s-dc"),dcN=$("n-dc");
+  if(dcS)dcS.value=dcDef;
+  if(dcN)dcN.value=dcDef;
+
+  // Compute tarifa from descuento after franjas loaded
+  setTimeout(function(){
+    var tp2=tpvReal();
+    var tn2=tp2*(1-dcDef/100);
+    var ntn=$("n-tn");
+    if(ntn) ntn.value=tn2.toFixed(5);
+    updateLinkedDisplay(dcDef/100, tn2, tp2);
+    buildP0();
+    goTo(0);
+  },50);
+}
+
+function resetParams(){loadProj(curP);}
+
+// ════════════════════════════════════════════════════════
+// MODAL NUEVO PROYECTO — JS
+// NO modifica ningún cálculo financiero existente
+// Solo crea un nuevo objeto en PROY[] y llama loadProj()
+// ════════════════════════════════════════════════════════
+function openNewProj(){
+  EDITING_PROJ_IDX = null;
+  // Reset form
+  var fields=['np-nombre','np-cliente','np-kwp','np-capex','np-om','np-gen-mes','np-gen-año',
+              'np-cons-bv','np-dem-bv','np-fac-bv','np-pct-dia','np-pct-noche',
+              'np-kwh-media','np-kwh-punta','np-kwh-base','np-kwh-fds',
+              'np-dem-mv','np-demmax-mv','np-fac-mv','np-sapg','np-bomb','np-ubic'];
+  fields.forEach(function(id){var e=$(id);if(e)e.value='';});
+  var ci=$("np-comerc"); if(ci) ci.value="4.182";
+  var di=$("np-deg");    if(di) di.value="0.5";
+  var ii=$("np-irr");    if(ii) ii.value="4.6";
+  var pi=$("np-pr");     if(pi) pi.value="80";
+  // Reset info fields
+  var infos=['np-planillas-info','np-planillas-preview','np-informe-info','np-cotizacion-info'];
+  infos.forEach(function(id){var e=$(id);if(e)e.innerHTML='';});
+  // Reset file inputs
+  var fileInputs=['np-planillas','np-informe-gen','np-cotizacion'];
+  fileInputs.forEach(function(id){var e=$(id);if(e)e.value='';});
+  setTipoTarifa('BV');
+  $("np-errores").style.display="none";
+  $("np-preview").style.display="none";
+  // Reset modal title and button
+  var mh = document.querySelector("#modal-np [style*='font-size:16px']");
+  if(mh) mh.textContent="Nuevo Proyecto EaaS — NEPOS ENERGY";
+  var mb = document.querySelector("#modal-np button[onclick='npCrear()']");
+  if(mb) mb.textContent="⚡ Crear proyecto y cotizar";
+  $("modal-np").style.display="block";
+  document.body.style.overflow="hidden";
+}
+
+function closeNewProj(){
+  $("modal-np").style.display="none";
+  document.body.style.overflow="";
+}
+
+// ── BORRAR PROYECTO CUSTOM ────────────────────────────────────
+function npDeleteProj(idx){
+  if(!PROY[idx] || !PROY[idx]._custom) return;
+  var nom = PROY[idx].nombre;
+  if(!confirm("Borrar el proyecto: "+nom+". Esta accion no se puede deshacer.")) return;
+  delete PROY[idx];
+  // Remove chip wrapper
+  var wrap = $("chip-wrap-"+idx);
+  if(wrap) wrap.parentNode.removeChild(wrap);
+  // If this was the active project, go to project 0
+  if(curP === idx){ loadProj(0); } else { runAll(); }
+}
+
+// ── EDITAR PROYECTO CUSTOM ───────────────────────────────────
+var EDITING_PROJ_IDX = null;
+
+function npEditProj(idx){
+  if(!PROY[idx]) return;
+  EDITING_PROJ_IDX = idx;
+  var p = PROY[idx];
+  // Open modal and pre-populate all fields
+  openNewProj();
+  // After openNewProj resets the form, fill it with existing data
+  setTimeout(function(){
+    var fn=$("np-nombre");   if(fn) fn.value = p.nombre||"";
+    var fc=$("np-cliente");  if(fc) fc.value = p.cliente||"";
+    var fu=$("np-ubic");     if(fu) fu.value = p.ubic||"";
+    var fd=$("np-dist");
+    if(fd && p.distComp){
+      for(var oi=0;oi<fd.options.length;oi++){
+        if(fd.options[oi].value === p.distComp){ fd.selectedIndex=oi; break; }
+      }
+    }
+    setTipoTarifa(p.tipo||'BV');
+    if(p.tipo==='BV'){
+      var totalBV = p.franjas.reduce(function(a,x){return a+x.kwh;},0);
+      var cb=$("np-cons-bv"); if(cb) cb.value=totalBV;
+      var db=$("np-dem-bv"); if(db) db.value=p.demKW||"";
+      var fb=$("np-fac-bv"); if(fb) fb.value=p.facturaMes||"";
+      var dayFranja = p.franjas.filter(function(f){return f.per==='dia';})[0];
+      if(dayFranja && totalBV>0){
+        var pctD=Math.round(dayFranja.kwh/totalBV*100);
+        var pd=$("np-pct-dia"); if(pd) pd.value=pctD;
+        var pn=$("np-pct-noche"); if(pn) pn.value=(100-pctD);
+      }
+    } else {
+      p.franjas.forEach(function(f){
+        if(f.per==='media'){ var q=$("np-kwh-media"); if(q) q.value=f.kwh; }
+        if(f.per==='punta'){ var q=$("np-kwh-punta"); if(q) q.value=f.kwh; }
+        if(f.per==='base') { var q=$("np-kwh-base");  if(q) q.value=f.kwh; }
+        if(f.per==='fds')  { var q=$("np-kwh-fds");   if(q) q.value=f.kwh; }
+      });
+      var dm=$("np-dem-mv");    if(dm) dm.value=p.demKW||"";
+      var dmx=$("np-demmax-mv");if(dmx) dmx.value=p.demMax12||"";
+      var fm=$("np-fac-mv");    if(fm) fm.value=p.facturaMes||"";
+      var sp=$("np-sapg");      if(sp) sp.value=p.sapg||"";
+      var co=$("np-comerc");    if(co) co.value=p.comerc||4.182;
+      var bo=$("np-bomb");      if(bo) bo.value=p.bomberos||"";
+      npUpdateMvTarifa();
+    }
+    var nk=$("np-kwp");   if(nk) nk.value=p.kwp||"";
+    var nc=$("np-capex"); if(nc) nc.value=p.capex||"";
+    var no=$("np-om");    if(no) no.value=p.om||"";
+    var ndg=$("np-deg");  if(ndg) ndg.value=p.deg||0.5;
+    npCalcGen(); npCalcCapexkwp();
+    // Update modal title to indicate edit mode
+    var mh = document.querySelector("#modal-np [style*='font-size:16px']");
+    if(mh) mh.textContent = "Editar Proyecto — "+p.nombre;
+    var mb = document.querySelector("#modal-np button[onclick='npCrear()']");
+    if(mb){ mb.textContent="💾 Guardar cambios"; }
+  }, 80);
+}
+
+
+function setTipoTarifa(tipo){
+  $("np-tipo-val").value=tipo;
+  var bvSel = tipo==='BV';
+  $("np-tipo-bv").style.border = bvSel ? "2px solid var(--az)" : "2px solid var(--g4)";
+  $("np-tipo-bv").style.background = bvSel ? "var(--az-lt)" : "var(--g1)";
+  $("np-tipo-mv").style.border = !bvSel ? "2px solid var(--az)" : "2px solid var(--g4)";
+  $("np-tipo-mv").style.background = !bvSel ? "var(--az-lt)" : "var(--g1)";
+  $("np-campos-bv").style.display = bvSel ? "block" : "none";
+  $("np-campos-mv").style.display = !bvSel ? "block" : "none";
+}
+
+function npCalcGen(){
+  var kwp = parseFloat($("np-kwp").value)||0;
+  var irr = parseFloat($("np-irr").value)||4.6;
+  var pr  = (parseFloat($("np-pr").value)||80)/100;
+  var genMes = kwp * irr * 30.4 * pr;
+  var genAno = kwp * irr * 365 * pr;
+  var gm=$("np-gen-mes"); if(gm) gm.value = kwp>0 ? Math.round(genMes) : "";
+  var ga=$("np-gen-año"); if(ga) ga.value = kwp>0 ? Math.round(genAno) : "";
+  npCalcCapexkwp();
+}
+
+function npCalcCapexkwp(){
+  var kwp = parseFloat($("np-kwp").value)||0;
+  var capex = parseFloat($("np-capex").value)||0;
+  var om = parseFloat($("np-om").value)||0;
+  var el = $("np-capex-kwp");
+  var elo = $("np-om-pct");
+  if(el && kwp>0 && capex>0) el.textContent = "→ $"+(capex/kwp).toFixed(0)+"/kWp instalado";
+  else if(el) el.textContent="";
+  if(elo && capex>0 && om>0) elo.textContent = "→ "+(om/capex*100).toFixed(2)+"% del CAPEX/año";
+  else if(elo) elo.textContent="";
+  // Auto-sugerir O&M si CAPEX ingresado
+  if(capex>0 && om===0){
+    var nomS=$("np-om"); if(nomS && !nomS.value) {nomS.placeholder="Sugerido: $"+Math.round(capex*0.005)+"/año (0.5%)";}
+  }
+}
+
+function npUpdateBvFranjas(){
+  var pctDia  = parseFloat($("np-pct-dia").value)||65;
+  var pctNoch = parseFloat($("np-pct-noche").value)||(100-pctDia);
+  if(pctDia+pctNoch > 100){
+    var nd=$("np-pct-noche"); if(nd) nd.value=(100-pctDia).toFixed(0);
+  }
+}
+
+function npUpdateMvTarifa(){
+  var media = parseFloat($("np-kwh-media").value)||0;
+  var punta = parseFloat($("np-kwh-punta").value)||0;
+  var base  = parseFloat($("np-kwh-base").value)||0;
+  var fds   = parseFloat($("np-kwh-fds").value)||0;
+  var tot   = media+punta+base+fds;
+  var prev  = $("np-mv-tpv-preview");
+  if(tot > 0){
+    var tpv = (media*0.1178 + punta*0.1318 + base*0.1001 + fds*0.1178) / tot;
+    var tv = $("np-mv-tpv-val"); if(tv) tv.textContent = "$"+tpv.toFixed(5);
+    var cv = $("np-mv-cons-val"); if(cv) cv.textContent = Math.round(tot).toLocaleString();
+    if(prev) prev.style.display="block";
+  } else {
+    if(prev) prev.style.display="none";
+  }
+}
+
+function npPreview(){
+  var errs = npValidate();
+  var errEl = $("np-errores");
+  if(errs.length > 0){
+    errEl.innerHTML = "⚠️ <strong>Complete los siguientes campos:</strong><br>" + errs.join("<br>");
+    errEl.style.display="block";
+    return;
+  }
+  errEl.style.display="none";
+  var d = npGetData();
+  var tpvP = d.tipo==='BV' ?
+    (d.franjas.reduce(function(a,x){return a+x.tarifa*x.kwh;},0)/d.franjas.reduce(function(a,x){return a+x.kwh;},0)) :
+    (d.franjas.reduce(function(a,x){return a+x.tarifa*x.kwh;},0)/d.franjas.reduce(function(a,x){return a+x.kwh;},0));
+  var genM = d.kwp * (parseFloat($("np-irr").value)||4.6) * 30.4 * ((parseFloat($("np-pr").value)||80)/100);
+  var capexKwp = d.capex/d.kwp;
+  var prev = $("np-preview"); if(prev) prev.style.display="block";
+  var pkpis = $("np-preview-kpis");
+  if(pkpis) pkpis.innerHTML =
+    npKpi("CAPEX","$"+(d.capex/1000).toFixed(0)+"k","USD total")+
+    npKpi("Potencia",d.kwp+" kWp","instalados")+
+    npKpi("Generación",Math.round(genM).toLocaleString()+" kWh","/mes")+
+    npKpi("$/kWp","$"+capexKwp.toFixed(0),"/kWp inst.")+
+    npKpi("Tarifa ponderada","$"+tpvP.toFixed(4),"USD/kWh")+
+    npKpi("Consumo",Math.round(d.franjas.reduce(function(a,x){return a+x.kwh;},0)).toLocaleString()+" kWh","/mes")+
+    npKpi("O&M",fUSD(d.om),"/año")+
+    npKpi("FGDI",d.tipo==='MV'&&d.demKW>0?"calc. auto":"N/A","demanda");
+}
+
+function npKpi(lbl,val,sub){
+  return "<div style='background:rgba(255,255,255,.15);border-radius:7px;padding:9px;text-align:center'>"+
+    "<div style='font-size:9px;color:rgba(255,255,255,.7);font-weight:600;text-transform:uppercase;margin-bottom:2px'>"+lbl+"</div>"+
+    "<div style='font-size:16px;font-weight:800;color:#fff'>"+val+"</div>"+
+    "<div style='font-size:9px;color:rgba(255,255,255,.6)'>"+sub+"</div></div>";
+}
+
+function npValidate(){
+  var errs=[];
+
+  // Detectar qué documentos tiene adjuntos el usuario
+  var fiPlanillas  = $("np-planillas");
+  var fiInforme    = $("np-informe-gen");
+  var fiCotizacion = $("np-cotizacion");
+  var hasPlanillas  = fiPlanillas  && fiPlanillas.files  && fiPlanillas.files.length  > 0;
+  var hasInforme    = fiInforme    && fiInforme.files    && fiInforme.files.length    > 0;
+  var hasCotizacion = fiCotizacion && fiCotizacion.files && fiCotizacion.files.length > 0;
+
+  // Nombre del proyecto: siempre obligatorio
+  if(!($("np-nombre").value.trim())) errs.push("• Nombre del proyecto");
+
+  // kWp: obligatorio SOLO si no hay informe FV adjunto
+  if(!hasInforme){
+    if(!($("np-kwp").value) || parseFloat($("np-kwp").value)<=0)
+      errs.push("• Potencia instalada (kWp) — o adjunta el informe de generación");
+  }
+
+  // CAPEX: obligatorio SOLO si no hay cotización adjunta
+  if(!hasCotizacion){
+    if(!($("np-capex").value) || parseFloat($("np-capex").value)<=0)
+      errs.push("• CAPEX del proyecto — o adjunta la cotización Nepos");
+  }
+
+  // Consumo: obligatorio SOLO si no hay planillas adjuntas
+  if(!hasPlanillas){
+    var tipo = $("np-tipo-val").value;
+    if(tipo==='BV'){
+      if(!(parseFloat($("np-cons-bv").value)>0))
+        errs.push("• Consumo total kWh/mes (BV) — o adjunta las planillas de luz");
+    } else {
+      var tot = (parseFloat($("np-kwh-media").value)||0)+(parseFloat($("np-kwh-punta").value)||0)
+               +(parseFloat($("np-kwh-base").value)||0)+(parseFloat($("np-kwh-fds").value)||0);
+      if(tot<=0)
+        errs.push("• Al menos un campo de consumo kWh por franja (MV) — o adjunta las planillas de luz");
+    }
+  }
+
+  return errs;
+}
+
+function npGetData(){
+  var tipo = $("np-tipo-val").value;
+  var kwp  = parseFloat($("np-kwp").value)||0;
+  var irr  = parseFloat($("np-irr").value)||4.6;
+  var pr   = (parseFloat($("np-pr").value)||80)/100;
+  var capex= parseFloat($("np-capex").value)||0;
+  var om   = parseFloat($("np-om").value)|| Math.round(capex*0.005);
+  var deg  = parseFloat($("np-deg").value)||0.5;
+  var dist = $("np-dist").value;
+  var nom  = $("np-nombre").value.trim() || "Nuevo proyecto";
+  var cli  = $("np-cliente").value.trim() || nom;
+  var ubic = $("np-ubic").value.trim() || "Ecuador";
+  var facDef= 0;
+  var franjas=[], demKW=0, demMax12=0, sapg=0, comerc=4.182, bomb=28.92;
+
+  if(tipo==='BV'){
+    var consBV = parseFloat($("np-cons-bv").value)||0;
+    var pctDia = (parseFloat($("np-pct-dia").value)||65)/100;
+    var pctNoche = 1 - pctDia;
+    var kwhDia  = consBV * pctDia;
+    var kwhNoche= consBV * pctNoche;
+    franjas = [
+      {nom:"Energía Día 06-22h",   kwh:Math.round(kwhDia),   tarifa:0.0620,per:"dia",   col:"#185FA5"},
+      {nom:"Energía Noche 22-06h", kwh:Math.round(kwhNoche), tarifa:0.0520,per:"noche", col:"#888780"}
+    ];
+    demKW   = parseFloat($("np-dem-bv").value)||0;
+    demMax12= demKW;
+    facDef  = parseFloat($("np-fac-bv").value)|| Math.round(consBV*0.0620 + demKW*2.704 + 4.182);
+    comerc  = 4.182;
+  } else {
+    var media= parseFloat($("np-kwh-media").value)||0;
+    var punta= parseFloat($("np-kwh-punta").value)||0;
+    var base = parseFloat($("np-kwh-base").value)||0;
+    var fds  = parseFloat($("np-kwh-fds").value)||0;
+    if(media>0)franjas.push({nom:"Media L-V 08-18h (solar)",kwh:Math.round(media),tarifa:0.1178,per:"media",col:"#185FA5"});
+    if(punta>0)franjas.push({nom:"Punta L-V 18-22h",        kwh:Math.round(punta),tarifa:0.1318,per:"punta",col:"#D85A30"});
+    if(base>0) franjas.push({nom:"Base 22-08h+S/D",          kwh:Math.round(base), tarifa:0.1001,per:"base", col:"#888780"});
+    if(fds>0)  franjas.push({nom:"FdS punta 18-22h",         kwh:Math.round(fds),  tarifa:0.1178,per:"fds",  col:"#EF9F27"});
+    demKW   = parseFloat($("np-dem-mv").value)||0;
+    demMax12= parseFloat($("np-demmax-mv").value)||demKW;
+    sapg    = parseFloat($("np-sapg").value)||0;
+    comerc  = parseFloat($("np-comerc").value)||4.182;
+    bomb    = parseFloat($("np-bomb").value)||28.92;
+    var totMV=(media+punta+base+fds);
+    var tpvMV= totMV>0 ? (media*0.1178+punta*0.1318+base*0.1001+fds*0.1178)/totMV : 0.1178;
+    facDef  = parseFloat($("np-fac-mv").value)|| Math.round(totMV*tpvMV + demKW*2.620*0.87 + sapg + comerc + bomb);
+  }
+
+  // Tarifa ponderada para default descuento
+  var tpvCalc = franjas.length>0 ? franjas.reduce(function(a,x){return a+x.tarifa*x.kwh;},0)/franjas.reduce(function(a,x){return a+x.kwh;},0) : 0.062;
+  var tnDef = tpvCalc * (1 - 0.09);
+
+  return {
+    nombre:nom, cliente:cli, kwp:kwp, capex:capex, om:om, deg:deg,
+    facturaMes: facDef, distComp:dist, ubic:ubic, tipo:tipo,
+    sapg:sapg, comerc:comerc, bomberos:bomb,
+    demKW:demKW, demMax12:demMax12,
+    franjas:franjas,
+    def:{dc:9, en:1.5, yr:15, er:3, wc:12, om:om, dg:deg},
+    notaIVA:"Proyecto nuevo. Tarifa: "+(tipo==='BV'?"BV Horaria":"MV Industrial Dem.Hor.Dif.")+" | ARCONEL-006/25.",
+    notaSolar:kwp+" kWp genera ~"+Math.round(kwp*irr*30.4*pr)+" kWh/mes (PR="+Math.round(pr*100)+"%). Irradiación: "+irr+" kWh/kWp/día."
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// EXTRACCIÓN DE PDF — v4.6
+// Estrategia en dos capas:
+//   1) pdf.js sin Worker externo (disableWorker:true) → sin fetch/CORS
+//   2) Si el texto extraído está vacío (PDF escaneado/imagen),
+//      fallback a Claude Vision API para OCR real.
+// Los parsers y la lógica financiera SGDA no se modifican.
+// ══════════════════════════════════════════════════════════════
+
+function npReadFileAsBase64(file, callback){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var dataUrl = e.target.result;
+    var base64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
+    callback(base64);
+  };
+  reader.onerror = function(){ callback(null); };
+  reader.readAsDataURL(file);
+}
+
+// ── Extrae texto de una página con join consciente de líneas ────
+// Agrupa ítems de pdf.js por coordenada Y para reconstruir
+// líneas reales, crítico para planillas de luz en columnas.
+function npItemsToText(items){
+  if(!items || items.length === 0) return '';
+  var lines = [];
+  var curLine = [];
+  var lastY = null;
+  for(var i=0; i<items.length; i++){
+    var it = items[i];
+    var y = Math.round(it.transform[5]);
+    if(lastY !== null && Math.abs(y - lastY) > 3){
+      lines.push(curLine.join(' '));
+      curLine = [];
+    }
+    if(it.str && it.str.trim()) curLine.push(it.str.trim());
+    lastY = y;
+  }
+  if(curLine.length) lines.push(curLine.join(' '));
+  return lines.join('\n');
+}
+
+// ── Renderiza una página a base64 JPEG (para fallback Vision) ──
+function npRenderPageToBase64(page, scale, callback){
+  try {
+    var viewport = page.getViewport({ scale: scale || 2.0 });
+    var canvas   = document.createElement('canvas');
+    canvas.width  = viewport.width;
+    canvas.height = viewport.height;
+    var ctx = canvas.getContext('2d');
+    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
+      callback(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    }).catch(function(){ callback(null); });
+  } catch(e){ callback(null); }
+}
+
+// ── Claude Vision OCR para PDFs escaneados ─────────────────────
+// Rasteriza hasta 3 páginas y las manda a Claude Sonnet con
+// un prompt estructurado para extraer los campos de planilla.
+function npOcrWithVision(pdfDoc, docType, onDone, onErr){
+  var total   = Math.min(pdfDoc.numPages, 3);
+  var images  = [];
+  var pending = total;
+
+  function tryBuild(){
+    if(images.filter(Boolean).length === 0){ onErr("No se pudo rasterizar el PDF"); return; }
+    var content = [];
+    for(var i=0; i<images.length; i++){
+      if(images[i]) content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data: images[i] } });
+    }
+    var promptMap = {
+      'planillaBV': 'Sos un extractor de datos de planillas de electricidad ecuatorianas (Baja Tensión). Del documento adjunto extrae en JSON estricto (sin texto extra): consumo_total_kwh, consumo_dia_kwh, consumo_noche_kwh, demanda_kw, factura_total_usd, sapg_usd, comercializacion_usd, bomberos_usd, distribuidor. Usa null para campos no encontrados.',
+      'planillaMV': 'Sos un extractor de planillas de electricidad Media Tensión Ecuador. Extrae en JSON estricto: kwh_media, kwh_punta, kwh_base, kwh_fds, demanda_kw, demanda_max_12_kw, factura_total_usd, sapg_usd, comercializacion_usd, bomberos_usd, fgdi, distribuidor. Usa null para campos no encontrados.',
+      'informeFV':  'Extrae datos de un informe de generación solar (PVsyst u similar). JSON estricto: gen_anual_kwh, kwp, pr_pct, irr_kwh_kwp_dia. Usa null si no existe.',
+      'cotizacion': 'Extrae datos de una cotización de sistema fotovoltaico. JSON estricto: capex_usd, kwp, om_anual_usd. Usa null si no existe.'
+    };
+    content.push({ type:'text', text: promptMap[docType] || promptMap['planillaBV'] });
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 512,
+        messages: [{ role:'user', content: content }]
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      try {
+        var raw = (data.content||[]).filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; }).join('');
+        raw = raw.replace(/```json|```/g,'').trim();
+        var parsed = JSON.parse(raw);
+        onDone(parsed);
+      } catch(e){ onErr("Vision: respuesta no parseable — "+e); }
+    }).catch(function(e){ onErr("Vision fetch error: "+e); });
+  }
+
+  for(var p=1; p<=total; p++){
+    (function(pageNum){
+      pdfDoc.getPage(pageNum).then(function(page){
+        npRenderPageToBase64(page, 2.0, function(b64){
+          images[pageNum-1] = b64;
+          pending--;
+          if(pending === 0) tryBuild();
+        });
+      }).catch(function(){
+        images[pageNum-1] = null;
+        pending--;
+        if(pending === 0) tryBuild();
+      });
+    })(p);
+  }
+}
+
+// ── Extractor principal ─────────────────────────────────────────
+// Retorna texto extraído vía pdf.js (hilo principal, sin Worker).
+// Si el texto está vacío o casi vacío, activa Vision OCR.
+// docType: 'planillaBV' | 'planillaMV' | 'informeFV' | 'cotizacion'
+// Los callbacks onDone y onErr se mantienen igual que antes.
+// NUEVO: si Vision está activo, onDone recibe objeto JSON directo
+//        en lugar de texto; la propiedad __visionParsed=true lo indica.
+function npExtractPdfText(file, onDone, onErr, docType){
+  if(!file){ onErr("No hay archivo"); return; }
+
+  // Imágenes directas — derivar a Vision
+  var isImage = file.type && file.type.indexOf('image/') === 0;
+  if(isImage){
+    onDone("__IMAGE__:"+file.name);
+    return;
+  }
+
+  // Texto plano / CSV — leer directo
+  if(file.type === 'text/plain' || file.type === 'text/csv' ||
+     /\.(txt|csv)$/i.test(file.name)){
+    var rt = new FileReader();
+    rt.onload = function(e){ onDone(e.target.result || ""); };
+    rt.onerror = function(){ onErr("Error leyendo texto plano"); };
+    rt.readAsText(file);
+    return;
+  }
+
+  // xlsx / xls / docx — leer como texto plano como fallback
+  if(/\.(xlsx|xls|docx)$/i.test(file.name)){
+    var rx = new FileReader();
+    rx.onload = function(e){ onDone(e.target.result || ""); };
+    rx.onerror = function(){ onErr("Formato no soportado para extracción automática"); };
+    rx.readAsText(file);
+    return;
+  }
+
+  // pdf.js sin Worker externo — elimina TODOS los errores de fetch/CORS
+  if(typeof pdfjsLib === 'undefined'){
+    onErr("pdf.js no disponible. Recargue la página.");
+    return;
+  }
+
+  // workerSrc apunta al mismo CDN (v2.16) — elimina el warning "No workerSrc".
+  // En file:// el browser bloquea el worker; el catch de loadWithWorker
+  // lo detecta y reintenta automáticamente con disableWorker:true.
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var typedArray = new Uint8Array(e.target.result);
+
+    function loadWithWorker(useWorker){
+      var opts = { data: typedArray, isEvalSupported: false };
+      if(!useWorker) opts.disableWorker = true;
+      pdfjsLib.getDocument(opts).promise.then(function(pdfDoc){
+        var total  = pdfDoc.numPages;
+        if(total === 0){ onDone(""); return; }
+
+        var pages  = new Array(total);
+        var done   = 0;
+
+        for(var i=1; i<=total; i++){
+          (function(pageNum){
+            pdfDoc.getPage(pageNum).then(function(page){
+              page.getTextContent({ normalizeWhitespace: true }).then(function(tc){
+                pages[pageNum-1] = npItemsToText(tc.items);
+                done++;
+                if(done === total){
+                  var fullText = pages.join('\n');
+                  var textLen  = fullText.replace(/\s/g,'').length;
+
+                  if(textLen < 80){
+                    // PDF escaneado — activar Claude Vision OCR
+                    npOcrWithVision(pdfDoc, docType || 'planillaBV',
+                      function(parsed){
+                        parsed.__visionParsed = true;
+                        onDone(parsed);
+                      },
+                      function(vErr){
+                        onDone("__SCAN__:"+vErr);
+                      }
+                    );
+                  } else {
+                    onDone(fullText);
+                  }
+                }
+              }).catch(function(){
+                pages[pageNum-1] = '';
+                done++;
+                if(done === total) onDone(pages.join('\n'));
+              });
+            }).catch(function(){
+              pages[pageNum-1] = '';
+              done++;
+              if(done === total) onDone(pages.join('\n'));
+            });
+          })(i);
+        }
+      }).catch(function(err){
+        // Si falló con worker (típico en file://) — reintentar sin worker
+        if(useWorker){
+          loadWithWorker(false);
+        } else {
+          onErr("Error abriendo PDF: "+err);
+        }
+      });
+    }
+
+    // Intentar primero con worker; si falla (file://) reintenta sin él
+    loadWithWorker(true);
+  };
+  reader.onerror = function(){ onErr("Error leyendo archivo"); };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── PARSERS LOCALES ──────────────────────────────────────────────
+// Extrae un número de un texto dado un array de patrones regex
+function npFindNum(text, patterns){
+  for(var i=0;i<patterns.length;i++){
+    var m = text.match(patterns[i]);
+    if(m){
+      // Limpiar el número: quitar puntos de miles, cambiar coma decimal por punto
+      var raw = m[1] || m[0];
+      raw = raw.replace(/\./g,'').replace(',','.');
+      var n = parseFloat(raw);
+      if(!isNaN(n) && n > 0) return n;
+    }
+  }
+  return null;
+}
+
+function npParsePlanillaBV(text){
+  var t = text.toUpperCase();
+  var r = {};
+
+  r.consumo_total_kwh = npFindNum(t, [
+    /CONSUMO\s+TOTAL[^\d]*([\d.,]+)\s*KWH/,
+    /ENERG[IÍ]A\s+ACTIVA\s+TOTAL[^\d]*([\d.,]+)/,
+    /kWh\s+CONSUMIDOS[^\d]*([\d.,]+)/,
+    /TOTAL\s+KWH[^\d]*([\d.,]+)/,
+    /CONSUMO[^\d]*([\d.,]+)\s*KWH/
+  ]);
+
+  r.consumo_dia_kwh = npFindNum(t, [
+    /D[IÍ]A[^\d]*([\d.,]+)\s*KWH/,
+    /06[:\-]?00[^\d]*([\d.,]+)/,
+    /HORARIO\s+DI[^\d]*([\d.,]+)/,
+    /FRANJA\s+DI[^\d]*([\d.,]+)/
+  ]);
+
+  r.consumo_noche_kwh = npFindNum(t, [
+    /NOCHE[^\d]*([\d.,]+)\s*KWH/,
+    /22[:\-]?00[^\d]*([\d.,]+)/,
+    /HORARIO\s+NOC[^\d]*([\d.,]+)/
+  ]);
+
+  r.demanda_kw = npFindNum(t, [
+    /DEMANDA\s+FACTUR[^\d]*([\d.,]+)\s*KW/,
+    /DEMANDA\s+M[AÁ]X[^\d]*([\d.,]+)/,
+    /CARGO\s+DEMANDA[^\d]*([\d.,]+)\s*KW/,
+    /POTENCIA[^\d]*([\d.,]+)\s*KW/
+  ]);
+
+  r.factura_total_usd = npFindNum(t, [
+    /TOTAL\s+A\s+PAGAR[^\d]*([\d.,]+)/,
+    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
+    /TOTAL\s+FACTURA[^\d]*([\d.,]+)/,
+    /IMPORTE\s+TOTAL[^\d]*([\d.,]+)/,
+    /TOTAL[^\d]*([\d.,]+)\s*USD/
+  ]);
+
+  r.sapg_usd = npFindNum(t, [
+    /SAPG[^\d]*([\d.,]+)/,
+    /ALUMBRADO\s+P[UÚ]BLICO[^\d]*([\d.,]+)/,
+    /CONTRIBUCI[OÓ]N\s+ALUMBRADO[^\d]*([\d.,]+)/
+  ]);
+
+  r.comercializacion_usd = npFindNum(t, [
+    /COMERCIALIZACI[OÓ]N[^\d]*([\d.,]+)/,
+    /CARGO\s+COMERCI[^\d]*([\d.,]+)/
+  ]);
+
+  r.bomberos_usd = npFindNum(t, [
+    /BOMBEROS[^\d]*([\d.,]+)/,
+    /CUERPO\s+BOMBEROS[^\d]*([\d.,]+)/,
+    /CONTRIBUCI[OÓ]N\s+BOMB[^\d]*([\d.,]+)/
+  ]);
+
+  // Detectar distribuidora
+  var distMap = {
+    'EEQ':'EEQ','EMPRESA ELECTRICA QUITO':'EEQ',
+    'EMELNORTE':'EMELNORTE',
+    'CNEL':'CNEL EP','CENTROSUR':'CENTROSUR',
+    'EEASA':'EEASA','ELEPCO':'ELEPCO','EERSA':'EERSA'
+  };
+  r.distribuidor = null;
+  for(var k in distMap){ if(t.indexOf(k) !== -1){ r.distribuidor = distMap[k]; break; } }
+
+  return r;
+}
+
+function npParsePlanillaMV(text){
+  var t = text.toUpperCase();
+  var r = {};
+
+  r.kwh_media = npFindNum(t, [
+    /MEDIA[^\d]*([\d.,]+)\s*KWH/,
+    /08[:\-]?00.*?18[:\-]?00[^\d]*([\d.,]+)/,
+    /FRANJA\s+MEDIA[^\d]*([\d.,]+)/,
+    /HORARIO\s+MEDIA[^\d]*([\d.,]+)/,
+    /SOLAR[^\d]*([\d.,]+)\s*KWH/
+  ]);
+
+  r.kwh_punta = npFindNum(t, [
+    /PUNTA[^\d]*([\d.,]+)\s*KWH/,
+    /18[:\-]?00.*?22[:\-]?00[^\d]*([\d.,]+)/,
+    /FRANJA\s+PUNTA[^\d]*([\d.,]+)/,
+    /HORARIO\s+PUNTA[^\d]*([\d.,]+)/
+  ]);
+
+  r.kwh_base = npFindNum(t, [
+    /BASE[^\d]*([\d.,]+)\s*KWH/,
+    /22[:\-]?00.*?08[:\-]?00[^\d]*([\d.,]+)/,
+    /FRANJA\s+BASE[^\d]*([\d.,]+)/,
+    /NOCTURNO[^\d]*([\d.,]+)\s*KWH/
+  ]);
+
+  r.kwh_fds = npFindNum(t, [
+    /FDS[^\d]*([\d.,]+)/,
+    /FIN\s+DE\s+SEMANA[^\d]*([\d.,]+)/,
+    /S[AÁ]BADO.*?DOMINGO[^\d]*([\d.,]+)/
+  ]);
+
+  r.demanda_kw = npFindNum(t, [
+    /DEMANDA\s+FACTUR[^\d]*([\d.,]+)\s*KW/,
+    /DEMANDA\s+REGISTR[^\d]*([\d.,]+)/,
+    /POTENCIA\s+CONTRAT[^\d]*([\d.,]+)/,
+    /CARGO\s+POR\s+DEMANDA[^\d]*([\d.,]+)\s*KW/
+  ]);
+
+  r.demanda_max_12_kw = npFindNum(t, [
+    /DEMANDA\s+M[AÁ]X.*?12[^\d]*([\d.,]+)/,
+    /M[AÁ]XIMA\s+12[^\d]*([\d.,]+)/,
+    /DEMANDA\s+M[AÁ]XIM[^\d]*([\d.,]+)/
+  ]);
+
+  r.factura_total_usd = npFindNum(t, [
+    /TOTAL\s+A\s+PAGAR[^\d]*([\d.,]+)/,
+    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
+    /TOTAL\s+FACTURA[^\d]*([\d.,]+)/,
+    /IMPORTE\s+TOTAL[^\d]*([\d.,]+)/
+  ]);
+
+  r.sapg_usd = npFindNum(t, [
+    /SAPG[^\d]*([\d.,]+)/,
+    /ALUMBRADO\s+P[UÚ]BLICO[^\d]*([\d.,]+)/
+  ]);
+
+  r.comercializacion_usd = npFindNum(t, [
+    /COMERCIALIZACI[OÓ]N[^\d]*([\d.,]+)/
+  ]);
+
+  r.bomberos_usd = npFindNum(t, [
+    /BOMBEROS[^\d]*([\d.,]+)/,
+    /CUERPO\s+BOMBEROS[^\d]*([\d.,]+)/
+  ]);
+
+  r.fgdi = npFindNum(t, [
+    /FGDI[^\d]*([\d.,]+)/,
+    /FACTOR\s+GENERACI[OÓ]N[^\d]*([\d.,]+)/
+  ]);
+
+  var distMap = {
+    'EEQ':'EEQ','EMPRESA ELECTRICA QUITO':'EEQ',
+    'EMELNORTE':'EMELNORTE','CNEL':'CNEL EP',
+    'CENTROSUR':'CENTROSUR','EEASA':'EEASA',
+    'ELEPCO':'ELEPCO','EERSA':'EERSA'
+  };
+  r.distribuidor = null;
+  for(var k in distMap){ if(t.indexOf(k) !== -1){ r.distribuidor = distMap[k]; break; } }
+
+  return r;
+}
+
+function npParseInformeFV(text){
+  var t = text.toUpperCase();
+  var r = {};
+
+  r.gen_anual_kwh = npFindNum(t, [
+    /PRODUCCI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*KWH/,
+    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)/,
+    /ENERG[IÍ]A\s+ANUAL[^\d]*([\d.,]+)/,
+    /ANNUAL\s+ENERGY[^\d]*([\d.,]+)/,
+    /E_GRID[^\d]*([\d.,]+)/,
+    /YIELD[^\d]*([\d.,]+)\s*KWH/
+  ]);
+
+  // Si viene en MWh, convertir
+  var genMWh = npFindNum(t, [
+    /PRODUCCI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
+    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
+    /ANNUAL\s+ENERGY[^\d]*([\d.,]+)\s*MWH/
+  ]);
+  if(genMWh && (!r.gen_anual_kwh || genMWh*1000 > r.gen_anual_kwh)){
+    r.gen_anual_kwh = genMWh * 1000;
+  }
+
+  r.kwp = npFindNum(t, [
+    /POTENCIA\s+INSTALADA[^\d]*([\d.,]+)\s*KWP/,
+    /POTENCIA\s+PICO[^\d]*([\d.,]+)/,
+    /PEAK\s+POWER[^\d]*([\d.,]+)/,
+    /PNOM[^\d]*([\d.,]+)\s*KWP/,
+    /SYSTEM\s+SIZE[^\d]*([\d.,]+)/
+  ]);
+
+  r.pr_pct = npFindNum(t, [
+    /PERFORMANCE\s+RATIO[^\d]*([\d.,]+)/,
+    /PR[^\d]*([\d.,]+)\s*%/,
+    /RENDIMIENTO[^\d]*([\d.,]+)\s*%/
+  ]);
+
+  r.irr_kwh_kwp_dia = npFindNum(t, [
+    /IRRADIACI[OÓ]N[^\d]*([\d.,]+)\s*KWH/,
+    /IRRADIANCE[^\d]*([\d.,]+)/,
+    /GHI[^\d]*([\d.,]+)/,
+    /RADIACI[OÓ]N\s+GLOBAL[^\d]*([\d.,]+)/
+  ]);
+
+  return r;
+}
+
+function npParseCotizacion(text){
+  var t = text.toUpperCase();
+  var r = {};
+
+  r.capex_usd = npFindNum(t, [
+    /TOTAL\s+PROYECTO[^\d]*([\d.,]+)/,
+    /PRECIO\s+TOTAL[^\d]*([\d.,]+)/,
+    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
+    /COSTO\s+TOTAL[^\d]*([\d.,]+)/,
+    /INVERSI[OÓ]N\s+TOTAL[^\d]*([\d.,]+)/,
+    /TOTAL\s+USD[^\d]*([\d.,]+)/,
+    /TOTAL\s+OFERTA[^\d]*([\d.,]+)/
+  ]);
+
+  r.kwp = npFindNum(t, [
+    /POTENCIA[^\d]*([\d.,]+)\s*KWP/,
+    /SISTEMA[^\d]*([\d.,]+)\s*KWP/,
+    /CAPACIDAD[^\d]*([\d.,]+)\s*KWP/
+  ]);
+
+  r.om_anual_usd = npFindNum(t, [
+    /O&M[^\d]*([\d.,]+)/,
+    /MANTENIMIENTO\s+ANUAL[^\d]*([\d.,]+)/,
+    /OPERACI[OÓ]N\s+Y\s+MANTENIMIENTO[^\d]*([\d.,]+)/
+  ]);
+
+  return r;
+}
+
+// ── PLANILLAS DE LUZ ────────────────────────────────────────────
+function npHandleFiles(){
+  var fi    = $("np-planillas");
+  var info  = $("np-planillas-info");
+  var prev  = $("np-planillas-preview");
+  if(!fi || !fi.files || !fi.files.length) return;
+  var names = [];
+  for(var i=0;i<fi.files.length;i++) names.push(fi.files[i].name);
+  var tipo = $("np-tipo-val").value;
+
+  if(info) info.innerHTML = "📄 "+names.join(", ")+"<br><span style='color:var(--az);font-weight:600'>⏳ Leyendo planilla...</span>";
+  if(prev) prev.innerHTML = "<div style='background:var(--az-lt);border:1px solid var(--az-bd);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--az)'>⏳ Extrayendo datos...</div>";
+
+  var docType = tipo==='BV' ? 'planillaBV' : 'planillaMV';
+  npExtractPdfText(fi.files[0],
+    function(result){
+      // Caso Vision: ya viene parseado como objeto JSON
+      if(result && typeof result === 'object' && result.__visionParsed){
+        delete result.__visionParsed;
+        npApplyExtracted(result, tipo, names, info, prev);
+        return;
+      }
+      var text = result;
+      if(typeof text !== 'string'){ text = ""; }
+      if(text.indexOf('__IMAGE__') === 0){
+        if(info) info.innerHTML="📄 "+names.join(", ")+"<br><span style='color:var(--am)'>⚠️ Las imágenes no se pueden procesar automáticamente. Use archivos PDF o ingrese los datos manualmente.</span>";
+        if(prev) prev.innerHTML=""; return;
+      }
+      if(text.indexOf('__SCAN__') === 0){
+        if(info) info.innerHTML="📄 "+names.join(", ")+"<br><span style='color:var(--am)'>⚠️ PDF escaneado sin texto. Ingrese los datos manualmente.</span>";
+        if(prev) prev.innerHTML=""; return;
+      }
+      var ex = tipo==='BV' ? npParsePlanillaBV(text) : npParsePlanillaMV(text);
+      npApplyExtracted(ex, tipo, names, info, prev);
+    },
+    function(err){
+      if(info) info.innerHTML="📄 "+names.join(", ")+"<br><span style='color:var(--rj)'>❌ Error al leer el PDF: "+err+"</span><br><span style='color:var(--t4);font-size:10px'>Ingrese los datos manualmente.</span>";
+      if(prev) prev.innerHTML="";
+    },
+    docType
+  );
+}
+
+function npApplyExtracted(ex, tipo, names, info, prev){
+  var applied = [];
+  if(tipo==='BV'){
+    if(ex.consumo_total_kwh > 0){
+      var cb=$("np-cons-bv"); if(cb){ cb.value=Math.round(ex.consumo_total_kwh); applied.push("Consumo: "+Math.round(ex.consumo_total_kwh)+" kWh"); }
+      if(ex.consumo_dia_kwh > 0 && ex.consumo_total_kwh > 0){
+        var pctD = Math.round(ex.consumo_dia_kwh / ex.consumo_total_kwh * 100);
+        var pd=$("np-pct-dia"); if(pd){ pd.value=pctD; applied.push("Día: "+pctD+"%"); }
+        var pn=$("np-pct-noche"); if(pn){ pn.value=(100-pctD); }
+      }
+    }
+    if(ex.demanda_kw > 0){ var db=$("np-dem-bv"); if(db){ db.value=ex.demanda_kw; applied.push("Demanda: "+ex.demanda_kw+" kW"); } }
+    if(ex.factura_total_usd > 0){ var fb=$("np-fac-bv"); if(fb){ fb.value=ex.factura_total_usd; applied.push("Factura: $"+ex.factura_total_usd); } }
+  } else {
+    if(ex.kwh_media > 0){ var qm=$("np-kwh-media"); if(qm){ qm.value=Math.round(ex.kwh_media); applied.push("Media: "+Math.round(ex.kwh_media)+" kWh"); } }
+    if(ex.kwh_punta > 0){ var qp=$("np-kwh-punta"); if(qp){ qp.value=Math.round(ex.kwh_punta); applied.push("Punta: "+Math.round(ex.kwh_punta)+" kWh"); } }
+    if(ex.kwh_base  > 0){ var qb=$("np-kwh-base");  if(qb){ qb.value=Math.round(ex.kwh_base);  applied.push("Base: "+Math.round(ex.kwh_base)+" kWh");  } }
+    if(ex.kwh_fds   > 0){ var qf=$("np-kwh-fds");   if(qf){ qf.value=Math.round(ex.kwh_fds);   applied.push("FdS: "+Math.round(ex.kwh_fds)+" kWh");   } }
+    if(ex.demanda_kw > 0){ var dm=$("np-dem-mv"); if(dm){ dm.value=ex.demanda_kw; applied.push("Demanda: "+ex.demanda_kw+" kW"); } }
+    if(ex.demanda_max_12_kw > 0){ var dmx=$("np-demmax-mv"); if(dmx){ dmx.value=ex.demanda_max_12_kw; } }
+    if(ex.factura_total_usd > 0){ var fm=$("np-fac-mv"); if(fm){ fm.value=ex.factura_total_usd; applied.push("Factura: $"+ex.factura_total_usd); } }
+    if(ex.sapg_usd > 0){ var sp=$("np-sapg"); if(sp){ sp.value=ex.sapg_usd; applied.push("SAPG: $"+ex.sapg_usd); } }
+    if(ex.comercializacion_usd > 0){ var co=$("np-comerc"); if(co){ co.value=ex.comercializacion_usd; } }
+    if(ex.bomberos_usd > 0){ var bo=$("np-bomb"); if(bo){ bo.value=ex.bomberos_usd; } }
+    npUpdateMvTarifa();
+  }
+  // Match distribuidor
+  if(ex.distribuidor){
+    var nd=$("np-dist");
+    if(nd){
+      var dv = ex.distribuidor.toUpperCase();
+      var opts = nd.options;
+      for(var oi=0;oi<opts.length;oi++){
+        if(dv.indexOf(opts[oi].value.split(' ')[0].toUpperCase()) !== -1){ nd.selectedIndex=oi; break; }
+      }
+    }
+  }
+  var msg = applied.length > 0
+    ? "<span style='color:var(--vd);font-weight:600'>✅ Extraído: "+applied.join(" · ")+"</span>"
+    : "<span style='color:var(--am)'>⚠️ IA procesó el archivo pero no encontró datos numéricos claros. Ingrese los datos manualmente.</span>";
+  if(info) info.innerHTML = "📄 "+names.join(", ")+"<br>"+msg+"<br><span style='color:var(--t4);font-size:10px'>Puede editar los campos si hay diferencias con la planilla original.</span>";
+  if(prev) prev.innerHTML = applied.length > 0
+    ? "<div style='background:var(--vd-lt);border:1px solid var(--vd-bd);border-radius:8px;padding:8px 11px;font-size:11px;color:var(--vd)'>✅ Campos completados automáticamente. Verifique y ajuste si es necesario.</div>"
+    : "";
+}
+
+// ── INFORME DE GENERACIÓN FV ─────────────────────────────────────
+function npHandleInforme(){
+  var fi   = $("np-informe-gen");
+  var info = $("np-informe-info");
+  if(!fi || !fi.files || !fi.files.length) return;
+  var fname = fi.files[0].name;
+  if(info) info.innerHTML = "📄 "+fname+"<br><span style='color:var(--az);font-weight:600'>⏳ Leyendo informe solar...</span>";
+
+  npExtractPdfText(fi.files[0],
+    function(result){
+      if(result && typeof result === 'object' && result.__visionParsed){
+        delete result.__visionParsed;
+        var ex = result;
+        if(!ex.gen_anual_kwh || ex.gen_anual_kwh <= 0){
+          if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ No se encontró la generación anual. Ingrese los valores manualmente.</span>";
+          return;
+        }
+        if(ex.kwp > 0 && !(parseFloat($("np-kwp").value)>0)){ var nk=$("np-kwp"); if(nk) nk.value=ex.kwp; }
+        if(ex.pr_pct > 0 && ex.pr_pct <= 100){ var npr=$("np-pr"); if(npr) npr.value=ex.pr_pct; }
+        if(ex.irr_kwh_kwp_dia > 0 && ex.irr_kwh_kwp_dia < 10){ var nirr=$("np-irr"); if(nirr) nirr.value=ex.irr_kwh_kwp_dia.toFixed(2); }
+        npCalcGen();
+        var genMes = Math.round(ex.gen_anual_kwh / 12);
+        var gm=$("np-gen-mes"); if(gm) gm.value = genMes;
+        var ga=$("np-gen-año"); if(ga) ga.value = Math.round(ex.gen_anual_kwh);
+        if(info) info.innerHTML = "✅ <strong>Generación extraída (OCR):</strong> "
+          +Math.round(ex.gen_anual_kwh).toLocaleString()+" kWh/año · "+genMes.toLocaleString()+" kWh/mes"
+          +(ex.pr_pct?" · PR="+ex.pr_pct+"%":"")
+          +(ex.irr_kwh_kwp_dia?" · Irr="+ex.irr_kwh_kwp_dia.toFixed(2)+" kWh/kWp/d":"")
+          +"<br><span style='color:var(--t4);font-size:10px'>Fuente: "+fname+"</span>";
+        return;
+      }
+      var text = (typeof result === 'string') ? result : "";
+      if(text.indexOf('__IMAGE__') === 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ Use el PDF del informe, no una imagen.</span>";
+        return;
+      }
+      if(text.indexOf('__SCAN__') === 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ PDF escaneado sin texto legible. Ingrese los valores manualmente.</span>";
+        return;
+      }
+      var ex = npParseInformeFV(text);
+      if(!ex.gen_anual_kwh || ex.gen_anual_kwh <= 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ No se encontró la generación anual en el informe. Ingrese los valores manualmente.</span>";
+        return;
+      }
+      if(ex.kwp > 0 && !(parseFloat($("np-kwp").value)>0)){ var nk=$("np-kwp"); if(nk) nk.value=ex.kwp; }
+      if(ex.pr_pct > 0 && ex.pr_pct <= 100){ var npr=$("np-pr"); if(npr) npr.value=ex.pr_pct; }
+      if(ex.irr_kwh_kwp_dia > 0 && ex.irr_kwh_kwp_dia < 10){ var nirr=$("np-irr"); if(nirr) nirr.value=ex.irr_kwh_kwp_dia.toFixed(2); }
+      npCalcGen();
+      var genMes = Math.round(ex.gen_anual_kwh / 12);
+      var gm=$("np-gen-mes"); if(gm) gm.value = genMes;
+      var ga=$("np-gen-año"); if(ga) ga.value = Math.round(ex.gen_anual_kwh);
+      if(info) info.innerHTML = "✅ <strong>Generación extraída:</strong> "
+        +Math.round(ex.gen_anual_kwh).toLocaleString()+" kWh/año · "+genMes.toLocaleString()+" kWh/mes"
+        +(ex.pr_pct?" · PR="+ex.pr_pct+"%":"")
+        +(ex.irr_kwh_kwp_dia?" · Irr="+ex.irr_kwh_kwp_dia.toFixed(2)+" kWh/kWp/d":"")
+        +"<br><span style='color:var(--t4);font-size:10px'>Fuente: "+fname+"</span>";
+    },
+    function(err){
+      if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--rj)'>❌ "+err+"</span><br><span style='color:var(--t4);font-size:10px'>Ingrese la generación manualmente.</span>";
+    },
+    'informeFV'
+  );
+}
+
+// ── COTIZACIÓN CAPEX ─────────────────────────────────────────────
+function npHandleCotizacion(){
+  var fi   = $("np-cotizacion");
+  var info = $("np-cotizacion-info");
+  if(!fi || !fi.files || !fi.files.length) return;
+  var fname = fi.files[0].name;
+  if(info) info.innerHTML = "📄 "+fname+"<br><span style='color:var(--az);font-weight:600'>⏳ Leyendo cotización CAPEX...</span>";
+
+  npExtractPdfText(fi.files[0],
+    function(result){
+      if(result && typeof result === 'object' && result.__visionParsed){
+        delete result.__visionParsed;
+        var ex = result;
+        if(!ex.capex_usd || ex.capex_usd <= 0){
+          if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ No se encontró el CAPEX total. Ingréselo manualmente.</span>";
+          return;
+        }
+        var nc=$("np-capex"); if(nc) nc.value=ex.capex_usd;
+        if(ex.om_anual_usd > 0){ var no=$("np-om"); if(no) no.value=ex.om_anual_usd; }
+        if(ex.kwp > 0 && !(parseFloat($("np-kwp").value)>0)){ var nk=$("np-kwp"); if(nk) nk.value=ex.kwp; }
+        npCalcCapexkwp(); npCalcGen();
+        if(info) info.innerHTML = "✅ <strong>CAPEX extraído (OCR):</strong> $"+Math.round(ex.capex_usd).toLocaleString()
+          +(ex.kwp?" · "+ex.kwp+" kWp":"")
+          +(ex.om_anual_usd?" · O&M: $"+Math.round(ex.om_anual_usd)+"/año":"")
+          +"<br><span style='color:var(--t4);font-size:10px'>Verifique antes de continuar. Fuente: "+fname+"</span>";
+        return;
+      }
+      var text = (typeof result === 'string') ? result : "";
+      if(text.indexOf('__IMAGE__') === 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ Use el PDF de la cotización, no una imagen.</span>";
+        return;
+      }
+      if(text.indexOf('__SCAN__') === 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ PDF escaneado sin texto legible. Ingrese el CAPEX manualmente.</span>";
+        return;
+      }
+      var ex = npParseCotizacion(text);
+      if(!ex.capex_usd || ex.capex_usd <= 0){
+        if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--am)'>⚠️ No se encontró el CAPEX total en la cotización. Ingréselo manualmente.</span>";
+        return;
+      }
+      var nc=$("np-capex"); if(nc) nc.value=ex.capex_usd;
+      if(ex.om_anual_usd > 0){ var no=$("np-om"); if(no) no.value=ex.om_anual_usd; }
+      if(ex.kwp > 0 && !(parseFloat($("np-kwp").value)>0)){ var nk=$("np-kwp"); if(nk) nk.value=ex.kwp; }
+      npCalcCapexkwp(); npCalcGen();
+      if(info) info.innerHTML = "✅ <strong>CAPEX extraído:</strong> $"+Math.round(ex.capex_usd).toLocaleString()
+        +(ex.kwp?" · "+ex.kwp+" kWp":"")
+        +(ex.om_anual_usd?" · O&M: $"+Math.round(ex.om_anual_usd)+"/año":"")
+        +"<br><span style='color:var(--t4);font-size:10px'>Verifique antes de continuar. Fuente: "+fname+"</span>";
+    },
+    function(err){
+      if(info) info.innerHTML="📄 "+fname+"<br><span style='color:var(--rj)'>❌ "+err+"</span><br><span style='color:var(--t4);font-size:10px'>Ingrese el CAPEX manualmente.</span>";
+    },
+    'cotizacion'
+  );
+}
+
+function npCrear(){
+  var errs = npValidate();
+  var errEl = $("np-errores");
+  if(errs.length > 0){
+    errEl.innerHTML="⚠️ <strong>Complete los siguientes campos:</strong><br>"+errs.join("<br>");
+    errEl.style.display="block";
+    return;
+  }
+  errEl.style.display="none";
+
+  var d = npGetData();
+  d._custom = true;
+
+  // ── MODO EDICIÓN: actualizar proyecto existente ──
+  if(EDITING_PROJ_IDX !== null){
+    var ei = EDITING_PROJ_IDX;
+    d._custom = true;
+    PROY[ei] = d;
+    EDITING_PROJ_IDX = null;
+    // Actualizar label del chip
+    var wrap = $("chip-wrap-"+ei);
+    if(wrap){
+      var lbl = wrap.querySelector(".chip-label");
+      if(lbl) lbl.textContent = d.nombre.length>18 ? d.nombre.substring(0,16)+"…" : d.nombre;
+    }
+    closeNewProj();
+    loadProj(ei);
+    return;
+  }
+
+  // ── MODO CREACIÓN: buscar slot libre ──
+  var targetIdx = 6;
+  for(var si=6; si<=20; si++){
+    if(!PROY[si] || !PROY[si]._custom){ targetIdx=si; break; }
+  }
+  PROY[targetIdx] = d;
+
+  var newLabel = d.nombre.length>18 ? d.nombre.substring(0,16)+"…" : d.nombre;
+
+  // Crear wrapper con chip + botones de acción
+  function makeChipWrap(idx, label){
+    var plusBtn = $("chip-new-btn");
+    if(!plusBtn) return;
+    var wrap = document.createElement("span");
+    wrap.id = "chip-wrap-"+idx;
+    wrap.style.cssText = "display:inline-flex;align-items:center;gap:2px;margin:0 2px";
+
+    var chipBtn = document.createElement("button");
+    chipBtn.className = "chip";
+    chipBtn.id = "chip-"+idx;
+    chipBtn.style.borderStyle = "solid";
+    chipBtn.style.margin = "0";
+    chipBtn.innerHTML = "<span class='chip-label'>"+label+"</span>";
+    chipBtn.onclick = (function(i){ return function(){ loadProj(i); }; })(idx);
+
+    var editBtn = document.createElement("button");
+    editBtn.title = "Editar proyecto";
+    editBtn.style.cssText = "padding:3px 5px;font-size:10px;border:1px solid var(--az-bd);border-radius:5px;background:var(--az-lt);color:var(--az);cursor:pointer;line-height:1";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = (function(i){ return function(e){ e.stopPropagation(); npEditProj(i); }; })(idx);
+
+    var delBtn = document.createElement("button");
+    delBtn.title = "Borrar proyecto";
+    delBtn.style.cssText = "padding:3px 5px;font-size:10px;border:1px solid var(--rj-bd);border-radius:5px;background:var(--rj-lt);color:var(--rj);cursor:pointer;line-height:1";
+    delBtn.textContent = "🗑";
+    delBtn.onclick = (function(i){ return function(e){ e.stopPropagation(); npDeleteProj(i); }; })(idx);
+
+    wrap.appendChild(chipBtn);
+    wrap.appendChild(editBtn);
+    wrap.appendChild(delBtn);
+    plusBtn.parentNode.insertBefore(wrap, plusBtn);
+  }
+
+  makeChipWrap(targetIdx, newLabel);
+  closeNewProj();
+  loadProj(targetIdx);
+}
+
+// Event listeners para file inputs (no-jQuery compatible)
+document.addEventListener('DOMContentLoaded', function(){
+  var pf=$("np-planillas");    if(pf) pf.addEventListener('change', npHandleFiles);
+  var ig=$("np-informe-gen");  if(ig) ig.addEventListener('change', npHandleInforme);
+  var cq=$("np-cotizacion");   if(cq) cq.addEventListener('change', npHandleCotizacion);
+});
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+window.onload=function(){loadProj(0);};
+</script>
+</body>
+</html>
