@@ -2717,9 +2717,16 @@ function npFindNum(text, patterns){
   for(var i=0;i<patterns.length;i++){
     var m = text.match(patterns[i]);
     if(m){
-      // Limpiar el número: quitar puntos de miles, cambiar coma decimal por punto
-      var raw = m[1] || m[0];
-      raw = raw.replace(/\./g,'').replace(',','.');
+      var raw = m[1] !== undefined ? m[1] : m[0];
+      raw = raw.trim();
+      // Detectar formato: si tiene punto Y coma, el punto es miles → quitar punto, coma→punto
+      // Si solo tiene coma, la coma es decimal → coma→punto
+      // Si solo tiene punto, puede ser decimal (ej: 61.07) → dejar
+      if(raw.indexOf('.') !== -1 && raw.indexOf(',') !== -1){
+        raw = raw.replace(/\./g,'').replace(',','.');
+      } else if(raw.indexOf(',') !== -1){
+        raw = raw.replace(',','.');
+      }
       var n = parseFloat(raw);
       if(!isNaN(n) && n > 0) return n;
     }
@@ -2727,6 +2734,12 @@ function npFindNum(text, patterns){
   return null;
 }
 
+// ══════════════════════════════════════════════════════════════
+// PARSERS CALIBRADOS CON PLANILLAS EEQ REALES (HORMIPISOS 2026)
+// Tarifa MTCGCD32 - MT Industrial con Dem Hor Dif
+// ══════════════════════════════════════════════════════════════
+
+// ── BV: Baja Tensión ─────────────────────────────────────────
 function npParsePlanillaBV(text){
   var t = text.toUpperCase();
   var r = {};
@@ -2734,60 +2747,57 @@ function npParsePlanillaBV(text){
   r.consumo_total_kwh = npFindNum(t, [
     /CONSUMO\s+TOTAL[^\d]*([\d.,]+)\s*KWH/,
     /ENERG[IÍ]A\s+ACTIVA\s+TOTAL[^\d]*([\d.,]+)/,
-    /kWh\s+CONSUMIDOS[^\d]*([\d.,]+)/,
     /TOTAL\s+KWH[^\d]*([\d.,]+)/,
     /CONSUMO[^\d]*([\d.,]+)\s*KWH/
   ]);
 
   r.consumo_dia_kwh = npFindNum(t, [
     /D[IÍ]A[^\d]*([\d.,]+)\s*KWH/,
-    /06[:\-]?00[^\d]*([\d.,]+)/,
-    /HORARIO\s+DI[^\d]*([\d.,]+)/,
-    /FRANJA\s+DI[^\d]*([\d.,]+)/
+    /FRANJA\s+DI[^\d]*([\d.,]+)/,
+    /HORARIO\s+DI[^\d]*([\d.,]+)/
   ]);
 
   r.consumo_noche_kwh = npFindNum(t, [
     /NOCHE[^\d]*([\d.,]+)\s*KWH/,
-    /22[:\-]?00[^\d]*([\d.,]+)/,
+    /FRANJA\s+NOC[^\d]*([\d.,]+)/,
     /HORARIO\s+NOC[^\d]*([\d.,]+)/
   ]);
 
   r.demanda_kw = npFindNum(t, [
     /DEMANDA\s+FACTUR[^\d]*([\d.,]+)\s*KW/,
     /DEMANDA\s+M[AÁ]X[^\d]*([\d.,]+)/,
-    /CARGO\s+DEMANDA[^\d]*([\d.,]+)\s*KW/,
     /POTENCIA[^\d]*([\d.,]+)\s*KW/
   ]);
 
+  // EEQ: "TOTAL SE Y APG (1)  6245,68" — usar ese como factura sin IVA
   r.factura_total_usd = npFindNum(t, [
+    /TOTAL\s+SE\s+Y\s+APG[^\d]*([\d.,]+)/,
+    /TOTAL\s+SECTOR\s+EL[EÉ]CTRICO[^\d]*([\d.,]+)/,
     /TOTAL\s+A\s+PAGAR[^\d]*([\d.,]+)/,
-    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
-    /TOTAL\s+FACTURA[^\d]*([\d.,]+)/,
-    /IMPORTE\s+TOTAL[^\d]*([\d.,]+)/,
-    /TOTAL[^\d]*([\d.,]+)\s*USD/
+    /BASE\s+I\.V\.A\.\s*0\s*%[^\d]*([\d.,]+)/,
+    /VALOR\s+TOTAL[^\d]*([\d.,]+)/
   ]);
 
   r.sapg_usd = npFindNum(t, [
+    /SERVICIO\s+ALUMBRADO\s+P[UÚ]BLICO\s+GENERAL[^\d]*([\d.,]+)/,
+    /SUBTOTAL\s+ALUMBRADO[^\d]*([\d.,]+)/,
     /SAPG[^\d]*([\d.,]+)/,
-    /ALUMBRADO\s+P[UÚ]BLICO[^\d]*([\d.,]+)/,
-    /CONTRIBUCI[OÓ]N\s+ALUMBRADO[^\d]*([\d.,]+)/
+    /ALUMBRADO\s+P[UÚ]BLICO[^\d]*([\d.,]+)/
   ]);
 
   r.comercializacion_usd = npFindNum(t, [
-    /COMERCIALIZACI[OÓ]N[^\d]*([\d.,]+)/,
+    /COMERCIALIZACI[OÓ]N\s*([\d.,]+)/,
     /CARGO\s+COMERCI[^\d]*([\d.,]+)/
   ]);
 
   r.bomberos_usd = npFindNum(t, [
-    /BOMBEROS[^\d]*([\d.,]+)/,
-    /CUERPO\s+BOMBEROS[^\d]*([\d.,]+)/,
-    /CONTRIBUCI[OÓ]N\s+BOMB[^\d]*([\d.,]+)/
+    /CONTRIBUCI[OÓ]N\s+BOMBEROS[^\d]*([\d.,]+)/,
+    /TOTAL\s+CONTRIBUCI[OÓ]N\s+BOMBEROS[^\d]*([\d.,]+)/,
+    /BOMBEROS[^\d]*([\d.,]+)/
   ]);
 
-  // Detectar distribuidora
   var distMap = {
-    'EEQ':'EEQ','EMPRESA ELECTRICA QUITO':'EEQ',
-    'EMELNORTE':'EMELNORTE',
+    'EMPRESA EL':'EEQ','EEQ':'EEQ','EMELNORTE':'EMELNORTE',
     'CNEL':'CNEL EP','CENTROSUR':'CENTROSUR',
     'EEASA':'EEASA','ELEPCO':'ELEPCO','EERSA':'EERSA'
   };
@@ -2797,82 +2807,101 @@ function npParsePlanillaBV(text){
   return r;
 }
 
+// ── MV: Media Tensión EEQ (MTCGCD32 - franjas A/B/C/D) ──────
+// Planilla real Hormipisos Machachi:
+//   Hor. A (L-V 08-18h) = kwh_media
+//   Hor. B (L-V 18-22h) = kwh_punta
+//   Hor. C (22-08h + S,D,F 22-18h) = kwh_base
+//   Hor. D (S,D,F 18-22h) = kwh_fds
+//   Demanda facturable = demanda_kw
 function npParsePlanillaMV(text){
   var t = text.toUpperCase();
   var r = {};
 
+  // Franja A → media (horario solar / producción FV)
   r.kwh_media = npFindNum(t, [
+    /HOR\.\s*A[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /08H00[-–]18H00[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /ENERG[IÍ]A\s+ACT\.\s*HOR\.\s*A[^\d]*([\d.,]+)/,
     /MEDIA[^\d]*([\d.,]+)\s*KWH/,
-    /08[:\-]?00.*?18[:\-]?00[^\d]*([\d.,]+)/,
-    /FRANJA\s+MEDIA[^\d]*([\d.,]+)/,
-    /HORARIO\s+MEDIA[^\d]*([\d.,]+)/,
-    /SOLAR[^\d]*([\d.,]+)\s*KWH/
+    /FRANJA\s+MEDIA[^\d]*([\d.,]+)/
   ]);
 
+  // Franja B → punta
   r.kwh_punta = npFindNum(t, [
-    /PUNTA[^\d]*([\d.,]+)\s*KWH/,
-    /18[:\-]?00.*?22[:\-]?00[^\d]*([\d.,]+)/,
-    /FRANJA\s+PUNTA[^\d]*([\d.,]+)/,
-    /HORARIO\s+PUNTA[^\d]*([\d.,]+)/
+    /HOR\.\s*B[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /18H00[-–]22H00[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /ENERG[IÍ]A\s+ACT\.\s*HOR\.\s*B[^\d]*([\d.,]+)/,
+    /PUNTA[^\d]*([\d.,]+)\s*KWH/
   ]);
 
+  // Franja C → base
   r.kwh_base = npFindNum(t, [
-    /BASE[^\d]*([\d.,]+)\s*KWH/,
-    /22[:\-]?00.*?08[:\-]?00[^\d]*([\d.,]+)/,
-    /FRANJA\s+BASE[^\d]*([\d.,]+)/,
-    /NOCTURNO[^\d]*([\d.,]+)\s*KWH/
+    /HOR\.\s*C[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /22H00[-–]08H00[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /ENERG[IÍ]A\s+ACT\.\s*HOR\.\s*C[^\d]*([\d.,]+)/,
+    /BASE[^\d]*([\d.,]+)\s*KWH/
   ]);
 
+  // Franja D → fin de semana punta
   r.kwh_fds = npFindNum(t, [
-    /FDS[^\d]*([\d.,]+)/,
-    /FIN\s+DE\s+SEMANA[^\d]*([\d.,]+)/,
-    /S[AÁ]BADO.*?DOMINGO[^\d]*([\d.,]+)/
+    /HOR\.\s*D[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /S,D,F\s+18H00[-–]22H00[^\n]*?(\d[\d.,]+)\s*KWH/,
+    /ENERG[IÍ]A\s+ACT\.\s*HOR\.\s*D[^\d]*([\d.,]+)/,
+    /FDS[^\d]*([\d.,]+)/
   ]);
 
+  // Demanda facturable (línea específica)
   r.demanda_kw = npFindNum(t, [
+    /DEMANDA\s+FACTURABLE[^\d]*([\d.,]+)\s*KW/,
     /DEMANDA\s+FACTUR[^\d]*([\d.,]+)\s*KW/,
-    /DEMANDA\s+REGISTR[^\d]*([\d.,]+)/,
-    /POTENCIA\s+CONTRAT[^\d]*([\d.,]+)/,
     /CARGO\s+POR\s+DEMANDA[^\d]*([\d.,]+)\s*KW/
   ]);
 
+  // Demanda máx registrada (mayor de las 4 franjas, EEQ no publica "demanda máx 12m" explícitamente)
   r.demanda_max_12_kw = npFindNum(t, [
     /DEMANDA\s+M[AÁ]X.*?12[^\d]*([\d.,]+)/,
     /M[AÁ]XIMA\s+12[^\d]*([\d.,]+)/,
     /DEMANDA\s+M[AÁ]XIM[^\d]*([\d.,]+)/
   ]);
 
+  // Factura: usar "TOTAL SE Y APG" (sin bomberos, sin IVA — es base IVA 0%)
   r.factura_total_usd = npFindNum(t, [
+    /TOTAL\s+SE\s+Y\s+APG[^\d]*([\d.,]+)/,
+    /TOTAL\s+SECTOR\s+EL[EÉ]CTRICO[^\d]*([\d.,]+)/,
+    /BASE\s+I\.V\.A\.\s*0\s*%[^\d]*([\d.,]+)/,
     /TOTAL\s+A\s+PAGAR[^\d]*([\d.,]+)/,
-    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
-    /TOTAL\s+FACTURA[^\d]*([\d.,]+)/,
-    /IMPORTE\s+TOTAL[^\d]*([\d.,]+)/
+    /VALOR\s+TOTAL[^\d]*([\d.,]+)/
   ]);
 
   r.sapg_usd = npFindNum(t, [
+    /SERVICIO\s+ALUMBRADO\s+P[UÚ]BLICO\s+GENERAL[^\d]*([\d.,]+)/,
+    /SUBTOTAL\s+ALUMBRADO[^\d]*([\d.,]+)/,
     /SAPG[^\d]*([\d.,]+)/,
     /ALUMBRADO\s+P[UÚ]BLICO[^\d]*([\d.,]+)/
   ]);
 
   r.comercializacion_usd = npFindNum(t, [
-    /COMERCIALIZACI[OÓ]N[^\d]*([\d.,]+)/
+    /COMERCIALIZACI[OÓ]N\s*([\d.,]+)/,
+    /CARGO\s+COMERCI[^\d]*([\d.,]+)/
   ]);
 
   r.bomberos_usd = npFindNum(t, [
-    /BOMBEROS[^\d]*([\d.,]+)/,
-    /CUERPO\s+BOMBEROS[^\d]*([\d.,]+)/
+    /CONTRIBUCI[OÓ]N\s+BOMBEROS[^\d]*([\d.,]+)/,
+    /TOTAL\s+CONTRIBUCI[OÓ]N\s+BOMBEROS[^\d]*([\d.,]+)/,
+    /BOMBEROS[^\d]*([\d.,]+)/
   ]);
 
   r.fgdi = npFindNum(t, [
-    /FGDI[^\d]*([\d.,]+)/,
-    /FACTOR\s+GENERACI[OÓ]N[^\d]*([\d.,]+)/
+    /FAC\s+GEST[^\d]*([\d.,]+)/,
+    /FACTOR\s+GESTI[OÓ]N[^\d]*([\d.,]+)/,
+    /FGDI[^\d]*([\d.,]+)/
   ]);
 
   var distMap = {
-    'EEQ':'EEQ','EMPRESA ELECTRICA QUITO':'EEQ',
-    'EMELNORTE':'EMELNORTE','CNEL':'CNEL EP',
-    'CENTROSUR':'CENTROSUR','EEASA':'EEASA',
-    'ELEPCO':'ELEPCO','EERSA':'EERSA'
+    'EMPRESA EL':'EEQ','EEQ':'EEQ','EMELNORTE':'EMELNORTE',
+    'CNEL':'CNEL EP','CENTROSUR':'CENTROSUR',
+    'EEASA':'EEASA','ELEPCO':'ELEPCO','EERSA':'EERSA'
   };
   r.distribuidor = null;
   for(var k in distMap){ if(t.indexOf(k) !== -1){ r.distribuidor = distMap[k]; break; } }
@@ -2880,78 +2909,138 @@ function npParsePlanillaMV(text){
   return r;
 }
 
+// ── PVsyst: Informe de generación solar ──────────────────────
+// Calibrado contra PVsyst V7.4.8 - Hormipisos Machachi
+// "Energía producida  295267 kWh/año"
+// "Producción específica  1221 kWh/kWp/año"
+// "Proporción rend. PR  61.07 %"
+// Tabla anual: "Año  2020.0 ... 310057 550666 ..." — 2020.0 es GlobHor, NO irradiación
 function npParseInformeFV(text){
   var t = text.toUpperCase();
   var r = {};
 
+  // Generación anual producida (kWh)
+  // PVsyst: "ENERGÍA PRODUCIDA  295267 KWH/AÑO"
   r.gen_anual_kwh = npFindNum(t, [
+    /ENERG[IÍ]A\s+PRODUCIDA\s+([\d.,]+)\s*KWH/,
     /PRODUCCI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*KWH/,
-    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)/,
-    /ENERG[IÍ]A\s+ANUAL[^\d]*([\d.,]+)/,
-    /ANNUAL\s+ENERGY[^\d]*([\d.,]+)/,
+    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*KWH/,
+    /ANNUAL\s+ENERGY[^\d]*([\d.,]+)\s*KWH/,
     /E_GRID[^\d]*([\d.,]+)/,
     /YIELD[^\d]*([\d.,]+)\s*KWH/
   ]);
 
-  // Si viene en MWh, convertir
-  var genMWh = npFindNum(t, [
-    /PRODUCCI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
-    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
-    /ANNUAL\s+ENERGY[^\d]*([\d.,]+)\s*MWH/
-  ]);
-  if(genMWh && (!r.gen_anual_kwh || genMWh*1000 > r.gen_anual_kwh)){
-    r.gen_anual_kwh = genMWh * 1000;
+  // Si viene en MWh (ej: "295.267 MWh/año" en cotización)
+  if(!r.gen_anual_kwh || r.gen_anual_kwh < 1000){
+    var genMWh = npFindNum(t, [
+      /ENERG[IÍ]A\s+PRODUCIDA\s+([\d.,]+)\s*MWH/,
+      /PRODUCCI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
+      /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/,
+      /GENERACI[OÓ]N\s+ANUAL\s+ESTIMADA[^\d]*([\d.,]+)\s*MWH/
+    ]);
+    if(genMWh && genMWh > 0) r.gen_anual_kwh = genMWh * 1000;
   }
 
+  // kWp del sistema
   r.kwp = npFindNum(t, [
+    /POTENCIA\s+DEL\s+SISTEMA[^\d]*([\d.,]+)\s*KWP/,
+    /PNOM\s+TOTAL\s+([\d.,]+)\s*KWP/,
+    /NOMINAL\s*\(STC\)[^\d]*([\d.,]+)\s*KWP/,
     /POTENCIA\s+INSTALADA[^\d]*([\d.,]+)\s*KWP/,
-    /POTENCIA\s+PICO[^\d]*([\d.,]+)/,
-    /PEAK\s+POWER[^\d]*([\d.,]+)/,
-    /PNOM[^\d]*([\d.,]+)\s*KWP/,
     /SYSTEM\s+SIZE[^\d]*([\d.,]+)/
   ]);
 
+  // PR — PVsyst: "PROPORCIÓN REND. PR  61.07 %"
+  // CUIDADO: no tomar "35.25 %" (fracción solar) ni porcentajes de pérdidas
   r.pr_pct = npFindNum(t, [
+    /PROPORCI[OÓ]N\s+REND\.\s*PR[^\d]*([\d.,]+)/,
     /PERFORMANCE\s+RATIO[^\d]*([\d.,]+)/,
-    /PR[^\d]*([\d.,]+)\s*%/,
-    /RENDIMIENTO[^\d]*([\d.,]+)\s*%/
+    /\bPR\b[^\d]*([\d.,]+)\s*%/
+  ]);
+  // Validar rango razonable de PR (40-100%)
+  if(r.pr_pct && (r.pr_pct < 40 || r.pr_pct > 100)) r.pr_pct = null;
+
+  // Irradiación específica del sitio (kWh/kWp/día)
+  // PVsyst tabla: "GlobHor ... Año  2020.0" — ese 2020 es kWh/m²/año NO irradiación diaria
+  // La irradiación diaria = GlobHor_año / 365 = 2020/365 = 5.53 kWh/kWp/día
+  // Buscar primero "Producción específica 1221 kWh/kWp/año" y derivar si no hay dato directo
+  var prodEsp = npFindNum(t, [
+    /PRODUCCI[OÓ]N\s+ESPEC[IÍ]FICA[^\d]*([\d.,]+)\s*KWH\/KWP/,
+    /SPECIFIC\s+YIELD[^\d]*([\d.,]+)/,
+    /YF[^\d]*([\d.,]+)\s*KWH\/KWP/
   ]);
 
   r.irr_kwh_kwp_dia = npFindNum(t, [
-    /IRRADIACI[OÓ]N[^\d]*([\d.,]+)\s*KWH/,
-    /IRRADIANCE[^\d]*([\d.,]+)/,
-    /GHI[^\d]*([\d.,]+)/,
-    /RADIACI[OÓ]N\s+GLOBAL[^\d]*([\d.,]+)/
+    /IRRADIACI[OÓ]N\s+HORIZONTAL\s+GLOBAL[^\n]*?A[ÑN]O[^\d]*([\d.,]+)/,
+    /GLOBHOR[^\n]*?A[ÑN]O[^\d]*([\d.,]+)/
   ]);
+  // Convertir de kWh/m²/año a kWh/kWp/día
+  if(r.irr_kwh_kwp_dia && r.irr_kwh_kwp_dia > 100){
+    r.irr_kwh_kwp_dia = Math.round(r.irr_kwh_kwp_dia / 365 * 100) / 100;
+  }
+  // Si no encontramos irradiación pero tenemos producción específica, derivarla del PR
+  if(!r.irr_kwh_kwp_dia && prodEsp && r.pr_pct){
+    r.irr_kwh_kwp_dia = Math.round(prodEsp / (r.pr_pct/100) / 365 * 100) / 100;
+  }
+  // Validar rango razonable (2-8 kWh/kWp/día para Ecuador)
+  if(r.irr_kwh_kwp_dia && (r.irr_kwh_kwp_dia < 2 || r.irr_kwh_kwp_dia > 8)) r.irr_kwh_kwp_dia = null;
 
   return r;
 }
 
+// ── Cotización CAPEX ─────────────────────────────────────────
+// Calibrado contra proforma Nepos Energy 26-107
+// "Sub Total  $ 139.770,02" — punto miles, coma decimal
+// "Total USD  $ 152.450,93" — incluye IVA, NO usar
+// "Generación mensual estimada: 24605.58 KWH/MES"
+// "Generación anual estimada: 295.267 MWH/AÑO"
 function npParseCotizacion(text){
   var t = text.toUpperCase();
   var r = {};
 
+  // CAPEX sin IVA: "SUB TOTAL  139.770,02" o "SUB TOTAL $ 139.770,02"
+  // Evitar "TOTAL USD" que incluye IVA
   r.capex_usd = npFindNum(t, [
+    /SUB\s+TOTAL\s+IVA\s+0\s*%[^\d]*([\d.,]+)/,
+    /SUB\s+TOTAL[^\d]*([\d.,]+)/,
+    /SUBTOTAL[^\d]*([\d.,]+)/,
     /TOTAL\s+PROYECTO[^\d]*([\d.,]+)/,
     /PRECIO\s+TOTAL[^\d]*([\d.,]+)/,
-    /VALOR\s+TOTAL[^\d]*([\d.,]+)/,
     /COSTO\s+TOTAL[^\d]*([\d.,]+)/,
-    /INVERSI[OÓ]N\s+TOTAL[^\d]*([\d.,]+)/,
-    /TOTAL\s+USD[^\d]*([\d.,]+)/,
-    /TOTAL\s+OFERTA[^\d]*([\d.,]+)/
+    /INVERSI[OÓ]N\s+TOTAL[^\d]*([\d.,]+)/
   ]);
+  // Validar: un CAPEX razonable > 5000 USD
+  if(r.capex_usd && r.capex_usd < 5000) r.capex_usd = null;
 
   r.kwp = npFindNum(t, [
+    /SISTEMA\s+FOTOVOLTAICO\s+ON\s+GRID\s+([\d.,]+)\s*KW/,
+    /PLANTA\s+SOLAR\s+DE\s+([\d.,]+)\s*KW/,
     /POTENCIA[^\d]*([\d.,]+)\s*KWP/,
     /SISTEMA[^\d]*([\d.,]+)\s*KWP/,
     /CAPACIDAD[^\d]*([\d.,]+)\s*KWP/
   ]);
 
+  // O&M anual
   r.om_anual_usd = npFindNum(t, [
+    /TOTAL\s*\(OPEX\)[^\d]*([\d.,]+)/,
+    /TOTAL\s+OPEX[^\d]*([\d.,]+)/,
     /O&M[^\d]*([\d.,]+)/,
     /MANTENIMIENTO\s+ANUAL[^\d]*([\d.,]+)/,
     /OPERACI[OÓ]N\s+Y\s+MANTENIMIENTO[^\d]*([\d.,]+)/
   ]);
+
+  // Generación anual desde cotización (si viene)
+  var genMes = npFindNum(t, [
+    /GENERACI[OÓ]N\s+MENSUAL\s+ESTIMADA[^\d]*([\d.,]+)/,
+    /GENERACI[OÓ]N\s+MENSUAL[^\d]*([\d.,]+)\s*KWH/
+  ]);
+  if(genMes && genMes > 100) r.gen_anual_kwh_cotizacion = Math.round(genMes * 12);
+
+  var genAnio = npFindNum(t, [
+    /GENERACI[OÓ]N\s+ANUAL\s+ESTIMADA[^\d]*([\d.,]+)\s*MWH/,
+    /GENERACI[OÓ]N\s+ANUAL[^\d]*([\d.,]+)\s*MWH/
+  ]);
+  if(genAnio && genAnio > 0) r.gen_anual_kwh_cotizacion = Math.round(genAnio * 1000);
 
   return r;
 }
@@ -3154,10 +3243,18 @@ function npHandleCotizacion(){
       var nc=$("np-capex"); if(nc) nc.value=ex.capex_usd;
       if(ex.om_anual_usd > 0){ var no=$("np-om"); if(no) no.value=ex.om_anual_usd; }
       if(ex.kwp > 0 && !(parseFloat($("np-kwp").value)>0)){ var nk=$("np-kwp"); if(nk) nk.value=ex.kwp; }
+      // Si la cotización trae generación anual y no hay informe FV cargado, poblarla
+      if(ex.gen_anual_kwh_cotizacion > 0 && !(parseFloat(($("np-gen-mes")||{}).value)>0)){
+        var genMesCot = Math.round(ex.gen_anual_kwh_cotizacion / 12);
+        var gmc=$("np-gen-mes"); if(gmc){ gmc.removeAttribute('readonly'); gmc.value=genMesCot; gmc.setAttribute('readonly',''); }
+        var gac=$("np-gen-año"); if(gac){ gac.removeAttribute('readonly'); gac.value=ex.gen_anual_kwh_cotizacion; gac.setAttribute('readonly',''); }
+      }
       npCalcCapexkwp(); npCalcGen();
+      var genStr = ex.gen_anual_kwh_cotizacion ? " · Gen: "+Math.round(ex.gen_anual_kwh_cotizacion/1000)+" MWh/año" : "";
       if(info) info.innerHTML = "✅ <strong>CAPEX extraído:</strong> $"+Math.round(ex.capex_usd).toLocaleString()
         +(ex.kwp?" · "+ex.kwp+" kWp":"")
         +(ex.om_anual_usd?" · O&M: $"+Math.round(ex.om_anual_usd)+"/año":"")
+        +genStr
         +"<br><span style='color:var(--t4);font-size:10px'>Verifique antes de continuar. Fuente: "+fname+"</span>";
     },
     function(err){
