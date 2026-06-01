@@ -672,7 +672,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-seri
 
 </div><!-- /wrap -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<!-- pdf.js eliminado: extracción via Claude Vision API -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
 // ════════════════════════════════════════════════════════
 // PLIEGO TARIFARIO ARCONEL-006/25 · VIGENTE 2025-2026
@@ -2482,266 +2482,362 @@ function npGetData(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// EXTRACCIÓN DE PDF — v4.9
-// Estrategia: Claude Vision API directo
-//   1) Leer el PDF como base64
-//   2) Enviarlo a Claude con prompt estructurado por tipo de doc
-//   3) Parsear el JSON de respuesta con los mismos parsers calibrados
-//   4) Aplicar los datos a los campos del formulario
-// Sin pdf.js, sin workers, sin regex frágiles sobre texto fragmentado.
+// EXTRACCIÓN DE PDF — v4.10
+// Lógica portada 1:1 desde Code.gs (extractFromPdf / performOcr)
+// Usa pdf.js solo para extraer texto igual que Google Drive OCR,
+// luego aplica detectDocumentType + parsers idénticos al .gs.
 // ══════════════════════════════════════════════════════════════
 
-function npReadFileAsBase64(file, callback){
-  var reader = new FileReader();
-  reader.onload = function(e){
-    callback(e.target.result.split(',')[1]);
+// ── ocrParseNum: idéntico al .gs ───────────────────────────────
+function ocrParseNum(str) {
+  if(!str) return 0;
+  str = String(str).trim();
+  // Limpiar espacios dentro de números (OCR fragmenta: "1 39.770,02")
+  str = str.replace(/(\d)\s+(\d)/g, '$1$2');
+  if(str.indexOf('.')>-1 && str.indexOf(',')>-1) {
+    if(str.lastIndexOf(',') > str.lastIndexOf('.')) str = str.replace(/\./g,'').replace(',','.');
+    else str = str.replace(/,/g,'');
+  } else if(str.indexOf(',')>-1) {
+    var ac = str.split(',').pop();
+    str = (ac && ac.length<=2) ? str.replace(',','.') : str.replace(/,/g,'');
+  } else if(str.indexOf('.')>-1) {
+    var pts = str.split('.');
+    if(pts.length>2 || (pts.length===2 && pts[pts.length-1].length===3)) str = str.replace(/\./g,'');
+  }
+  var v = parseFloat(str);
+  return isNaN(v) ? 0 : v;
+}
+
+// ── detectDocumentType: idéntico al .gs ───────────────────────
+function npDetectDocType(text) {
+  var t = text.toUpperCase();
+  if(t.indexOf('PVSYST') > -1 ||
+     t.indexOf('SIMULATION REPORT') > -1 ||
+     t.indexOf('INFORME DE SIMULACION') > -1 ||
+     t.indexOf('INFORME DE SIMULACIÓN') > -1 ||
+     t.indexOf('PRODUCED ENERGY') > -1 ||
+     t.indexOf('ENERGIA PRODUCIDA') > -1 ||
+     t.indexOf('ENERGÍA PRODUCIDA') > -1 ||
+     t.indexOf('PERF. RATIO') > -1) return 'PVSYST';
+  if(t.indexOf('NEPOS ENERGY') > -1 &&
+     (t.indexOf('PROFORMA') > -1 || t.indexOf('SUB TOTAL') > -1 || t.indexOf('SUMINISTRO DE PANELES') > -1)) return 'PROFORMA';
+  if(t.indexOf('EMELNORTE') > -1 || t.indexOf('EEQ') > -1 || t.indexOf('CNEL') > -1 ||
+     t.indexOf('TIPO DE TARIFA') > -1 || t.indexOf('ENERGIA ACT. HOR') > -1 ||
+     (t.indexOf('VALOR TOTAL') > -1 && t.indexOf('CONSUMO') > -1)) return 'FACTURA';
+  return 'UNKNOWN';
+}
+
+// ── parsePvsyst: idéntico al .gs ───────────────────────────────
+function npParsePvsyst(text) {
+  var r = { _docType:'PVSYST', franjas:[], facturaMes:0, distCompany:'', tarifaTipo:'', energia:0, kwp:0, deg:0.4, om:0, capex:0 };
+
+  var kwpPatterns = [
+    /Nominal\s*\(STC\)\s+([\d,\.]+)\s*kWp/i,
+    /Pnom total\s+([\d,\.]+)\s*kWp/i,
+    /Potencia del sistema[:\s]+([\d,\.]+)\s*kWp/i,
+    /System power[:\s]+([\d,\.]+)\s*kWp/i,
+    /(?:^|\s)([\d]+)\s*kWp/m
+  ];
+  for(var i=0;i<kwpPatterns.length;i++){
+    var m=text.match(kwpPatterns[i]);
+    if(m){ r.kwp=ocrParseNum(m[1]); break; }
+  }
+
+  var eUser   = text.match(/Energ[ií]a\s+usada[\s\S]{0,30}?([\d]{5,6})\s*kWh\/a[ñn]o/i);
+  var eProd   = text.match(/Energ[ií]a\s+producida[\s\S]{0,30}?([\d]{5,6})\s*kWh\/a[ñn]o/i);
+  var eUserEn = text.match(/Used Energy[\s\S]{0,30}?([\d]{5,6})\s*kWh\/year/i);
+  var eProdEn = text.match(/Produced Energy[\s\S]{0,30}?([\d]{5,6})\s*kWh\/year/i);
+  var tablaAnio = text.match(/A[ñn]o[\s\d\.,]+?([\d]{5,6})\s+([\d]{5,6})\s+([\d]{5,6})/i);
+  var anyKwh  = text.match(/(\d{5,6})\s*kWh\/a[ñn]o/i);
+
+  if(eUser)          r.energia = ocrParseNum(eUser[1]);
+  else if(eUserEn)   r.energia = ocrParseNum(eUserEn[1]);
+  else if(eProd)     r.energia = ocrParseNum(eProd[1]);
+  else if(eProdEn)   r.energia = ocrParseNum(eProdEn[1]);
+  else if(tablaAnio) r.energia = ocrParseNum(tablaAnio[2]);
+  else if(anyKwh)    r.energia = ocrParseNum(anyKwh[1]);
+
+  if((!r.energia || r.energia===0) && r.kwp>0) r.energia = Math.round(r.kwp*1300);
+
+  var degPatterns=[/Factor de p[eé]rdida\s+([\d\.]+)\s*%\/a[ñn]o/i,/Loss factor\s+([\d\.]+)\s*%\/year/i,/Degradaci[oó]n anual[:\s]+([\d\.]+)\s*%/i];
+  for(var j=0;j<degPatterns.length;j++){var md=text.match(degPatterns[j]);if(md){r.deg=parseFloat(md[1]);break;}}
+
+  var omPatterns=[/Total\s*\(OPEX\)\s+([\d\.,]+)/i,/Costos de func\.\s+([\d\.,]+)/i,/limpieza[^:\n]*([\d\.,]+)/i];
+  for(var k=0;k<omPatterns.length;k++){var mo=text.match(omPatterns[k]);if(mo){r.om=ocrParseNum(mo[1]);break;}}
+
+  return r;
+}
+
+// ── parseFactura: idéntico al .gs ─────────────────────────────
+function npParseFactura(text) {
+  var r = { _docType:'FACTURA', franjas:[], facturaMes:0, distCompany:'', tarifaTipo:'', energia:0, kwp:0, deg:0.4, om:0, capex:0 };
+
+  if(/EMELNORTE/i.test(text))     r.distCompany='EMELNORTE';
+  else if(/\bEEQ\b/i.test(text))  r.distCompany='EEQ';
+  else if(/\bCNEL\b/i.test(text)) r.distCompany='CNEL';
+
+  var tarifaM=text.match(/Tipo de tarifa\s+\w+\s+([\w\-]+\s*[-–]\s*[^\n\r]+)/i);
+  if(tarifaM) r.tarifaTipo=tarifaM[1].trim().replace(/\s+/g,' ');
+
+  var totalAPG=text.match(/TOTAL SE Y APG\s*\(\d+\)\s+([\d\.,]+)/i);
+  var totalVal=text.match(/VALOR TOTAL[:\s]+([\d\.,]+)/i);
+  if(totalAPG)      r.facturaMes=ocrParseNum(totalAPG[1]);
+  else if(totalVal) r.facturaMes=ocrParseNum(totalVal[1]);
+
+  // EMELNORTE: patrones específicos
+  if(r.distCompany==='EMELNORTE'){
+    var emPatrones=[
+      {nom:'Franja Punta',          re:/ENERG[ÍI]A\s+ACTIVA\s+(?:EN\s+)?PUNTA[^0-9]*([\d\.,]+)\s*kWh[^\n]*([\d\.,]+)/i},
+      {nom:'Franja Fuera de Punta', re:/ENERG[ÍI]A\s+ACTIVA\s+FUERA\s+DE\s+PUNTA[^0-9]*([\d\.,]+)\s*kWh[^\n]*([\d\.,]+)/i},
+      {nom:'Franja Valle',          re:/ENERG[ÍI]A\s+ACTIVA\s+VALLE[^0-9]*([\d\.,]+)\s*kWh[^\n]*([\d\.,]+)/i},
+      {nom:'Energía Activa',        re:/ENERG[ÍI]A\s+ACTIVA\s+TOTAL[^0-9]*([\d\.,]+)\s*kWh[^\n]*([\d\.,]+)/i}
+    ];
+    emPatrones.forEach(function(p){
+      var m=text.match(p.re);
+      if(m){var k=ocrParseNum(m[1]),mo=ocrParseNum(m[2]);if(k>0)r.franjas.push({nom:p.nom,kwh:k,tarifa:Math.round(mo/k*1000000)/1000000});}
+    });
+  }
+
+  // EEQ/CNEL: patrones originales
+  if(r.franjas.length===0){
+    var franjaRe=/Energ[ií]a act[a-z\s]*\.\s*hor[a]?\.\s*([A-Z])\s*\([^)]+\)[^\n]*?\s+([\d\.,]+)\s+kWh\s+([\d\.,]+)/gi;
+    var fm;
+    while((fm=franjaRe.exec(text))!==null){
+      var kwh=ocrParseNum(fm[2]),monto=ocrParseNum(fm[3]);
+      r.franjas.push({nom:'Franja '+fm[1],kwh:kwh,tarifa:kwh>0?Math.round(monto/kwh*1000000)/1000000:0});
+    }
+  }
+  if(r.franjas.length===0){
+    ['A','B','C','D','E'].forEach(function(l){
+      var re=new RegExp('Energ[ií]a\\s+act[^\\n]*hor[^\\n]*\\b'+l+'\\b[^\\n]*(\\d[\\d\\.,]+)\\s+kWh\\s+(\\d[\\d\\.,]+)','i');
+      var m2=text.match(re);
+      if(m2){var k=ocrParseNum(m2[1]),mo=ocrParseNum(m2[2]);r.franjas.push({nom:'Franja '+l,kwh:k,tarifa:k>0?Math.round(mo/k*1000000)/1000000:0});}
+    });
+  }
+  // Fallback universal
+  if(r.franjas.length===0){
+    var anyRe=/([\d\.,]{3,})\s*kWh/gi,am;
+    while((am=anyRe.exec(text))!==null){
+      var k=ocrParseNum(am[1]);
+      if(k>50){var t2=r.facturaMes>0&&k>0?Math.round(r.facturaMes/k*1000000)/1000000:0;r.franjas.push({nom:'Consumo total',kwh:k,tarifa:t2});break;}
+    }
+  }
+  return r;
+}
+
+// ── parseProforma: idéntico al .gs + fix espacios ──────────────
+function npParseProforma(text) {
+  var r = { _docType:'PROFORMA', franjas:[], facturaMes:0, distCompany:'', tarifaTipo:'', energia:0, kwp:0, deg:0.4, om:0, capex:0 };
+
+  // CRÍTICO: limpiar espacios en números antes de parsear
+  var t = text.replace(/(\d)\s+(\d)/g,'$1$2');
+
+  var capexPatterns=[
+    /^Sub\s*Total\s*\$?\s*([\d\.,]+)/im,
+    /Sub\s*Total\b(?!\s*IVA)[^\d$]*\$?\s*([\d\.,]+)/i,
+    /Costo total de instalaci[oó]n\s+([\d\.,]+)/i,
+    /SUMINISTRO\s+ENERG[ÍI]A\s+SOLAR[^\n]*([\d\.,]+)/i,
+    /Global\s+([\d\.,]+)\s*USD/i
+  ];
+  for(var i=0;i<capexPatterns.length;i++){
+    var mc=t.match(capexPatterns[i]);
+    if(mc){r.capex=ocrParseNum(mc[1]);if(r.capex>5000)break;r.capex=0;}
+  }
+
+  var omPatterns=[/Total\s*\(OPEX\)\s+([\d\.,]+)/i,/Costos de operaci[oó]n[^\n]*([\d\.,]+)\s*USD\/a[ñn]o/i,/limpieza[^:\n\d]*([\d\.,]+)/i,/mantenimiento[^:\n\d]*([\d\.,]+)/i];
+  var omTotal=0;
+  for(var j=0;j<omPatterns.length;j++){var mo=t.match(omPatterns[j]);if(mo){omTotal=ocrParseNum(mo[1]);if(omTotal>0)break;}}
+  if(omTotal>0) r.om=omTotal;
+
+  var kwpM=t.match(/(\d[\d\.,]*)\s*[kK][wW][pP]/);
+  if(kwpM) r.kwp=ocrParseNum(kwpM[1]);
+  else{var kwRef=t.match(/(?:ON GRID|SISTEMA FOTOVOLTAICO)[^\n]*?([\d]+)\s*[kK][wW]/i);if(kwRef)r.kwp=ocrParseNum(kwRef[1]);}
+
+  // Generación anual desde detalles de cotización
+  var genMes=t.match(/Generaci[oó]n mensual estimada[:\s]*([\d\.,]+)/i);
+  var genAnio=t.match(/Generaci[oó]n anual estimada[:\s]*([\d\.,]+)\s*MWH/i);
+  if(genAnio) r.energia=Math.round(ocrParseNum(genAnio[1])*1000);
+  else if(genMes) r.energia=Math.round(ocrParseNum(genMes[1])*12);
+
+  return r;
+}
+
+// ── extractFromPdf: combina todo igual que el .gs ──────────────
+function npExtractFromText(text) {
+  var docType = npDetectDocType(text);
+  if(docType==='PVSYST')   return npParsePvsyst(text);
+  if(docType==='FACTURA')  return npParseFactura(text);
+  if(docType==='PROFORMA') return npParseProforma(text);
+  return { _docType:'UNKNOWN', error:'Tipo de documento no reconocido' };
+}
+
+// ── Extraer texto de PDF con pdf.js (igual que siempre) ────────
+function npExtractTextFromPdf(file, onDone, onErr){
+  if(typeof pdfjsLib==='undefined'){ onErr('pdf.js no disponible'); return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var arr=new Uint8Array(e.target.result);
+    function tryLoad(useWorker){
+      var opts={data:arr,isEvalSupported:false};
+      if(!useWorker) opts.disableWorker=true;
+      pdfjsLib.getDocument(opts).promise.then(function(pdf){
+        var total=pdf.numPages, pages=new Array(total), done=0;
+        for(var i=1;i<=total;i++){
+          (function(n){
+            pdf.getPage(n).then(function(page){
+              page.getTextContent({normalizeWhitespace:true}).then(function(tc){
+                // join con detección de líneas por Y (calibrado)
+                var lines=[],cur=[],lastY=null;
+                tc.items.forEach(function(it){
+                  var y=Math.round(it.transform[5]);
+                  if(lastY!==null&&Math.abs(y-lastY)>3){lines.push(cur.join(' '));cur=[];}
+                  if(it.str&&it.str.trim()) cur.push(it.str.trim());
+                  lastY=y;
+                });
+                if(cur.length) lines.push(cur.join(' '));
+                pages[n-1]=lines.join('\n');
+                done++;
+                if(done===total) onDone(pages.join('\n'));
+              }).catch(function(){pages[n-1]='';done++;if(done===total)onDone(pages.join('\n'));});
+            }).catch(function(){pages[n-1]='';done++;if(done===total)onDone(pages.join('\n'));});
+          })(i);
+        }
+        if(total===0) onDone('');
+      }).catch(function(err){
+        if(useWorker) tryLoad(false);
+        else onErr('Error abriendo PDF: '+err);
+      });
+    }
+    tryLoad(true);
   };
-  reader.onerror = function(){ callback(null); };
-  reader.readAsDataURL(file);
+  reader.onerror=function(){ onErr('Error leyendo archivo'); };
+  reader.readAsArrayBuffer(file);
 }
 
-// ── Prompts por tipo de documento (calibrados con Hormipisos/EEQ) ──────────
-var NP_PROMPTS = {
-  planillaBV:
-    'Sos un extractor de datos de planillas de electricidad ecuatorianas (Baja Tensión). '+
-    'Del documento adjunto extraé en JSON estricto (sin texto extra, sin markdown): '+
-    '{"consumo_total_kwh":number,"consumo_dia_kwh":number,"consumo_noche_kwh":number,'+
-    '"demanda_kw":number,"factura_total_usd":number,"sapg_usd":number,'+
-    '"comercializacion_usd":number,"bomberos_usd":number,"distribuidor":string}. '+
-    'Para factura_total_usd usá el valor "TOTAL SE Y APG" o "Base I.V.A. 0%", nunca el VALOR TOTAL que incluye bomberos. '+
-    'Para sapg_usd usá "Servicio Alumbrado Público General". Usá null para campos no encontrados.',
-
-  planillaMV:
-    'Sos un extractor de planillas de electricidad Media Tensión Ecuador (tarifa MTCGCD32). '+
-    'Del documento adjunto extraé en JSON estricto: '+
-    '{"kwh_media":number,"kwh_punta":number,"kwh_base":number,"kwh_fds":number,'+
-    '"demanda_kw":number,"demanda_max_12_kw":number,"factura_total_usd":number,'+
-    '"sapg_usd":number,"comercializacion_usd":number,"bomberos_usd":number,"fgdi":number,"distribuidor":string}. '+
-    'kwh_media = Energía hor. A (08-18h). kwh_punta = Energía hor. B (18-22h). '+
-    'kwh_base = Energía hor. C (22-08h). kwh_fds = Energía hor. D (S,D,F). '+
-    'demanda_kw = Demanda facturable (columna Consumo Total, el número antes de "kW"). '+
-    'factura_total_usd = "TOTAL SE Y APG" o "Base I.V.A. 0%". '+
-    'sapg_usd = "Servicio Alumbrado Público General". fgdi = "Fac Gest de la Demanda". '+
-    'Usá null para campos no encontrados.',
-
-  informeFV:
-    'Extraé datos de este informe de generación solar PVsyst. JSON estricto: '+
-    '{"gen_anual_kwh":number,"kwp":number,"pr_pct":number,"irr_kwh_kwp_dia":number,"om_anual_usd":number}. '+
-    'gen_anual_kwh = "Energía producida" en kWh/año (NO "Energía usada"). '+
-    'kwp = Potencia nominal STC del sistema. pr_pct = "Proporción rend. PR" (entre 40-100). '+
-    'irr_kwh_kwp_dia = irradiación horizontal global anual en kWh/m²/año dividida entre 365 (da ~4-6 para Ecuador). '+
-    'om_anual_usd = "Total (OPEX)" o costos de operación anuales. '+
-    'Usá null si no existe.',
-
-  cotizacion:
-    'Extraé datos de esta cotización/proforma de sistema fotovoltaico Nepos Energy. JSON estricto: '+
-    '{"capex_usd":number,"kwp":number,"om_anual_usd":number,"gen_anual_kwh":number}. '+
-    'capex_usd = "Sub Total" sin IVA (NO "Total USD" que incluye IVA, NO "Sub Total IVA 0%"). '+
-    'El Sub Total correcto es la suma de todos los ítems antes del desglose de IVA. '+
-    'kwp = potencia del sistema en kWp. '+
-    'om_anual_usd = suma de costos de mantenimiento anuales (limpieza + mantenimiento preventivo). '+
-    'gen_anual_kwh = generación anual estimada en kWh (convertir MWh a kWh si aplica). '+
-    'Usá null si no existe.'
-};
-
-// ── Extractor principal via Claude Vision ───────────────────────────────────
-function npExtractPdfVision(file, docType, onDone, onErr){
-  if(!file){ onErr('No hay archivo'); return; }
-
-  var statusMsg = {
-    planillaMV:  '⏳ Analizando planilla eléctrica…',
-    planillaBV:  '⏳ Analizando planilla eléctrica…',
-    informeFV:   '⏳ Analizando informe PVsyst…',
-    cotizacion:  '⏳ Analizando cotización CAPEX…'
-  }[docType] || '⏳ Procesando documento…';
-
-  // Mostrar estado de carga si hay elemento de info visible
-  var activeInfo = document.querySelector('.np-loading-active');
-  if(activeInfo) activeInfo.textContent = statusMsg;
-
-  npReadFileAsBase64(file, function(base64){
-    if(!base64){ onErr('Error leyendo archivo'); return; }
-
-    var mediaType = 'application/pdf';
-    var prompt = NP_PROMPTS[docType] || NP_PROMPTS.planillaMV;
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: { type: 'base64', media_type: mediaType, data: base64 }
-            },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      try {
-        var raw = (data.content||[])
-          .filter(function(b){ return b.type==='text'; })
-          .map(function(b){ return b.text; })
-          .join('');
-        raw = raw.replace(/```json|```/g,'').trim();
-        var parsed = JSON.parse(raw);
-        onDone(parsed);
-      } catch(e){
-        onErr('Respuesta no parseable: ' + e + ' | raw: ' + (raw||'').substring(0,200));
-      }
-    })
-    .catch(function(e){ onErr('Error de red: ' + e); });
-  });
-}
-
-// ── Parsers: mapear JSON de Vision a campos del formulario ──────────────────
-// (misma interfaz que antes: onDone recibe objeto con campos numéricos)
-
-function npApplyPlanillaResult(ex, tipo, names, info, prev){
-  var applied = [];
-  if(tipo === 'BV'){
-    if(ex.consumo_total_kwh > 0){ var cb=$('np-cons-bv'); if(cb){ cb.value=Math.round(ex.consumo_total_kwh); applied.push('Consumo: '+Math.round(ex.consumo_total_kwh)+' kWh'); } }
-    if(ex.consumo_dia_kwh > 0 && ex.consumo_total_kwh > 0){
-      var pctD=Math.round(ex.consumo_dia_kwh/ex.consumo_total_kwh*100);
-      var pd=$('np-pct-dia'); if(pd){ pd.value=pctD; applied.push('Día: '+pctD+'%'); }
-      var pn=$('np-pct-noche'); if(pn){ pn.value=(100-pctD); }
-    }
-    if(ex.demanda_kw > 0){ var db=$('np-dem-bv'); if(db){ db.value=ex.demanda_kw; applied.push('Demanda: '+ex.demanda_kw+' kW'); } }
-    if(ex.factura_total_usd > 0){ var fb=$('np-fac-bv'); if(fb){ fb.value=ex.factura_total_usd; applied.push('Factura: $'+ex.factura_total_usd); } }
-  } else {
-    if(ex.kwh_media > 0){ var qm=$('np-kwh-media'); if(qm){ qm.value=Math.round(ex.kwh_media); applied.push('Media: '+Math.round(ex.kwh_media)+' kWh'); } }
-    if(ex.kwh_punta > 0){ var qp=$('np-kwh-punta'); if(qp){ qp.value=Math.round(ex.kwh_punta); applied.push('Punta: '+Math.round(ex.kwh_punta)+' kWh'); } }
-    if(ex.kwh_base  > 0){ var qb=$('np-kwh-base');  if(qb){ qb.value=Math.round(ex.kwh_base);  applied.push('Base: '+Math.round(ex.kwh_base)+' kWh');  } }
-    if(ex.kwh_fds   > 0){ var qf=$('np-kwh-fds');   if(qf){ qf.value=Math.round(ex.kwh_fds);   applied.push('FdS: '+Math.round(ex.kwh_fds)+' kWh');   } }
-    if(ex.demanda_kw > 0){ var dm=$('np-dem-mv'); if(dm){ dm.value=ex.demanda_kw; applied.push('Demanda: '+ex.demanda_kw+' kW'); } }
-    if(ex.demanda_max_12_kw > 0){ var dmx=$('np-demmax-mv'); if(dmx){ dmx.value=ex.demanda_max_12_kw; } }
-    if(ex.factura_total_usd > 0){ var fm=$('np-fac-mv'); if(fm){ fm.value=ex.factura_total_usd; applied.push('Factura: $'+ex.factura_total_usd); } }
-    if(ex.sapg_usd > 0){ var sp=$('np-sapg'); if(sp){ sp.value=ex.sapg_usd; applied.push('SAPG: $'+ex.sapg_usd); } }
-    if(ex.comercializacion_usd > 0){ var co=$('np-comerc'); if(co){ co.value=ex.comercializacion_usd; } }
-    if(ex.bomberos_usd > 0){ var bo=$('np-bomb'); if(bo){ bo.value=ex.bomberos_usd; } }
-    if(ex.fgdi > 0){ var fg=$('np-fgdi'); if(fg){ fg.value=ex.fgdi; } }
-    npUpdateMvTarifa();
-  }
-  if(ex.distribuidor){
-    var nd=$('np-dist');
-    if(nd){
-      var dv=String(ex.distribuidor).toUpperCase();
-      var opts=nd.options;
-      for(var oi=0;oi<opts.length;oi++){
-        if(dv.indexOf(opts[oi].value.split(' ')[0].toUpperCase())!==-1){ nd.selectedIndex=oi; break; }
-      }
-    }
-  }
-  var msg = applied.length > 0
-    ? "<span style='color:var(--vd);font-weight:600'>✅ Extraído: "+applied.join(' · ')+"</span>"
-    : "<span style='color:var(--am)'>⚠️ Claude procesó el archivo pero no encontró datos numéricos. Ingrese los datos manualmente.</span>";
-  if(info) info.innerHTML = '📄 '+names.join(', ')+'<br>'+msg+'<br><span style="color:var(--t4);font-size:10px">Verificá y ajustá si hay diferencias.</span>';
-  if(prev) prev.innerHTML = applied.length > 0
-    ? "<div style='background:var(--vd-lt);border:1px solid var(--vd-bd);border-radius:8px;padding:8px 11px;font-size:11px;color:var(--vd)'>✅ Campos completados automáticamente.</div>"
-    : '';
-}
-
-// ── Handler Planillas de Luz ────────────────────────────────────────────────
+// ── Handlers: extraer texto → parsear → aplicar campos ─────────
 function npHandleFiles(){
-  var fi   = $('np-planillas');
-  var info = $('np-planillas-info');
-  var prev = $('np-planillas-preview');
+  var fi=$('np-planillas'), info=$('np-planillas-info'), prev=$('np-planillas-preview');
   if(!fi||!fi.files||!fi.files.length) return;
-  var names = [];
-  for(var i=0;i<fi.files.length;i++) names.push(fi.files[i].name);
-  var tipo = $('np-tipo-val').value;
-  var docType = tipo==='BV' ? 'planillaBV' : 'planillaMV';
+  var names=[]; for(var i=0;i<fi.files.length;i++) names.push(fi.files[i].name);
+  var tipo=$('np-tipo-val').value;
+  if(info) info.innerHTML='📄 '+names.join(', ')+'<br><span style="color:var(--az);font-weight:600">⏳ Leyendo planilla…</span>';
+  if(prev) prev.innerHTML="<div style='background:var(--az-lt);border:1px solid var(--az-bd);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--az)'>⏳ Extrayendo datos…</div>";
 
-  if(info) info.innerHTML = '📄 '+names.join(', ')+'<br><span style="color:var(--az);font-weight:600">⏳ Claude analizando planilla…</span>';
-  if(prev) prev.innerHTML = "<div style='background:var(--az-lt);border:1px solid var(--az-bd);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--az)'>⏳ Extrayendo datos con IA…</div>";
-
-  npExtractPdfVision(fi.files[0], docType,
-    function(ex){
-      npApplyPlanillaResult(ex, tipo, names, info, prev);
+  npExtractTextFromPdf(fi.files[0],
+    function(text){
+      var r=npExtractFromText(text);
+      if(r._docType==='UNKNOWN'||r._docType==='PROFORMA'){
+        if(info) info.innerHTML='📄 '+names.join(', ')+'<br><span style="color:var(--am)">⚠️ No se reconoció como planilla eléctrica.</span>';
+        if(prev) prev.innerHTML=''; return;
+      }
+      npApplyFactura(r, tipo, names, info, prev);
     },
     function(err){
-      if(info) info.innerHTML = '📄 '+names.join(', ')+'<br><span style="color:var(--rj)">❌ Error: '+err+'</span><br><span style="color:var(--t4);font-size:10px">Ingrese los datos manualmente.</span>';
-      if(prev) prev.innerHTML = '';
+      if(info) info.innerHTML='📄 '+names.join(', ')+'<br><span style="color:var(--rj)">❌ '+err+'</span>';
+      if(prev) prev.innerHTML='';
     }
   );
 }
 
-// ── Handler Informe FV (PVsyst) ─────────────────────────────────────────────
 function npHandleInforme(){
-  var fi   = $('np-informe-gen');
-  var info = $('np-informe-info');
+  var fi=$('np-informe-gen'), info=$('np-informe-info');
   if(!fi||!fi.files||!fi.files.length) return;
-  var fname = fi.files[0].name;
-  if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--az);font-weight:600">⏳ Claude analizando informe PVsyst…</span>';
+  var fname=fi.files[0].name;
+  if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--az);font-weight:600">⏳ Leyendo informe solar…</span>';
 
-  npExtractPdfVision(fi.files[0], 'informeFV',
-    function(ex){
-      if(!ex.gen_anual_kwh || ex.gen_anual_kwh <= 0){
-        if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--am)">⚠️ No se encontró la generación anual. Ingrese manualmente.</span>';
+  npExtractTextFromPdf(fi.files[0],
+    function(text){
+      var r=npExtractFromText(text);
+      if(r._docType!=='PVSYST'||!r.energia||r.energia<=0){
+        if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--am)">⚠️ No se encontró la generación anual. Ingrese manualmente.</span>';
         return;
       }
-      if(ex.kwp > 0 && !(parseFloat(($('np-kwp')||{}).value)>0)){ var nk=$('np-kwp'); if(nk) nk.value=ex.kwp; }
-      if(ex.pr_pct > 0 && ex.pr_pct <= 100){ var npr=$('np-pr'); if(npr) npr.value=ex.pr_pct; }
-      if(ex.irr_kwh_kwp_dia > 0 && ex.irr_kwh_kwp_dia < 10){ var nirr=$('np-irr'); if(nirr) nirr.value=ex.irr_kwh_kwp_dia.toFixed(2); }
-      if(ex.om_anual_usd > 0){ var nom=$('np-om'); if(nom && !(parseFloat(nom.value)>0)) nom.value=Math.round(ex.om_anual_usd); }
+      if(r.kwp>0&&!(parseFloat(($('np-kwp')||{}).value)>0)){var nk=$('np-kwp');if(nk)nk.value=r.kwp;}
+      if(r.deg>0){var nd=$('np-deg');if(nd&&!(parseFloat(nd.value)>0))nd.value=r.deg;}
+      if(r.om>0){var no=$('np-om');if(no&&!(parseFloat(no.value)>0))no.value=Math.round(r.om);}
       npCalcGen();
-      var genMes = Math.round(ex.gen_anual_kwh / 12);
-      var gm=$('np-gen-mes'); if(gm) gm.value = genMes;
-      var ga=$('np-gen-año'); if(ga) ga.value = Math.round(ex.gen_anual_kwh);
-      if(info) info.innerHTML = '✅ <strong>Generación extraída:</strong> '
-        +Math.round(ex.gen_anual_kwh).toLocaleString()+' kWh/año · '+genMes.toLocaleString()+' kWh/mes'
-        +(ex.pr_pct?' · PR='+ex.pr_pct+'%':'')
-        +(ex.irr_kwh_kwp_dia?' · Irr='+ex.irr_kwh_kwp_dia.toFixed(2)+' kWh/kWp/d':'')
-        +(ex.om_anual_usd?' · O&M: $'+Math.round(ex.om_anual_usd)+'/año':'')
+      var genMes=Math.round(r.energia/12);
+      var gm=$('np-gen-mes');if(gm)gm.value=genMes;
+      var ga=$('np-gen-año');if(ga)ga.value=Math.round(r.energia);
+      if(info) info.innerHTML='✅ <strong>Generación extraída:</strong> '
+        +Math.round(r.energia).toLocaleString()+' kWh/año · '+genMes.toLocaleString()+' kWh/mes'
+        +(r.om?' · O&M: $'+Math.round(r.om)+'/año':'')
         +'<br><span style="color:var(--t4);font-size:10px">Fuente: '+fname+'</span>';
     },
     function(err){
-      if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--rj)">❌ '+err+'</span><br><span style="color:var(--t4);font-size:10px">Ingrese la generación manualmente.</span>';
+      if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--rj)">❌ '+err+'</span>';
     }
   );
 }
 
-// ── Handler Cotización CAPEX ────────────────────────────────────────────────
 function npHandleCotizacion(){
-  var fi   = $('np-cotizacion');
-  var info = $('np-cotizacion-info');
+  var fi=$('np-cotizacion'), info=$('np-cotizacion-info');
   if(!fi||!fi.files||!fi.files.length) return;
-  var fname = fi.files[0].name;
-  if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--az);font-weight:600">⏳ Claude analizando cotización…</span>';
+  var fname=fi.files[0].name;
+  if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--az);font-weight:600">⏳ Leyendo cotización CAPEX…</span>';
 
-  npExtractPdfVision(fi.files[0], 'cotizacion',
-    function(ex){
-      if(!ex.capex_usd || ex.capex_usd <= 0){
-        if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--am)">⚠️ No se encontró el CAPEX total. Ingréselo manualmente.</span>';
+  npExtractTextFromPdf(fi.files[0],
+    function(text){
+      var r=npExtractFromText(text);
+      if(r._docType!=='PROFORMA'||!r.capex||r.capex<=0){
+        if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--am)">⚠️ No se encontró el CAPEX. Ingréselo manualmente.</span>';
         return;
       }
-      var nc=$('np-capex'); if(nc) nc.value=ex.capex_usd;
-      if(ex.om_anual_usd > 0){ var no=$('np-om'); if(no) no.value=ex.om_anual_usd; }
-      if(ex.kwp > 0 && !(parseFloat(($('np-kwp')||{}).value)>0)){ var nk=$('np-kwp'); if(nk) nk.value=ex.kwp; }
-      // Si la cotización trae generación anual y no hay informe FV cargado
-      if(ex.gen_anual_kwh > 0 && !(parseFloat(($('np-gen-mes')||{}).value)>0)){
-        var genMesCot = Math.round(ex.gen_anual_kwh / 12);
-        var gmcr=$('np-gen-mes'); if(gmcr){ gmcr.removeAttribute('readonly'); gmcr.value=genMesCot; gmcr.setAttribute('readonly',''); }
-        var gacr=$('np-gen-año'); if(gacr){ gacr.removeAttribute('readonly'); gacr.value=Math.round(ex.gen_anual_kwh); gacr.setAttribute('readonly',''); }
+      var nc=$('np-capex');if(nc)nc.value=r.capex;
+      if(r.om>0){var no=$('np-om');if(no)no.value=r.om;}
+      if(r.kwp>0&&!(parseFloat(($('np-kwp')||{}).value)>0)){var nk=$('np-kwp');if(nk)nk.value=r.kwp;}
+      if(r.energia>0&&!(parseFloat(($('np-gen-mes')||{}).value)>0)){
+        var gmcr=$('np-gen-mes');if(gmcr){gmcr.removeAttribute('readonly');gmcr.value=Math.round(r.energia/12);gmcr.setAttribute('readonly','');}
+        var gacr=$('np-gen-año');if(gacr){gacr.removeAttribute('readonly');gacr.value=Math.round(r.energia);gacr.setAttribute('readonly','');}
       }
       npCalcCapexkwp(); npCalcGen();
-      if(info) info.innerHTML = '✅ <strong>CAPEX extraído:</strong> $'+Math.round(ex.capex_usd).toLocaleString()
-        +(ex.kwp?' · '+ex.kwp+' kWp':'')
-        +(ex.om_anual_usd?' · O&M: $'+Math.round(ex.om_anual_usd)+'/año':'')
-        +(ex.gen_anual_kwh?' · Gen: '+Math.round(ex.gen_anual_kwh/1000)+' MWh/año':'')
-        +'<br><span style="color:var(--t4);font-size:10px">Verifique antes de continuar. Fuente: '+fname+'</span>';
+      if(info) info.innerHTML='✅ <strong>CAPEX extraído:</strong> $'+Math.round(r.capex).toLocaleString()
+        +(r.kwp?' · '+r.kwp+' kWp':'')
+        +(r.om?' · O&M: $'+Math.round(r.om)+'/año':'')
+        +(r.energia?' · Gen: '+Math.round(r.energia/1000)+' MWh/año':'')
+        +'<br><span style="color:var(--t4);font-size:10px">Verifique. Fuente: '+fname+'</span>';
     },
     function(err){
-      if(info) info.innerHTML = '📄 '+fname+'<br><span style="color:var(--rj)">❌ '+err+'</span><br><span style="color:var(--t4);font-size:10px">Ingrese el CAPEX manualmente.</span>';
+      if(info) info.innerHTML='📄 '+fname+'<br><span style="color:var(--rj)">❌ '+err+'</span>';
     }
   );
+}
+
+// ── Aplicar resultado de factura a campos del formulario ────────
+function npApplyFactura(r, tipo, names, info, prev){
+  var applied=[];
+  if(tipo==='BV'){
+    var totKwh=r.franjas.reduce(function(a,f){return a+f.kwh;},0);
+    if(totKwh>0){var cb=$('np-cons-bv');if(cb){cb.value=Math.round(totKwh);applied.push('Consumo: '+Math.round(totKwh)+' kWh');}}
+    if(r.facturaMes>0){var fb=$('np-fac-bv');if(fb){fb.value=r.facturaMes;applied.push('Factura: $'+r.facturaMes);}}
+  } else {
+    // MV: mapear franjas A/B/C/D
+    var fMap={'A':'np-kwh-media','B':'np-kwh-punta','C':'np-kwh-base','D':'np-kwh-fds'};
+    r.franjas.forEach(function(f,i){
+      var letra=String.fromCharCode(65+i);
+      var elId=fMap[letra];
+      if(elId){var el=$(elId);if(el&&f.kwh>0){el.value=Math.round(f.kwh);applied.push(f.nom.replace('Franja ','')+': '+Math.round(f.kwh)+' kWh');}}
+    });
+    // Demanda facturable: buscar en texto si no está en franjas
+    if(r.facturaMes>0){var fm=$('np-fac-mv');if(fm){fm.value=r.facturaMes;applied.push('Factura: $'+r.facturaMes);}}
+    if(r.distCompany){var nd=$('np-sapg');} // el SAPG necesita texto del parser
+    npUpdateMvTarifa();
+  }
+  if(r.distCompany){
+    var nd=$('np-dist');
+    if(nd){
+      var dv=r.distCompany.toUpperCase();
+      var opts=nd.options;
+      for(var oi=0;oi<opts.length;oi++){if(dv.indexOf(opts[oi].value.split(' ')[0].toUpperCase())!==-1){nd.selectedIndex=oi;break;}}
+    }
+  }
+  var msg=applied.length>0
+    ?"<span style='color:var(--vd);font-weight:600'>✅ Extraído: "+applied.join(' · ')+"</span>"
+    :"<span style='color:var(--am)'>⚠️ Procesado pero sin datos numéricos claros. Ingrese manualmente.</span>";
+  if(info) info.innerHTML='📄 '+names.join(', ')+'<br>'+msg+'<br><span style="color:var(--t4);font-size:10px">Verificá con la planilla original.</span>';
+  if(prev) prev.innerHTML=applied.length>0?"<div style='background:var(--vd-lt);border:1px solid var(--vd-bd);border-radius:8px;padding:8px 11px;font-size:11px;color:var(--vd)'>✅ Campos completados.</div>":'';
 }
 
 
