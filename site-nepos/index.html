@@ -257,7 +257,8 @@ html,body{
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFyCPN95NclQYFQoaPwmM2J8yncY8VuEUreY8soplJzJNFayNcQ9t3vCCC8tzoNDwf6g/exec';
 const WA_NUMBER       = '593983358832';
 const RECAPTCHA_KEY   = '6LdX4w4tAAAAAEYtFnDAG-D8FijKMffkTbahsIRv'; // ← reemplazá con tu site key de https://www.google.com/recaptcha
-
+const API_TOKEN = 'nepos2026xK9';
+  
 // ══════════════════════════════════════════
 // SEGMENTOS
 // ══════════════════════════════════════════
@@ -427,8 +428,9 @@ async function getRecaptchaToken(){
 // ══════════════════════════════════════════
 async function saveToSheet(){
   const token = await getRecaptchaToken();
-  const url = APPS_SCRIPT_URL
+  const url = 'https://script.google.com/macros/s/AKfycbw3aN5JdwtEmYx11qxMt3-Iw6OBWC-fB39VqB8knx-RKGPgPJ2drcxWrUjIg5Ga3RxT9g/exec'
     + '?action=crearLeadExterno'
+    + '&token='        + encodeURIComponent('nepos2026xK9')
     + '&nombre='       + encodeURIComponent(S.nombre)
     + '&telefono='     + encodeURIComponent(S.telefono)
     + '&email='        + encodeURIComponent(S.email)
