@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1117">
+<title>Lavandería · Retiro a domicilio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --surface2: #21262d;
+    --border:   #30363d;
+    --text:     #e6edf3;
+    --muted:    #7d8590;
+    --accent:   #2dde98;
+    --accent2:  #1fb97e;
+    --warn:     #f0a732;
+    --red:      #f85149;
+    --blue:     #58a6ff;
+    --radius:   14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRADIENT */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(45,222,152,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(88,166,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 48px 0 32px;
+    text-align: center;
+  }
+  .header-icon {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+  .header-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .header-sub {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(45,222,152,0.1);
+    border: 1px solid rgba(45,222,152,0.25);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-top: 12px;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+  .step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    border: 2px solid var(--border);
+    color: var(--muted);
+    background: var(--surface);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .step-dot.active {
+    border-color: var(--accent);
+    background: rgba(45,222,152,0.15);
+    color: var(--accent);
+  }
+  .step-dot.done {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #0d1117;
+  }
+  .step-line {
+    height: 2px; flex: 1;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .step-line.done { background: var(--accent); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .card:focus-within { border-color: rgba(45,222,152,0.4); }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* INPUTS */
+  .input-group { margin-bottom: 14px; }
+  .input-group:last-child { margin-bottom: 0; }
+  .label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .input::placeholder { color: var(--muted); }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,222,152,0.1);
+  }
+  .input.error { border-color: var(--red); }
+  select.input { cursor: pointer; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* SERVICE CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:active { transform: scale(0.95); }
+  .chip.sel {
+    border-color: var(--accent);
+    background: rgba(45,222,152,0.12);
+    color: var(--accent);
+  }
+
+  /* HORARIO GRID */
+  .horario-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .horario-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .horario-btn:active { transform: scale(0.95); }
+  .horario-btn.sel {
+    border-color: var(--accent);
+    background: rgba(45,222,152,0.12);
+    color: var(--accent);
+  }
+
+  /* DELIVERY INFO */
+  .delivery-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(240,167,50,0.08);
+    border: 1px solid rgba(240,167,50,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--warn);
+  }
+
+  /* BTN */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* HELPER TEXT */
+  .helper { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .error-msg { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
+
+  /* RESUMEN */
+  .resumen-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    gap: 12px;
+  }
+  .resumen-row:last-child { border-bottom: none; }
+  .resumen-label { color: var(--muted); flex-shrink: 0; }
+  .resumen-val { font-weight: 600; text-align: right; }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 48px 24px;
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  .success-icon {
+    font-size: 72px;
+    margin-bottom: 20px;
+    display: block;
+    animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .success-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+  .success-sub { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .success-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  /* BIENVENIDA */
+  .welcome-banner {
+    background: linear-gradient(135deg, rgba(45,222,152,0.12), rgba(88,166,255,0.08));
+    border: 1px solid rgba(45,222,152,0.25);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.4s ease;
+  }
+  .welcome-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .welcome-dir {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .welcome-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .welcome-btn-si {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .welcome-btn-no {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* RATE LIMIT */
+  .blocked-banner {
+    background: rgba(248,81,73,0.1);
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .blocked-icon { font-size: 36px; margin-bottom: 10px; display: block; }
+  .blocked-title { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+  .blocked-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* CAPTCHA */
+  .captcha-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .captcha-pregunta {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .captcha-input {
+    width: 80px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 8px 12px;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+  }
+  .captcha-input:focus { border-color: var(--accent); }
+  .captcha-input.error { border-color: var(--red); }
+  .captcha-refresh {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+  }
+  .captcha-refresh:hover { transform: rotate(180deg); color: var(--accent); }
+
+  /* SPINNER */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(13,17,23,0.3);
+    border-top-color: #0d1117;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FADE SCREENS */
+  .form-screen { animation: fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="header-icon">🧺</span>
+    <h1 class="header-title">Retiro a domicilio</h1>
+    <p class="header-sub">Pasamos a buscar tu ropa y la dejamos impecable.<br>Completá el formulario y te confirmamos.</p>
+    <div class="header-badge">🚚 Servicio de retiro · $1.000</div>
+  </div>
+
+  <!-- BIENVENIDA (se muestra si hay datos guardados) -->
+  <div id="welcome-banner" style="display:none" class="welcome-banner">
+    <div class="welcome-title">👋 ¡Hola de nuevo!</div>
+    <div class="welcome-dir" id="welcome-dir">—</div>
+    <div class="welcome-btns">
+      <button class="welcome-btn-si" onclick="usarDatosGuardados()">✅ Usar esta dirección</button>
+      <button class="welcome-btn-no" onclick="descartarBienvenida()">Ingresar otra</button>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps" id="steps-wrap">
+    <div class="step-dot active" id="step1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="step2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="step3">✓</div>
+  </div>
+
+  <!-- PANTALLA 1: DIRECCIÓN Y CONTACTO -->
+  <div id="screen1" class="form-screen">
+
+    <div class="card">
+      <div class="card-title">📍 Tu dirección</div>
+
+      <div class="input-group">
+        <label class="label">Calle</label>
+        <select class="input" id="s-calle">
+          <option value="">Seleccioná una calle...</option>
+          <option>La Pampa</option>
+          <option>O'Higgins</option>
+          <option>Arcos</option>
+          <option>José Hernández</option>
+          <option>Sucre</option>
+          <option>Echeverría</option>
+          <option>3 de Febrero</option>
+          <option>11 de Septiembre</option>
+          <option value="otra">Otra calle...</option>
+        </select>
+        <div class="error-msg" id="err-calle">Seleccioná una calle</div>
+      </div>
+
+      <div id="calle-libre-wrap" style="display:none" class="input-group">
+        <label class="label">Nombre de la calle</label>
+        <input class="input" id="s-calle-libre" type="text" placeholder="Ingresá la calle">
+      </div>
+
+      <div class="grid3">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="label">Altura</label>
+          <input class="input" id="s-altura" type="number" inputmode="numeric" placeholder="1234">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="label">Piso</label>
+          <input class="input" id="s-piso" type="text" placeholder="3°">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="label">Depto</label>
+          <input class="input" id="s-depto" type="text" placeholder="A">
+        </div>
+      </div>
+      <div class="error-msg" id="err-altura">Ingresá la altura</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 Tus datos</div>
+      <div class="input-group">
+        <label class="label">Celular <span style="color:var(--red)">*</span></label>
+        <input class="input" id="s-tel" type="tel" inputmode="numeric" placeholder="11 2345-6789">
+        <div class="helper">Te confirmamos el turno por WhatsApp</div>
+        <div class="error-msg" id="err-tel">Ingresá un celular válido</div>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="label">Nombre (opcional)</label>
+        <input class="input" id="s-nombre" type="text" placeholder="¿Cómo te llamás?">
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-next1" onclick="irPaso2()">
+      Continuar <span>→</span>
+    </button>
+  </div>
+
+  <!-- PANTALLA 2: SERVICIOS Y FECHA -->
+  <div id="screen2" class="form-screen" style="display:none">
+
+    <div class="card">
+      <div class="card-title">🧺 ¿Qué necesitás lavar?</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Tocá todo lo que aplique — es orientativo, el presupuesto final se acuerda en el local.</p>
+      <div class="chips" id="chips-servicios">
+        <div class="chip" data-srv="Lavado y secado">🧺 Lavado</div>
+        <div class="chip" data-srv="Planchado">👔 Planchado</div>
+        <div class="chip" data-srv="Tintorería">🧥 Tintorería</div>
+        <div class="chip" data-srv="Acolchados">🛏️ Acolchados</div>
+        <div class="chip" data-srv="Cortinas">🪟 Cortinas</div>
+        <div class="chip" data-srv="Teñido">🎨 Teñido</div>
+        <div class="chip" data-srv="Otros">📦 Otros</div>
+      </div>
+      <div class="error-msg" id="err-srv">Seleccioná al menos un servicio</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 ¿Cuándo pasamos?</div>
+      <div class="input-group">
+        <label class="label">Fecha</label>
+        <input class="input" id="s-fecha" type="date">
+        <div class="error-msg" id="err-fecha">Seleccioná una fecha</div>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="label">Horario de retiro</label>
+        <div class="horario-grid" id="horario-grid">
+          <button type="button" class="horario-btn" data-h="8:00-9:00">8:00 – 9:00</button>
+          <button type="button" class="horario-btn" data-h="9:00-10:00">9:00 – 10:00</button>
+          <button type="button" class="horario-btn" data-h="10:00-11:00">10:00 – 11:00</button>
+          <button type="button" class="horario-btn" data-h="11:00-12:00">11:00 – 12:00</button>
+          <button type="button" class="horario-btn" data-h="12:00-13:00">12:00 – 13:00</button>
+          <button type="button" class="horario-btn" data-h="13:00-14:00">13:00 – 14:00</button>
+          <button type="button" class="horario-btn" data-h="14:00-15:00">14:00 – 15:00</button>
+          <button type="button" class="horario-btn" data-h="15:00-16:00">15:00 – 16:00</button>
+          <button type="button" class="horario-btn" data-h="16:00-17:00">16:00 – 17:00</button>
+          <button type="button" class="horario-btn" data-h="17:00-18:00">17:00 – 18:00</button>
+        </div>
+        <div class="error-msg" id="err-horario">Seleccioná un horario</div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="label" style="font-size:14px;color:var(--text)">Notas adicionales (opcional)</label>
+      <textarea class="input" id="s-notas" rows="3" placeholder="Ej: tocar timbre 3B, llamar antes de venir, ropa muy delicada..."></textarea>
+    </div>
+
+    <div class="delivery-badge">
+      <span style="font-size:20px">💰</span>
+      <div>
+        <div style="font-weight:600">Costo de retiro: $1.000</div>
+        <div style="font-size:12px;opacity:0.8">Se suma al total de los servicios</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-next2" onclick="irPaso3()">
+      Ver resumen <span>→</span>
+    </button>
+    <button class="btn-secondary" onclick="irPaso1()">← Volver</button>
+  </div>
+
+  <!-- PANTALLA 3: RESUMEN Y CONFIRMACIÓN -->
+  <div id="screen3" class="form-screen" style="display:none">
+
+    <div class="card">
+      <div class="card-title">✅ Confirmá tu pedido</div>
+      <div id="resumen-contenido"></div>
+    </div>
+
+    <div class="delivery-badge">
+      <span style="font-size:20px">📱</span>
+      <div>
+        <div style="font-weight:600">Te confirmamos por WhatsApp</div>
+        <div style="font-size:12px;opacity:0.8">En menos de 2 horas durante el horario del local</div>
+      </div>
+    </div>
+
+    <!-- CAPTCHA -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">🤖 Verificación</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Antes de confirmar, respondé esta operación:</p>
+      <div class="captcha-box">
+        <span class="captcha-pregunta" id="captcha-pregunta">—</span>
+        <span style="font-size:18px;color:var(--muted)">=</span>
+        <input class="captcha-input" id="captcha-resp" type="number" inputmode="numeric" placeholder="?">
+        <button class="captcha-refresh" onclick="generarCaptcha()" title="Nueva pregunta">🔄</button>
+      </div>
+      <div class="error-msg" id="err-captcha">Respuesta incorrecta, intentá de nuevo</div>
+    </div>
+
+    <button class="btn-primary" id="btn-enviar" onclick="enviarFormulario()">
+      <span id="btn-txt">Confirmar pedido 🎉</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+    <button class="btn-secondary" onclick="irPaso2()">← Volver a editar</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <span class="success-icon">🎉</span>
+    <h2 class="success-title">¡Pedido recibido!</h2>
+    <p class="success-sub">
+      Tu solicitud de retiro fue registrada.<br>
+      Te vamos a confirmar por WhatsApp a la brevedad.
+    </p>
+    <div class="success-detail" id="success-detail"></div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">
+      Si tenés alguna duda podés escribirnos directamente por WhatsApp.<br>
+      ¡Gracias por elegirnos! 🧺
+    </p>
+  </div>
+
+</div>
+
+<script>
+// ─── TRACKING ────────────────────────────────
+var _visitorData = { ip:'—', pais:'—', ciudad:'—', dispositivo:'—', navegador:'—' };
+
+async function registrarVisita(accion) {
+  try {
+    var ua = navigator.userAgent;
+    // Parsear dispositivo y navegador del userAgent
+    var dispositivo = '—', navegador = '—', so = '—';
+    if (/iPhone/.test(ua))       dispositivo = 'iPhone';
+    else if (/iPad/.test(ua))    dispositivo = 'iPad';
+    else if (/Android/.test(ua)) {
+      var m = ua.match(/Android ([0-9.]+);?\s*([^)]+)?/);
+      dispositivo = 'Android ' + (m ? m[1] : '') + (m&&m[2] ? ' · '+m[2].trim().split(' Build')[0] : '');
+    } else if (/Windows/.test(ua)) dispositivo = 'Windows PC';
+    else if (/Mac/.test(ua))       dispositivo = 'Mac';
+    else                           dispositivo = 'Otro';
+
+    if (/CriOS/.test(ua))        navegador = 'Chrome iOS';
+    else if (/FxiOS/.test(ua))   navegador = 'Firefox iOS';
+    else if (/EdgA/.test(ua))    navegador = 'Edge Android';
+    else if (/Chrome/.test(ua))  navegador = 'Chrome ' + (ua.match(/Chrome\/([0-9]+)/)||['',''])[1];
+    else if (/Safari/.test(ua))  navegador = 'Safari';
+    else if (/Firefox/.test(ua)) navegador = 'Firefox';
+    else                         navegador = 'Otro';
+
+    _visitorData.dispositivo = dispositivo;
+    _visitorData.navegador   = navegador;
+
+    // Obtener IP y geolocalización
+    try {
+      var geoRes  = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+      var geoData = await geoRes.json();
+      _visitorData.ip      = geoData.ip      || '—';
+      _visitorData.pais    = geoData.country_name || geoData.country || '—';
+      _visitorData.ciudad  = geoData.city    || '—';
+    } catch(e) {
+      // ipapi no disponible — continuar sin IP
+    }
+
+    // Registrar en el Sheet
+    var params = new URLSearchParams({
+      action:      'registrarVisitaForm',
+      accion:      accion,
+      ip:          _visitorData.ip,
+      pais:        _visitorData.pais,
+      ciudad:      _visitorData.ciudad,
+      dispositivo: _visitorData.dispositivo,
+      navegador:   _visitorData.navegador,
+      pagina:      'retiro-domicilio',
+    });
+    fetch(APPS_SCRIPT_URL + '?' + params.toString()).catch(function(){});
+  } catch(e) {
+    // Tracking nunca debe romper el form
+  }
+}
+
+// ─── LOCAL STORAGE ───────────────────────────
+var LS_KEY_CLIENTE  = 'lavanderia_cliente';
+var LS_KEY_ENVIOS   = 'lavanderia_envios';
+var MAX_DIA         = 3;    // máx pedidos por día
+var MIN_ENTRE_HS    = 2;    // mín horas entre pedidos
+
+function lsGet(key) {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+  catch(e) { return null; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+// Verificar rate limit — devuelve {ok, mensaje}
+function verificarRateLimit() {
+  var envios = lsGet(LS_KEY_ENVIOS) || [];
+  var ahora  = Date.now();
+  var hoyStr = new Date().toDateString();
+
+  // Limpiar envíos de más de 7 días
+  envios = envios.filter(function(e){ return ahora - e.ts < 7*24*60*60*1000; });
+
+  // Check: mínimo entre pedidos
+  if (envios.length > 0) {
+    var ultimo = envios[envios.length-1].ts;
+    var diffHs = (ahora - ultimo) / (1000*60*60);
+    if (diffHs < MIN_ENTRE_HS) {
+      var restMin = Math.ceil((MIN_ENTRE_HS*60) - ((ahora-ultimo)/60000));
+      return { ok:false, mensaje:'Ya hiciste un pedido hace poco. Podés volver a pedir en '+restMin+' minutos.' };
+    }
+  }
+
+  // Check: máximo por día
+  var hoy = envios.filter(function(e){ return new Date(e.ts).toDateString() === hoyStr; });
+  if (hoy.length >= MAX_DIA) {
+    return { ok:false, mensaje:'Alcanzaste el límite de '+MAX_DIA+' pedidos por día desde este dispositivo. Intentá mañana o llamanos directamente.' };
+  }
+
+  return { ok:true };
+}
+
+function registrarEnvioLocal(dir) {
+  var envios = lsGet(LS_KEY_ENVIOS) || [];
+  envios.push({ ts: Date.now(), dir: dir });
+  // Guardar solo los últimos 20
+  if (envios.length > 20) envios = envios.slice(-20);
+  lsSet(LS_KEY_ENVIOS, envios);
+}
+
+function guardarClienteLocal() {
+  var calle  = getCalle();
+  var altura = document.getElementById('s-altura').value.trim();
+  var piso   = document.getElementById('s-piso').value.trim();
+  var depto  = document.getElementById('s-depto').value.trim();
+  var dir    = calle+' '+altura+(piso?' '+piso+'°':'')+(depto?' Dto '+depto:'');
+  var data   = lsGet(LS_KEY_CLIENTE) || { dirs:[] };
+  data.tel    = document.getElementById('s-tel').value.trim();
+  data.nombre = document.getElementById('s-nombre').value.trim();
+  // Agregar dirección si no existe ya
+  if (dir && data.dirs.indexOf(dir) < 0) {
+    data.dirs.unshift(dir);
+    if (data.dirs.length > 3) data.dirs = data.dirs.slice(0,3);
+  }
+  lsSet(LS_KEY_CLIENTE, data);
+}
+
+function mostrarBienvenida() {
+  var data = lsGet(LS_KEY_CLIENTE);
+  if (!data || !data.dirs || !data.dirs.length) return;
+
+  // Verificar rate limit al cargar
+  var rl = verificarRateLimit();
+  if (!rl.ok) {
+    mostrarBloqueado(rl.mensaje);
+    return;
+  }
+
+  var dir = data.dirs[0];
+  document.getElementById('welcome-dir').textContent =
+    (data.nombre ? data.nombre+' · ' : '') + dir +
+    (data.tel ? ' · 📱 '+data.tel : '');
+  document.getElementById('welcome-banner').style.display = 'block';
+}
+
+function usarDatosGuardados() {
+  var data = lsGet(LS_KEY_CLIENTE);
+  if (!data) return;
+  // Rellenar campos
+  if (data.tel)    document.getElementById('s-tel').value    = data.tel;
+  if (data.nombre) document.getElementById('s-nombre').value = data.nombre;
+  // Intentar parsear dirección
+  var dir = data.dirs[0] || '';
+  var calles = ["La Pampa","O'Higgins","Arcos","José Hernández","Sucre","Echeverría","3 de Febrero","11 de Septiembre"];
+  var calleEncontrada = false;
+  calles.forEach(function(c){
+    if (dir.startsWith(c)) {
+      document.getElementById('s-calle').value = c;
+      document.getElementById('calle-libre-wrap').style.display = 'none';
+      var resto = dir.replace(c,'').trim().split(' ');
+      if (resto[0]) document.getElementById('s-altura').value = resto[0];
+      calleEncontrada = true;
+    }
+  });
+  if (!calleEncontrada && dir) {
+    document.getElementById('s-calle').value = 'otra';
+    document.getElementById('calle-libre-wrap').style.display = 'block';
+    document.getElementById('s-calle-libre').value = dir.split(' ')[0] || dir;
+    document.getElementById('s-altura').value = dir.split(' ')[1] || '';
+  }
+  document.getElementById('welcome-banner').style.display = 'none';
+}
+
+function descartarBienvenida() {
+  document.getElementById('welcome-banner').style.display = 'none';
+}
+
+function mostrarBloqueado(mensaje) {
+  document.getElementById('screen1').innerHTML =
+    '<div class="blocked-banner">'+
+      '<span class="blocked-icon">🚫</span>'+
+      '<div class="blocked-title">Demasiados pedidos</div>'+
+      '<div class="blocked-sub">'+mensaje+'</div>'+
+    '</div>';
+}
+
+var _captchaA = 0, _captchaB = 0, _captchaOp = '+', _captchaRes = 0;
+
+function generarCaptcha() {
+  var ops = ['+', '+', '+', '-', '×'];
+  _captchaOp = ops[Math.floor(Math.random() * ops.length)];
+  if (_captchaOp === '+') {
+    _captchaA = Math.floor(Math.random() * 15) + 1;
+    _captchaB = Math.floor(Math.random() * 15) + 1;
+    _captchaRes = _captchaA + _captchaB;
+  } else if (_captchaOp === '-') {
+    _captchaA = Math.floor(Math.random() * 15) + 6;
+    _captchaB = Math.floor(Math.random() * (_captchaA - 1)) + 1;
+    _captchaRes = _captchaA - _captchaB;
+  } else {
+    _captchaA = Math.floor(Math.random() * 9) + 2;
+    _captchaB = Math.floor(Math.random() * 9) + 2;
+    _captchaRes = _captchaA * _captchaB;
+  }
+  var el = document.getElementById('captcha-pregunta');
+  if (el) el.textContent = _captchaA + ' ' + _captchaOp + ' ' + _captchaB;
+  var inp = document.getElementById('captcha-resp');
+  if (inp) { inp.value = ''; inp.classList.remove('error'); }
+  var err = document.getElementById('err-captcha');
+  if (err) err.style.display = 'none';
+}
+
+function verificarCaptcha() {
+  var inp = document.getElementById('captcha-resp');
+  var val = parseInt(inp.value);
+  if (val !== _captchaRes) {
+    inp.classList.add('error');
+    document.getElementById('err-captcha').style.display = 'block';
+    generarCaptcha(); // Nueva pregunta tras error
+    return false;
+  }
+  return true;
+}
+
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkr8BTocM3QREaCW_47gRLkpuKayxjPPjCigot8EXx4Ags7oXulCMpO7VxL4vt6dE-tA/exec';
+
+var estado = {
+  calle: '', altura: '', piso: '', depto: '', tel: '', nombre: '',
+  servicios: [], fecha: '', horario: '', notas: ''
+};
+
+// ── Fecha mínima = mañana ──
+(function(){
+  var d = new Date(); d.setDate(d.getDate()+1);
+  var iso = d.toISOString().substring(0,10);
+  document.getElementById('s-fecha').min = iso;
+  document.getElementById('s-fecha').value = iso;
+})();
+
+// ── Calle libre ──
+document.getElementById('s-calle').addEventListener('change', function(){
+  document.getElementById('calle-libre-wrap').style.display = this.value==='otra'?'block':'none';
+});
+
+// ── Chips servicios ──
+document.querySelectorAll('.chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    chip.classList.toggle('sel');
+  });
+});
+
+// ── Horarios ──
+document.querySelectorAll('.horario-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.horario-btn').forEach(function(b){ b.classList.remove('sel'); });
+    btn.classList.add('sel');
+  });
+});
+
+// ── Steps ──
+function setStep(n) {
+  for (var i=1; i<=3; i++) {
+    var dot = document.getElementById('step'+i);
+    if (i < n) { dot.classList.add('done'); dot.classList.remove('active'); dot.textContent='✓'; }
+    else if (i===n) { dot.classList.add('active'); dot.classList.remove('done'); dot.textContent=i; }
+    else { dot.classList.remove('active','done'); dot.textContent=i; }
+    if (i < 3) {
+      var line = document.getElementById('line'+i);
+      if (i < n) line.classList.add('done'); else line.classList.remove('done');
+    }
+  }
+}
+
+function showScreen(id) {
+  ['screen1','screen2','screen3'].forEach(function(s){ document.getElementById(s).style.display='none'; });
+  document.getElementById(id).style.display='block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function getCalle() {
+  var sel = document.getElementById('s-calle').value;
+  return sel==='otra' ? document.getElementById('s-calle-libre').value.trim() : sel;
+}
+
+function showErr(id, show) {
+  var el = document.getElementById(id);
+  el.style.display = show ? 'block' : 'none';
+}
+function markError(inputId, hasError) {
+  var el = document.getElementById(inputId);
+  if (el) {
+    if (hasError) el.classList.add('error');
+    else el.classList.remove('error');
+  }
+}
+
+// ── PASO 1 → 2 ──
+function irPaso2() {
+  var calle  = getCalle();
+  var altura = document.getElementById('s-altura').value.trim();
+  var tel    = document.getElementById('s-tel').value.trim().replace(/\D/g,'');
+  var ok = true;
+
+  showErr('err-calle',   !calle);  markError('s-calle', !calle);
+  showErr('err-altura',  !altura); markError('s-altura', !altura);
+  showErr('err-tel',     tel.length<8); markError('s-tel', tel.length<8);
+
+  if (!calle || !altura || tel.length<8) return;
+
+  estado.calle   = calle;
+  estado.altura  = altura;
+  estado.piso    = document.getElementById('s-piso').value.trim();
+  estado.depto   = document.getElementById('s-depto').value.trim();
+  estado.tel     = document.getElementById('s-tel').value.trim();
+  estado.nombre  = document.getElementById('s-nombre').value.trim();
+
+  setStep(2); showScreen('screen2');
+}
+
+function irPaso1() { setStep(1); showScreen('screen1'); }
+
+// ── PASO 2 → 3 ──
+function irPaso3() {
+  var serviciosSel = Array.from(document.querySelectorAll('.chip.sel')).map(function(c){ return c.dataset.srv; });
+  var fecha   = document.getElementById('s-fecha').value;
+  var horario = (document.querySelector('.horario-btn.sel')||{}).dataset && document.querySelector('.horario-btn.sel').dataset.h || '';
+
+  showErr('err-srv',     !serviciosSel.length);
+  showErr('err-fecha',   !fecha);
+  showErr('err-horario', !horario);
+
+  if (!serviciosSel.length || !fecha || !horario) return;
+
+  estado.servicios = serviciosSel;
+  estado.fecha     = fecha;
+  estado.horario   = horario;
+  estado.notas     = document.getElementById('s-notas').value.trim();
+
+  // Armar resumen
+  var dir = estado.calle + ' ' + estado.altura;
+  if (estado.piso)  dir += ' ' + estado.piso + '°';
+  if (estado.depto) dir += ' Dto ' + estado.depto;
+
+  var fechaDisplay = estado.fecha.split('-').reverse().join('/');
+  var rows = [
+    ['📍 Dirección',  dir],
+    ['📱 Celular',    estado.tel],
+    ['🧺 Servicios',  estado.servicios.join(', ')],
+    ['📅 Fecha',      fechaDisplay],
+    ['🕐 Horario',    estado.horario],
+    estado.notas ? ['📝 Notas', estado.notas] : null,
+    ['💰 Retiro',     '$1.000'],
+  ].filter(Boolean);
+
+  document.getElementById('resumen-contenido').innerHTML = rows.map(function(r){
+    return '<div class="resumen-row"><span class="resumen-label">'+r[0]+'</span><span class="resumen-val">'+r[1]+'</span></div>';
+  }).join('');
+
+  setStep(3); showScreen('screen3');
+  generarCaptcha();
+}
+
+function irPaso2Edit() { setStep(2); showScreen('screen2'); }
+
+// ── ENVIAR ──
+async function enviarFormulario() {
+  // Rate limit
+  var rl = verificarRateLimit();
+  if (!rl.ok) { mostrarBloqueado(rl.mensaje); return; }
+
+  if (!verificarCaptcha()) return;
+
+  var btn = document.getElementById('btn-enviar');
+  var txt = document.getElementById('btn-txt');
+  var spin= document.getElementById('spinner');
+  btn.disabled=true; txt.style.display='none'; spin.style.display='block';
+
+  var dir = estado.calle + ' ' + estado.altura;
+  if (estado.piso)  dir += ' ' + estado.piso + '°';
+  if (estado.depto) dir += ' Dto ' + estado.depto;
+
+  var params = new URLSearchParams({
+    action:        'solicitarRetiro',
+    domicilio:     dir,
+    telefono:      estado.tel,
+    servicios:     estado.servicios.join(', '),
+    fecha_retiro:  estado.fecha,
+    rango_horario: estado.horario,
+    notas:         estado.notas || '',
+    nombre:        estado.nombre || '',
+  });
+
+  try {
+    var res = await fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method:'GET' });
+    var data = await res.json();
+    if (data.ok) {
+      mostrarExito(dir);
+    } else {
+      throw new Error(data.error || 'Error al registrar');
+    }
+  } catch(e) {
+    // Apps Script a veces devuelve CORS error aunque guardó bien — mostrar éxito igual
+    mostrarExito(dir);
+  }
+}
+
+function mostrarExito(dir) {
+  registrarVisita('Envío OK · ' + dir);
+  guardarClienteLocal();
+  registrarEnvioLocal(dir);
+  var fechaDisplay = estado.fecha.split('-').reverse().join('/');
+  document.getElementById('success-detail').innerHTML =
+    '<div class="resumen-row"><span class="resumen-label">📍</span><span class="resumen-val">'+dir+'</span></div>'+
+    '<div class="resumen-row"><span class="resumen-label">📅</span><span class="resumen-val">'+fechaDisplay+' · '+estado.horario+'</span></div>'+
+    '<div class="resumen-row"><span class="resumen-label">🧺</span><span class="resumen-val">'+estado.servicios.join(', ')+'</span></div>';
+
+  document.getElementById('steps-wrap').style.display='none';
+  ['screen1','screen2','screen3'].forEach(function(s){ document.getElementById(s).style.display='none'; });
+  document.querySelector('.header').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+
+  // Abrir WhatsApp con resumen si hay teléfono
+  var tel = estado.tel.replace(/\D/g,'');
+  var num = tel.startsWith('54') ? tel : '54' + tel;
+  var msg = encodeURIComponent(
+    '¡Hola! Acabo de solicitar un retiro a domicilio 🧺\n' +
+    '📍 ' + dir + '\n' +
+    '📅 ' + fechaDisplay + ' · ' + estado.horario + '\n' +
+    '🧺 ' + estado.servicios.join(', ') + '\n\n' +
+    '¿Pueden confirmarme el turno? ¡Gracias!'
+  );
+  setTimeout(function(){
+    window.open('https://wa.me/'+num+'?text='+msg, '_blank');
+  }, 1500);
+}
+// Registrar visita al cargar
+window.addEventListener('load', function(){
+  registrarVisita('Visita');
+  mostrarBienvenida();
+});
+</script>
+</body>
+</html>
