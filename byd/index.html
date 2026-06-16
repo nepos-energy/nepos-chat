@@ -706,14 +706,16 @@ function showTextInput(label, placeholder, onSubmit, type = 'text') {
 //  Se sobreescriben si el Config del Sheet tiene claves byd_seg_*
 // ═══════════════════════════════════════════════════════════
 const SEGMENTOS_DEFAULT = [
-  { id:'F1', combo:'Sol Esencial',    label:'Hasta $50 / mes',     rango:'$0 – $50',      min:0,   max:50,  consumo:45,  kwp:5,    potencia:4.53,  costo:3328,  m2:19  },
-  { id:'F2', combo:'Sol Familiar',    label:'$50 – $100 / mes',    rango:'$50 – $100',    min:50,  max:100, consumo:75,  kwp:8,    potencia:7.55,  costo:5547,  m2:32  },
-  { id:'F3', combo:'Sol Confort',     label:'$100 – $150 / mes',   rango:'$100 – $150',   min:100, max:150, consumo:140, kwp:15,   potencia:14.09, costo:10355, m2:60  },
-  { id:'F4', combo:'Sol Premium',     label:'$150 – $200 / mes',   rango:'$150 – $200',   min:150, max:200, consumo:150, kwp:16,   potencia:15.10, costo:11094, m2:65  },
-  { id:'N1', combo:'Sol Negocio',     label:'$200 – $300 / mes',   rango:'$200 – $300',   min:200, max:300, consumo:250, kwp:26,   potencia:25.16, costo:18490, m2:108 },
-  { id:'N2', combo:'Sol Empresa',     label:'$300 – $400 / mes',   rango:'$300 – $400',   min:300, max:400, consumo:360, kwp:37,   potencia:36.23, costo:26626, m2:155 },
-  { id:'N3', combo:'Sol Industrial',  label:'$400 – $500 / mes',   rango:'$400 – $500',   min:400, max:500, consumo:470, kwp:48,   potencia:47.30, costo:34762, m2:203 },
-  { id:'N4', combo:'Sol Corporativo', label:'Más de $500 / mes',   rango:'Más de $500',   min:500, max:9999,consumo:600, kwp:null, potencia:null,  costo:null,  m2:999 },
+  { id:'F1', combo:'Familia 1', label:'Hasta $30 / mes',   rango:'$0 – $30',     min:0,   max:30,  consumo:33.53,  kwp:3,    potencia:3,    costo:3994,  m2:20  },
+  { id:'F2', combo:'Familia 2', label:'$30 – $50 / mes',   rango:'$30 – $50',    min:30,  max:50,  consumo:55.89,  kwp:5,    potencia:5,    costo:4998,  m2:29  },
+  { id:'F3', combo:'Familia 3', label:'$50 – $80 / mes',   rango:'$50 – $80',    min:50,  max:80,  consumo:89.42,  kwp:8.33, potencia:8.33, costo:6818,  m2:49  },
+  { id:'F4', combo:'Familia 4', label:'$80 – $120 / mes',  rango:'$80 – $120',   min:80,  max:120, consumo:134.14, kwp:12,   potencia:12,   costo:10237, m2:72  },
+  { id:'F5', combo:'Familia 5', label:'$120 – $150 / mes', rango:'$120 – $150',  min:120, max:150, consumo:167.67, kwp:15,   potencia:15,   costo:12099, m2:91  },
+  { id:'F6', combo:'Familia 6', label:'$150 – $200 / mes', rango:'$150 – $200',  min:150, max:200, consumo:223.56, kwp:20,   potencia:20,   costo:16268, m2:117 },
+  { id:'N1', combo:'Negocio 1', label:'$200 – $300 / mes', rango:'$200 – $300',  min:200, max:300, consumo:335.34, kwp:30,   potencia:30,   costo:26252, m2:157 },
+  { id:'N2', combo:'Negocio 2', label:'$300 – $400 / mes', rango:'$300 – $400',  min:300, max:400, consumo:447.12, kwp:40,   potencia:40,   costo:33627, m2:209 },
+  { id:'N3', combo:'Negocio 3', label:'$400 – $500 / mes', rango:'$400 – $500',  min:400, max:500, consumo:558.90, kwp:50,   potencia:50,   costo:39320, m2:261 },
+  { id:'N4', combo:'Negocio 4', label:'Más de $500 / mes', rango:'Más de $500',  min:500, max:9999,consumo:600,    kwp:null, potencia:null, costo:null,  m2:999 },
 ];
 
 // Se puebla en cargarConfig() si el Sheet tiene claves byd_seg_*
@@ -767,9 +769,9 @@ function reconstruirSegmentosDesdeConfig(cfg) {
 function getSegmento(id) { return SEGMENTOS.find(s => s.id === id); }
 
 // Segmento máximo que entra en los m² disponibles
-// Devuelve null si no alcanza ni para F1 (menos de 19m²)
+// Devuelve null si no alcanza ni para F1 (menos de 20m²)
 function segmentoPorM2(m2) {
-  const desc = ['N3','N2','N1','F4','F3','F2','F1'];
+  const desc = ['N4','N3','N2','N1','F6','F5','F4','F3','F2','F1'];
   for (const id of desc) {
     const seg = SEGMENTOS.find(s => s.id === id);
     if (seg && seg.m2 && m2 >= seg.m2) return seg;
@@ -804,7 +806,7 @@ function calcAhorro(segId, gasolina, m2Disponibles) {
     };
   }
 
-  const orden = ['F1','F2','F3','F4','N1','N2','N3','N4'];
+  const orden = ['F1','F2','F3','F4','F5','F6','N1','N2','N3','N4'];
   const idxConsumo = orden.indexOf(segConsumo.id);
   const idxEspacio = orden.indexOf(segEspacio.id);
 
@@ -1111,11 +1113,11 @@ async function step_resultado() {
     <div class="result-card">
       <div class="result-title">☀️ ${c.seg.combo}</div>
       <div class="result-ahorro">$${c.costoSistema.toLocaleString()}<span style="font-size:13px;font-weight:400;opacity:0.8"> inversión</span></div>
-      <div class="result-sub">Sistema ${c.kwp} kWp${c.limitadoPorEspacio ? ' · Cobertura '+c.coberturaPct+'%' : ''}</div>
+      <div class="result-sub">Sistema ${Number(c.kwp).toFixed(2).replace(/\.?0+$/,'')} kWp${c.limitadoPorEspacio ? ' · Cobertura '+c.coberturaPct+'%' : ''}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
         <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px">
           <div style="font-size:10px;opacity:0.65;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Sistema</div>
-          <div style="font-size:13px;font-weight:600">${c.kwp} kWp</div>
+          <div style="font-size:13px;font-weight:600">${Number(c.kwp).toFixed(2).replace(/\.?0+$/,'')} kWp</div>
         </div>
         <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px">
           <div style="font-size:10px;opacity:0.65;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Potencia pico</div>
@@ -1329,7 +1331,7 @@ function guardarLeadParcial(c) {
 // ─────────────────────────────────────────────────────────
 
 async function guardarLead() {
-  const c = calcAhorro(state.segId, state.gasolina);
+  const c = calcAhorro(state.segId, state.gasolina, state.m2);
 
   const payload = {
     action:    'crearLeadExterno',
@@ -1372,7 +1374,7 @@ async function guardarLead() {
   await showTyping(1000);
 
   const codigoLinea = state.codigoBYD
-    ? `<br><br>Tu número de referencia: <strong style="letter-spacing:1px;font-family:monospace">${state.codigoBYD}</strong>`
+    ? `<br><br>Su número de referencia: <strong style="letter-spacing:1px;font-family:monospace">${state.codigoBYD}</strong>`
     : '';
 
   await addMsg(`✅ <strong>¡Listo, ${state.nombre}!</strong><br><br>
