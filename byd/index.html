@@ -458,7 +458,7 @@
 // ═══════════════════════════════════════════════════════════
 //  CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3aN5JdwtEmYx11qxMt3-Iw6OBWC-fB39VqB8knx-RKGPgPJ2drcxWrUjIg5Ga3RxT9g/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFyCPN95NclQYFQoaPwmM2J8yncY8VuEUreY8soplJzJNFayNcQ9t3vCCC8tzoNDwf6g/exec';
 
 // Defaults — se sobreescriben con lo que viene del Sheet
 let CONFIG = {
@@ -477,7 +477,6 @@ async function cargarConfig() {
   try {
     const res  = await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ action: 'getConfig' })
     });
     const data = await res.json();
@@ -1248,7 +1247,6 @@ async function guardarLeadFinanciamiento() {
   try {
     const res  = await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
     });
     const data = await res.json();
@@ -1323,7 +1321,6 @@ function guardarLeadParcial(c) {
   fetch(APPS_SCRIPT_URL, {
     method:  'POST',
     mode:    'no-cors',
-    headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(payload)
   }).catch(() => {});
 }
@@ -1359,7 +1356,6 @@ async function guardarLead() {
   try {
     const res  = await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
     });
     const data = await res.json();
