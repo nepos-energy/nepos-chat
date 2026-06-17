@@ -502,6 +502,13 @@ let inactivityTimer = null;
 let countdownTimer  = null;
 let countdownVal    = 30;
 
+// Genera un ID único en el cliente — evita depender de la respuesta
+// del servidor (bloqueada por CORS en Apps Script Web Apps)
+function generarLeadId() {
+  const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+  return 'L-' + Date.now() + '-' + rand;
+}
+
 function initState() {
   state = {
     step:          'bienvenida',
@@ -1225,9 +1232,11 @@ async function step_correo_financiamiento() {
 
 async function guardarLeadFinanciamiento() {
   const c = calcAhorro(state.segId, state.gasolina, state.m2);
+  const leadId = generarLeadId();
 
   const payload = {
     action:    'crearLeadExterno',
+    lead_id:   leadId,
     nombre:    state.nombre,
     telefono:  state.telefono,
     email:     state.correo,
@@ -1245,14 +1254,14 @@ async function guardarLeadFinanciamiento() {
   };
 
   try {
-    const res  = await fetch(APPS_SCRIPT_URL, {
-      method:  'POST',
-      body:    JSON.stringify(payload)
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      body:   JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (data.lead_id) state.codigoBYD = data.lead_id;
+    state.codigoBYD = leadId;
   } catch (e) {
-    state.codigoBYD = '';
+    state.codigoBYD = leadId;
   }
 
   await showTyping(1000);
@@ -1329,9 +1338,11 @@ function guardarLeadParcial(c) {
 
 async function guardarLead() {
   const c = calcAhorro(state.segId, state.gasolina, state.m2);
+  const leadId = generarLeadId();
 
   const payload = {
     action:    'crearLeadExterno',
+    lead_id:   leadId,
     nombre:    state.nombre,
     telefono:  state.telefono,
     email:     state.correo,
@@ -1352,19 +1363,19 @@ async function guardarLead() {
                ' | Payback: ' + c.paybackAnios + ' años'
   };
 
-  // Fetch normal (necesitamos leer el código que devuelve el servidor)
+  // mode:'no-cors' evita el bloqueo de CORS de Apps Script Web Apps.
+  // No podemos leer la respuesta, pero el ID ya lo generamos acá arriba.
   try {
-    const res  = await fetch(APPS_SCRIPT_URL, {
-      method:  'POST',
-      body:    JSON.stringify(payload)
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      body:   JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (data.lead_id) {
-      state.codigoBYD = data.lead_id;   // ej: "L-1749234567890"
-    }
+    state.codigoBYD = leadId;
   } catch (e) {
-    // Si falla la red, seguimos sin código — el flujo no se interrumpe
-    state.codigoBYD = '';
+    // Aunque falle la red, mostramos el código igual —
+    // el usuario se lo puede llevar de palabra si hace falta
+    state.codigoBYD = leadId;
   }
 
   await showTyping(1000);
